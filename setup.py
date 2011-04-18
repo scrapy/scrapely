@@ -2,7 +2,7 @@ import sys
 
 args = dict(
     name='scrapely',
-    version='1.0',
+    version='0.9',
     license='BSD',
     description='A pure-python HTML screen-scraping library',
     author='Scrapy project',
