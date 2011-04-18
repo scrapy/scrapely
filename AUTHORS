@@ -1,0 +1,10 @@
+Scrapely was originally written by Shane Evans, while working on Mydeco, and
+released as part of the Scrapy project. More recently, Scrapely was taken out
+of Scrapy, and released as a standalone library, to improve its reusage and
+adoption.
+
+Here is the list of the primary authors & contributors:
+
+ * Shane Evans
+ * Pablo Hoffman
+ * Martin Olveyra
