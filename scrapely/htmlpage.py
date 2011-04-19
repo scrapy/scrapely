@@ -8,15 +8,12 @@ multiple times.
 import re
 import hashlib
 
-def create_page_from_jsonpage(jsonpage, body_key):
-    """Create an HtmlPage object from a dict object conforming to the schema
-    for a page
+def dict_to_page(jsonpage, body_key='body'):
+    """Create an HtmlPage object from a dict object.
 
-    `body_key` is the key where the body is stored and can be either 'body'
-    (original page with annotations - if any) or 'original_body' (original
-    page, always). Classification typically uses 'original_body' to avoid
-    confusing the classifier with annotated pages, while extraction uses 'body'
-    to pass the annotated pages.
+    `body_key` is the key where the page body can be found. This is used
+    sometimes when we want to store multiple version of the body (annotated and
+    original) into the same dict
     """
     url = jsonpage['url']
     headers = jsonpage.get('headers')
@@ -25,11 +22,16 @@ def create_page_from_jsonpage(jsonpage, body_key):
     encoding = jsonpage.get('encoding', 'utf-8')
     return HtmlPage(url, headers, body, page_id, encoding)
 
-def page_to_dict(page):
+def page_to_dict(page, body_key='body'):
+    """Create a dict from the given HtmlPage
+
+    `body_key` indicates what key to store the body into. See `dict_to_page`
+    for more info.
+    """
     return {
         'url': page.url,
         'headers': page.headers,
-        'body': page.body,
+        body_key: page.body,
         'page_id': page.page_id,
         'encoding': page.encoding,
     }
