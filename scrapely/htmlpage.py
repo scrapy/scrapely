@@ -20,7 +20,7 @@ def create_page_from_jsonpage(jsonpage, body_key):
     """
     url = jsonpage['url']
     headers = jsonpage.get('headers')
-    body = jsonpage[body_key].decode('utf-8')
+    body = jsonpage[body_key]
     page_id = jsonpage.get('page_id')
     encoding = jsonpage.get('encoding', 'utf-8')
     return HtmlPage(url, headers, body, page_id, encoding)
