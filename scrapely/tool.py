@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import sys, os, re, cmd, shlex, json, optparse, json, urllib, pprint
 from cStringIO import StringIO
 
