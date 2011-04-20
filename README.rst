@@ -116,6 +116,23 @@ Requirements
     * w3lib
     * simplejson or Python 2.6+
 
+
+Installation
+============
+
+To install scrapely on any platform use::
+
+    pip install scrapely
+
+If you're using Ubuntu (9.10 or above), you can install scrapely from the
+Scrapy Ubuntu repos. Just add the Ubuntu repos as described here:
+http://doc.scrapy.org/topics/ubuntu.html
+
+And then install scrapely with::
+
+    aptitude install python-scrapely
+
+
 Architecture
 ============
 
