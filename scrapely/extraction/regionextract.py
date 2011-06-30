@@ -114,7 +114,7 @@ class BasicTypeExtractor(object):
             # assumes ignored_regions are completely contained within start and end index
             assert (start_index <= ignored_regions[0].start_index and 
                 end_index >= ignored_regions[-1].end_index)
-            starts = [start_index] + [i.end_index for i in ignored_regions]
+            starts = [start_index] + [i.end_index for i in ignored_regions if i.end_index is not None]
             ends = [i.start_index for i in ignored_regions]
             if starts[-1] is not None:
                 ends.append(end_index)

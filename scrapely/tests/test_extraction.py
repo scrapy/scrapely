@@ -712,6 +712,38 @@ EXTRACT_PAGE23 = u"""
 </body></html>
 """
 
+ANNOTATED_PAGE24 = u"""
+<html><body>
+<h1 data-scrapy-ignore-beneath="true">A product</h1>
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
+<p>XXXX XXXX xxxxx</p>
+<div data-scrapy-ignore-beneath="true">
+<img scr="image.jpg" /><br/><a link="back.html">Click here to go back</a>
+</div>
+<p data-scrapy-ignore-beneath="true">Important news!!</p>
+<div>
+10.00<p> 13</p>
+</div>
+</div>
+</body></html>
+"""
+
+EXTRACT_PAGE24 = u"""
+<html><body>
+<h1>A product</h1>
+<div>
+<p>A very nice product for all intelligent people</p>
+<div>
+<img scr="image.jpg" /><br/><a link="back.html">Click here to go back</a>
+</div>
+<p>Important news!!</p>
+<div>
+12.00<p> ID 15</p>
+(VAT exc.)
+</div></div>
+</body></html>
+"""
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
     'item test, removes tags from description attribute',
     [A('description', 'description field without tags', notags)])
@@ -902,6 +934,12 @@ TEST_DATA = [
             {u'price': [u'320'], u'name': [u'Variant 2']},
             {u'price': [u'340'], u'name': [u'Variant 3']}
             ]},
+    ),
+    (# dont fail when there are two consecutive ignore-beneath
+    'double ignore-beneath inside annotation', [ANNOTATED_PAGE24], EXTRACT_PAGE24, DEFAULT_DESCRIPTOR,
+          {
+            'description': [u'\n A very nice product for all intelligent people \n'],
+          }
     ),
 ]
 
