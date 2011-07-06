@@ -56,20 +56,15 @@ class InstanceBasedLearningExtractor(object):
         self.validated = type_descriptor.validated if type_descriptor else \
                 self._filter_not_none
 
-    def extract(self, html, pref_template_id=None, useone=False):
+    def extract(self, html, pref_template_id=None):
         """extract data from an html page
         
         If pref_template_url is specified, the template with that url will be 
         used first.
-        if useone is True and no data was extracted, no additional template will
-        be tried. If False and no data was extracted, try with rest of item templates
         """
         extraction_page = parse_extraction_page(self.token_dict, html)
         if pref_template_id is not None:
-            if useone:
-                extraction_trees = [x for x in self.extraction_trees if x.template.id == pref_template_id]
-            else:
-                extraction_trees = sorted(self.extraction_trees, 
+            extraction_trees = sorted(self.extraction_trees, 
                     key=lambda x: x.template.id != pref_template_id)
         else:
             extraction_trees = self.extraction_trees
