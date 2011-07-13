@@ -97,14 +97,18 @@ def text(region):
     text = u''.join(chunks)
     return _WS.sub(u' ', text).strip()
 
-def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE):
+def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
+    tags_to_purge=_TAGS_TO_PURGE):
     """Creates an HTML subset, using a whitelist of HTML tags.
 
     The HTML generated is safe for display on a website,without escaping and
     should not cause formatting problems.
     
-    Allowed_tags is a set of tags that are allowed and replace_tags is a mapping of 
-    tags to alternative tags to substitute.
+    Behaviour can be customized through the following keyword arguments:
+        allowed_tags is a set of tags that are allowed
+        replace_tags is a mapping of tags to alternative tags to substitute.
+        tags_to_purge are tags that, if encountered, all content between the
+            opening and closing tag is removed.
 
     For example:
     >>> t = lambda s: safehtml(htmlregion(s))
@@ -119,6 +123,10 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE):
     are converted to strong and em.
     >>> t(u'<h2>header</h2> test <b>bold</b> <i>indent</i>')
     u'<strong>header</strong> test <strong>bold</strong> <em>indent</em>'
+    
+    tags_to_purge defines the tags that have enclosing content removed:
+    >>> t(u'<p>test <script>test</script></p>')
+    u'<p>test </p>'
 
     Comments are stripped, but entities are not converted
     >>> t(u'<!-- comment --> only &pound;42')
@@ -157,11 +165,11 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE):
         else:
             assert tag.tag_type == HtmlTagType.UNPAIRED_TAG, "unrecognised tag type"
             return u"<%s/>" % tag.tag
-    chunks = list(_process_markup(region, lambda text: text, _process_tag)) + \
-        ["</%s>" % t for t in reversed(tagstack)]
+    chunks = list(_process_markup(region, lambda text: text, 
+        _process_tag, tags_to_purge)) + ["</%s>" % t for t in reversed(tagstack)]
     return u''.join(chunks).strip()
 
-def _process_markup(region, textf, tagf):
+def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
     fragments = getattr(region, 'parsed_fragments', None)
     if fragments is None:
         yield textf(region)
@@ -171,7 +179,7 @@ def _process_markup(region, textf, tagf):
         if isinstance(fragment, HtmlTag):
             # skip forward to closing script tags
             tag = fragment.tag
-            if tag in _TAGS_TO_PURGE:
+            if tag in tags_to_purge:
                 # if opening, keep going until closed
                 if fragment.tag_type == HtmlTagType.OPEN_TAG:
                     for probe in fiter:
