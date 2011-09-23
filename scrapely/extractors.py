@@ -14,6 +14,8 @@ from scrapely.htmlpage import HtmlPage, HtmlTag, HtmlTagType
 _NUMERIC_ENTITIES = re.compile("&#([0-9]+)(?:;|\s)", re.U)
 _PRICE_NUMBER_RE = re.compile('(?:^|[^a-zA-Z0-9])(\d+(?:\.\d+)?)(?:$|[^a-zA-Z0-9])')
 _NUMBER_RE = re.compile('(\d+(?:\.\d+)?)')
+_DECIMAL_RE = re.compile(r'(\d[\d\,]*(?:(?:\.\d+)|(?:)))', re.U | re.M)
+_VALPARTS_RE = re.compile("([\.,]?\d+)")
 
 _IMAGES = (
     'mng', 'pct', 'bmp', 'gif', 'jpg', 'jpeg', 'png', 'pst', 'psp', 'tif',
@@ -244,6 +246,37 @@ def extract_number(txt):
     numbers = _NUMBER_RE.findall(txt)
     if len(numbers) == 1:
         return numbers[0]
+
+def extract_price(txt):
+    """ 
+    Extracts numbers making some price format specific assumptions
+
+    >>> extract_price('asdf 234,234.45sdf ')
+    '234234.45'
+    >>> extract_price('234,23')
+    '234.23'
+    >>> extract_price('234,230')
+    '234230'
+    >>> extract_price('asdf 2234 sdf ')
+    '2234'
+    >>> extract_price('947')
+    '947'
+    >>> extract_price('adsfg')
+    >>> extract_price('stained, linseed oil finish, clear glas doors')
+    >>> extract_price('')
+    >>> extract_price(u'&#163;129&#46;99')
+    u'129.99'
+    """
+    txt = _NUMERIC_ENTITIES.sub(lambda m: unichr(int(m.groups()[0])), txt)
+    m = _DECIMAL_RE.search(txt)
+    if m:
+        value = m.group(1)
+        parts = _VALPARTS_RE.findall(value)
+        decimalpart = parts.pop(-1)
+        if decimalpart[0] == "," and len(decimalpart) <= 3:
+            decimalpart = decimalpart.replace(",", ".")
+        value = "".join(parts + [decimalpart]).replace(",", "") 
+        return value
     
 def url(txt):
     """convert text to a url
