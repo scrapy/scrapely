@@ -945,10 +945,10 @@ TEST_DATA = [
 
 class TestIbl(TestCase):
 
-    def _run_extraction(self, name, templates, page, extractors, expected_output):
+    def _run_extraction(self, name, templates, page, descriptor, expected_output):
         self.trace = None
         template_pages = [HtmlPage(None, {}, t) for t in templates]
-        extractor = InstanceBasedLearningExtractor(template_pages, extractors, True)
+        extractor = InstanceBasedLearningExtractor([(t, descriptor) for t in template_pages], True)
         actual_output, _ = extractor.extract(HtmlPage(None, {}, page))
         if not actual_output:
             if expected_output is None:

@@ -87,7 +87,7 @@ class IblTool(cmd.Cmd):
         if assert_or_print(templates, "no templates available"):
             return
         page = get_page(url, templates[0].encoding)
-        ex = InstanceBasedLearningExtractor(templates)
+        ex = InstanceBasedLearningExtractor((t, None) for t in templates)
         pprint.pprint(ex.extract(page)[0])
 
     def default(self, line):

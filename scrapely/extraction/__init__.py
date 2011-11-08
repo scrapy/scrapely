@@ -26,8 +26,10 @@ class InstanceBasedLearningExtractor(object):
     extract data from web pages.
     """
 
-    def __init__(self, templates, type_descriptor=None, trace=False):
+    def __init__(self, td_pairs, trace=False):
         """Initialise this extractor
+
+        td_pairs is a list of (template, item descriptor) pairs.
 
         templates should contain a sequence of strings, each containing 
         annotated html that will be used as templates for extraction.
@@ -37,24 +39,25 @@ class InstanceBasedLearningExtractor(object):
         of the attribute. If the tag was inserted and was not present in the 
         original page, the data-scrapy-generated attribute must be present.
         
-        type_descriptor may contain a type descriptor describing the item
-        to be extracted.
+        type descriptors describe how the item will be extracted from target
+        page, using the corresponding template.
         
         if trace is true, the returned extracted data will have a 'trace'
         property that contains a trace of the extraction execution.
         """
         self.token_dict = TokenDict()
-        parsed_plus_templates = [(parse_template(self.token_dict, t), t) for t in templates]
-        parsed_plus_epages = [(p, parse_extraction_page(self.token_dict, t)) for p, t \
-               in parsed_plus_templates if _annotation_count(p)]
-        parsed_templates = map(itemgetter(0), parsed_plus_epages)
+        parsed_plus_tdpairs = [(parse_template(self.token_dict, td[0]), td) for td in td_pairs]
+        parsed_plus_epages = [(p, parse_extraction_page(self.token_dict, td[0]), td) for p, td \
+               in parsed_plus_tdpairs if _annotation_count(p)]
+        parsed_tdpairs = map(itemgetter(0, 2), parsed_plus_epages)
         
         # templates with more attributes are considered first
-        sorted_templates = sorted(parsed_templates, key=_annotation_count, reverse=True)
-        self.extraction_trees = [build_extraction_tree(t, type_descriptor, 
-            trace) for t in sorted_templates]
-        self.validated = type_descriptor.validated if type_descriptor else \
-                self._filter_not_none
+        sorted_tdpairs = sorted(parsed_tdpairs, \
+                key=lambda x: _annotation_count(itemgetter(0)(x)), reverse=True)
+        self.extraction_trees = [build_extraction_tree(p, td[1], 
+            trace) for p, td in sorted_tdpairs]
+        self.validated = dict((td[0].page_id, td[1].validated if td[1] else \
+                self._filter_not_none) for _, td in sorted_tdpairs)
 
     def extract(self, html, pref_template_id=None):
         """extract data from an html page
@@ -71,7 +74,7 @@ class InstanceBasedLearningExtractor(object):
 
         for extraction_tree in extraction_trees:
             extracted = extraction_tree.extract(extraction_page)
-            correctly_extracted = self.validated(extracted)
+            correctly_extracted = self.validated[extraction_tree.template.id](extracted)
             extra_required = extraction_tree.template.extra_required_attrs
             correctly_extracted = [c for c in correctly_extracted if \
                 extra_required.intersection(c.keys()) == extra_required ]
