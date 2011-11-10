@@ -23,7 +23,7 @@ class TemplateMakerTest(TestCase):
         tm = TemplateMaker(self.PAGE)
         tm.annotate('field1', best_match('text to annotate'))
         tpl = tm.get_template()
-        ex = InstanceBasedLearningExtractor([tpl])
+        ex = InstanceBasedLearningExtractor([(tpl, None)])
         self.assertEqual(ex.extract(self.PAGE)[0],
             [{u'field1': [u'Some text to annotate here']}])
 
@@ -31,7 +31,7 @@ class TemplateMakerTest(TestCase):
         tm = TemplateMaker(self.PAGE)
         tm.annotate('field1', best_match('text to annotate'), best_match=False)
         tpl = tm.get_template()
-        ex = InstanceBasedLearningExtractor([tpl])
+        ex = InstanceBasedLearningExtractor([(tpl, None)])
         self.assertEqual(ex.extract(self.PAGE)[0],
             [{u'field1': [u'Some text to annotate here', u'Another text to annotate there']}])
 
@@ -39,7 +39,7 @@ class TemplateMakerTest(TestCase):
         tm = TemplateMaker(self.PAGE)
         tm.annotate('field1', best_match("and that's"), best_match=False)
         tpl = tm.get_template()
-        ex = InstanceBasedLearningExtractor([tpl])
+        ex = InstanceBasedLearningExtractor([(tpl, None)])
         self.assertEqual(ex.extract(self.PAGE)[0],
             [{u'field1': [u"More text with unpaired tag <img />and that's it"]}])
 

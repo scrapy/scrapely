@@ -42,7 +42,7 @@ class Scraper(object):
 
     def scrape(self, url, encoding='utf-8'):
         page = self._get_page(url, encoding)
-        ex = InstanceBasedLearningExtractor(self.templates)
+        ex = InstanceBasedLearningExtractor((t, None) for t in self.templates)
         return ex.extract(page)[0]
 
     @staticmethod
