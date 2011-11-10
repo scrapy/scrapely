@@ -173,6 +173,12 @@ LABELLED_PAGE10 = u"""
 </body></html>
 """
 
+LABELLED_PAGE11 = u"""
+<html><body>
+<input type="text" name="3896" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 1, &quot;annotations&quot;: {&quot;name&quot;: &quot;site_id&quot;}, &quot;generated&quot;: false}" />
+</body></html>
+"""
+
 def _parse_page(parser_class, pagetext):
     htmlpage = HtmlPage(None, {}, pagetext)
     parser = parser_class(TokenDict())
@@ -292,6 +298,13 @@ class TestPageParsing(TestCase):
         self.assertEqual(annotations[6].variant_id, 2)
         self.assertEqual(annotations[7].variant_id, None)
 
+    def test_variant_attribute(self):
+        """
+        Test self closed tag attribute annotated for a variant
+        """
+        annotations = _parse_page(TemplatePageParser, LABELLED_PAGE11).annotations
+        self.assertEqual(annotations[0].variant_id, 1)
+
     def test_site_pages(self):
         """
         Tests from real pages. More reliable and easy to build for more complicated structures
@@ -317,3 +330,4 @@ class TestPageParsing(TestCase):
             self.assertEqual(annotations, [])
             count += 1
             fname = "%s_%d.json" % (SAMPLES_FILE_PREFIX, count)
+
