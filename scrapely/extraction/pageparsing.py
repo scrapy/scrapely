@@ -134,6 +134,10 @@ class TemplatePageParser(InstanceLearningParser):
             self.annotations.append(annotation)
 
             self.extra_required_attrs.extend(jannotation.pop('required', []))
+            variant_id = jannotation.pop('variant', 0)
+            if variant_id > 0:
+                annotation.variant_id = variant_id
+            assert jannotation.pop("generated", False) == False
             annotation.metadata = jannotation
 
         self.next_tag_index += 1
