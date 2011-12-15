@@ -113,6 +113,25 @@ ANNOTATED_PAGE5 =  u"""
 </table>
 """
 
+ANNOTATED_PAGE5a =  u"""
+<p data-scrapy-annotate="{&quot;annotations&quot;:
+    {&quot;content&quot;: &quot;description&quot;}}">description</p>
+<table>
+<tr>
+<td data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;annotations&quot;: 
+    {&quot;content&quot;: &quot;colour&quot;}}" >colour 1</td>
+<td data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;annotations&quot;: 
+    {&quot;content&quot;: &quot;price&quot;}, &quot;required&quot;: [&quot;price&quot;]}" >price 1</td>
+</tr>
+<tr>
+<td data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;annotations&quot;: 
+    {&quot;content&quot;: &quot;colour&quot;}}" >colour 2</td>
+<td data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;annotations&quot;: 
+    {&quot;content&quot;: &quot;price&quot;}, &quot;required&quot;: [&quot;price&quot;]}" >price 2</td>
+</tr>
+</table>
+"""
+
 EXTRACT_PAGE5 = u"""
 <p>description</p>
 <table>
@@ -745,17 +764,24 @@ EXTRACT_PAGE24 = u"""
 """
 
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
-    'item test, removes tags from description attribute',
-    [A('description', 'description field without tags', notags)])
+        'item test, removes tags from description attribute',
+        [A('description', 'description field without tags', notags)])
 
 SAMPLE_DESCRIPTOR1 = ItemDescriptor('test', 'product test', [
-    A('name', "Product name", required=True),
-    A('price', "Product price, including any discounts and tax or vat", 
-        contains_any_numbers, True),    
-    A('image_urls', "URLs for one or more images", image_url, True),
-    A('description', "The full description of the product", html),
-    ]
-)
+            A('name', "Product name", required=True),
+            A('price', "Product price, including any discounts and tax or vat", 
+                contains_any_numbers, True),    
+            A('image_urls', "URLs for one or more images", image_url, True),
+            A('description', "The full description of the product", html),
+            ]
+        )
+
+SAMPLE_DESCRIPTOR2 = ItemDescriptor('test', 'item test', [
+        A('description', 'description field without tags', notags),
+        A('price', "Product price, including any discounts and tax or vat",
+                contains_any_numbers),
+    ])
+
 
 # A list of (test name, [templates], page, extractors, expected_result)
 TEST_DATA = [
@@ -794,6 +820,19 @@ TEST_DATA = [
                  {u'colour': [u'colour 3'], u'price': [u'price 3']} 
              ]
          }
+    ),
+    ('variants with extra required attributes', [ANNOTATED_PAGE5a], EXTRACT_PAGE5, SAMPLE_DESCRIPTOR2,
+         {
+             'description': [u'description'],
+             'variants': [
+                 {u'colour': [u'colour 1'], u'price': [u'price 1']}, 
+                 {u'colour': [u'colour 2'], u'price': [u'price 2']}, 
+                 {u'colour': [u'colour 3'], u'price': [u'price 3']} 
+             ]
+         }
+    ),
+    ('test that new descriptor is created from the original', [ANNOTATED_PAGE4], EXTRACT_PAGE4, SAMPLE_DESCRIPTOR2,
+        {'features': [u'feature1', u'feature2', u'feature3']}
     ),
     # variants with an irregular structure
     ('irregular variants', [ANNOTATED_PAGE6], EXTRACT_PAGE6, DEFAULT_DESCRIPTOR,

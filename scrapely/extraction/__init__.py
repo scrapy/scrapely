@@ -39,7 +39,7 @@ class InstanceBasedLearningExtractor(object):
         of the attribute. If the tag was inserted and was not present in the 
         original page, the data-scrapy-generated attribute must be present.
         
-        type descriptors describe how the item will be extracted from target
+        item descriptors describe how the item will be extracted from target
         page, using the corresponding template.
         
         if trace is true, the returned extracted data will have a 'trace'
@@ -51,8 +51,17 @@ class InstanceBasedLearningExtractor(object):
                in parsed_plus_tdpairs if _annotation_count(p)]
         parsed_tdpairs = map(itemgetter(0, 2), parsed_plus_epages)
         
+        modified_parsed_tdpairs = []
+        # apply extra required attributes
+        for parsed, (t, descriptor) in parsed_tdpairs:
+            if descriptor is not None:
+                descriptor = descriptor.copy()
+                for attr in parsed.extra_required_attrs:
+                    descriptor._required_attributes.append(attr)
+                    descriptor.attribute_map[attr].required = True
+            modified_parsed_tdpairs.append((parsed, (t, descriptor)))
         # templates with more attributes are considered first
-        sorted_tdpairs = sorted(parsed_tdpairs, \
+        sorted_tdpairs = sorted(modified_parsed_tdpairs, \
                 key=lambda x: _annotation_count(itemgetter(0)(x)), reverse=True)
         self.extraction_trees = [build_extraction_tree(p, td[1], 
             trace) for p, td in sorted_tdpairs]
@@ -75,9 +84,6 @@ class InstanceBasedLearningExtractor(object):
         for extraction_tree in extraction_trees:
             extracted = extraction_tree.extract(extraction_page)
             correctly_extracted = self.validated[extraction_tree.template.id](extracted)
-            extra_required = extraction_tree.template.extra_required_attrs
-            correctly_extracted = [c for c in correctly_extracted if \
-                extra_required.intersection(c.keys()) == extra_required ]
             if len(correctly_extracted) > 0:
                 return correctly_extracted, extraction_tree.template
         return None, None
