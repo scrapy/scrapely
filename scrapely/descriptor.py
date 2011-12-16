@@ -27,6 +27,7 @@ class ItemDescriptor(object):
 
     def __init__(self, name, description, attribute_descriptors):
         self.name = name
+        self.description = description
         self.attribute_map = dict((d.name, d) for d in attribute_descriptors)
         self._required_attributes = [d.name for d in attribute_descriptors \
                 if d.required]
@@ -47,3 +48,10 @@ class ItemDescriptor(object):
     
     def __str__(self):
         return "ItemDescriptor(%s)" % self.name
+
+    def copy(self):
+        attribute_descriptors = []
+        for d in self.attribute_map.values():
+            attribute_descriptors.append(FieldDescriptor(d.name, d.description, d.extractor, d.required))
+        return ItemDescriptor(self.name, self.description, attribute_descriptors)
+        # return self
