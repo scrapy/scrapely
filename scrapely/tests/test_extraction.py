@@ -763,6 +763,37 @@ EXTRACT_PAGE24 = u"""
 </body></html>
 """
 
+ANNOTATED_PAGE25 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44'>
+<ins data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"Large"</ins>
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46'>
+<ins data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"XX Large"</ins>
+</span>
+"""
+
+
+EXTRACT_PAGE25 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44'>
+"Large"
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46'>
+"XX Large"
+</span>
+"""
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
         'item test, removes tags from description attribute',
         [A('description', 'description field without tags', notags)])
@@ -979,6 +1010,9 @@ TEST_DATA = [
           {
             'description': [u'\n A very nice product for all intelligent people \n'],
           }
+    ),
+    ('repeated partial annotation within same tag', [ANNOTATED_PAGE25], EXTRACT_PAGE25, DEFAULT_DESCRIPTOR,
+            {"name": ['"Large"', '"X Large"', '"XX Large"']}
     ),
 ]
 

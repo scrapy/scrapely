@@ -214,7 +214,7 @@ class RepeatedDataExtractor(object):
         while index <= max_start_index:
             prefix_end = index + prefixlen
             if (page.page_tokens[index:prefix_end] == self.prefix).all():
-                for peek in xrange(prefix_end, max_index):
+                for peek in xrange(prefix_end, max_index + 1):
                     if (page.page_tokens[peek:peek + suffixlen] \
                             == self.suffix).all():
                         extracted += self.extractor.extract(page, 
