@@ -58,7 +58,10 @@ class InstanceBasedLearningExtractor(object):
                 descriptor = descriptor.copy()
                 for attr in parsed.extra_required_attrs:
                     descriptor._required_attributes.append(attr)
-                    descriptor.attribute_map[attr].required = True
+                    # not always is present a descriptor for a given attribute
+                    if attr in descriptor.attribute_map:
+                        # not strictly necesary, but avoid possible inconsistences for user
+                        descriptor.attribute_map[attr].required = True
             modified_parsed_tdpairs.append((parsed, (t, descriptor)))
         # templates with more attributes are considered first
         sorted_tdpairs = sorted(modified_parsed_tdpairs, \
