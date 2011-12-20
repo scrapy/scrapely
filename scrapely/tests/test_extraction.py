@@ -876,6 +876,17 @@ TEST_DATA = [
              ]
          }
     ),
+    ('dont fail if extra required attribute has no field descriptor', [ANNOTATED_PAGE5a], EXTRACT_PAGE5,
+        DEFAULT_DESCRIPTOR,
+          {
+             'description': [u'description'],
+             'variants': [
+                 {u'colour': [u'colour 1'], u'price': [u'price 1']}, 
+                 {u'colour': [u'colour 2'], u'price': [u'price 2']}, 
+                 {u'colour': [u'colour 3'], u'price': [u'price 3']} 
+             ]
+         }
+    ),
 
     # discovering repeated variants in table columns
 #    ('variants in table columns', [ANNOTATED_PAGE7], EXTRACT_PAGE7, DEFAULT_DESCRIPTOR,
