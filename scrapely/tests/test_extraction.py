@@ -794,6 +794,104 @@ EXTRACT_PAGE25 = u"""
 </span>
 """
 
+ANNOTATED_PAGE26 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44'>
+<ins data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"Large"</ins>
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46'>
+<ins data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"XX Large"</ins>
+</span>
+"""
+
+EXTRACT_PAGE26 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44'>
+"Large"
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46'>
+"XX Large"
+</span>
+"""
+
+ANNOTATED_PAGE27 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44' data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: false,
+&quot;annotations&quot;: {&quot;value&quot;: &quot;site_id&quot;}}">
+<ins data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"Large"</ins>
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46' data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: false,
+&quot;annotations&quot;: {&quot;value&quot;: &quot;site_id&quot;}}">
+<ins data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"XX Large"</ins>
+</span>
+"""
+
+EXTRACT_PAGE27 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44'>
+"Large"
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46'>
+"XX Large"
+</span>
+"""
+
+ANNOTATED_PAGE28 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44' data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: false,
+&quot;annotations&quot;: {&quot;value&quot;: &quot;site_id&quot;}}">
+<ins data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"Large"</ins>
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46' data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: false,
+&quot;annotations&quot;: {&quot;value&quot;: &quot;site_id&quot;}}">
+<ins data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: true, 
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"XX Large"</ins>
+</span>
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: false,
+&quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}"">Price: 45</div>
+"""
+
+EXTRACT_PAGE28 = u"""
+<span>
+<br>
+<input type="radio" name="size" checked value='44'>
+"Large"
+<br>
+<input type="radio" name="size" checked value='45'>
+"X Large"
+<br>
+<input type="radio" name="size" checked value='46'>
+"XX Large"
+</span>
+<div>Price: 45</div>
+"""
+
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
         'item test, removes tags from description attribute',
         [A('description', 'description field without tags', notags)])
@@ -1024,6 +1122,30 @@ TEST_DATA = [
     ),
     ('repeated partial annotation within same tag', [ANNOTATED_PAGE25], EXTRACT_PAGE25, DEFAULT_DESCRIPTOR,
             {"name": ['"Large"', '"X Large"', '"XX Large"']}
+    ),
+    ('repeated partial annotation within same tag, variants version', [ANNOTATED_PAGE26], EXTRACT_PAGE26, DEFAULT_DESCRIPTOR,
+            {"variants": [
+                {"name": ['"Large"']},
+                {"name": ['"X Large"']},
+                {"name": ['"XX Large"']}
+            ]}
+    ),
+    ('repeated partial annotation within same tag, variants version with more than one attribute',
+            [ANNOTATED_PAGE27], EXTRACT_PAGE27, DEFAULT_DESCRIPTOR,
+            {"variants": [
+                {"name": ['"Large"'], "site_id": ["44"]},
+                {"name": ['"X Large"'], "site_id": ["45"]},
+                {"name": ['"XX Large"'], "site_id": ["46"]}
+            ]}
+    ),
+    ('repeated partial annotation within same tag, variants version with more than one attribute, more annotations around',
+            [ANNOTATED_PAGE28], EXTRACT_PAGE28, DEFAULT_DESCRIPTOR, {
+                "price": ["Price: 45"],
+                "variants": [
+                    {"name": ['"Large"'], "site_id": ["44"]},
+                    {"name": ['"X Large"'], "site_id": ["45"]},
+                    {"name": ['"XX Large"'], "site_id": ["46"]}]
+            }
     ),
 ]
 

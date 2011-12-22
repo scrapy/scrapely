@@ -79,7 +79,7 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
     return None, None
 
 def similar_region(extracted_tokens, template_tokens, labelled_region, 
-        range_start=0, range_end=None):
+        range_start=0, range_end=None, **kwargs):
     """Given a labelled section in a template, identify a similar region
     in the extracted tokens.
 
@@ -103,15 +103,17 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     (rpi, pscore) = longest_unique_subsequence(reverse_tokens, reverse_prefix,
             data_length - range_end, data_length - range_start)
 
-    # None means nothing exracted. Index 0 means there cannot be a suffix.
+    # None means nothing extracted. Index 0 means there cannot be a suffix.
     if not rpi:
         return 0, None, None
     
     # convert to an index from the start instead of in reverse
     prefix_index = len(extracted_tokens) - rpi - 1
-
+ 
     if labelled_region.end_index is None:
         return pscore, prefix_index, None
+    elif kwargs.get("suffix_max_length", None) == 0:
+        return pscore, prefix_index, range_start + 1
 
     suffix = template_tokens[labelled_region.end_index:]
 
@@ -134,3 +136,4 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     if match_index is None:
         return 0, None, None
     return (pscore + sscore, prefix_index, match_index)
+
