@@ -27,7 +27,7 @@ def build_extraction_tree(template, type_descriptor, trace=True):
     extractors = BasicTypeExtractor.create(template.annotations, attribute_map)
     if trace:
         extractors = TraceExtractor.apply(template, extractors)
-    for cls in (AdjacentVariantExtractor, RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor,
+    for cls in (RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor,
             RecordExtractor):
         extractors = cls.apply(template, extractors)
         if trace:
@@ -201,7 +201,7 @@ class RepeatedDataExtractor(object):
         self.annotation = copy.copy(self.extractor.annotation)
         self.annotation.end_index = extractors[-1].annotation.end_index
 
-    def extract(self, page, start_index, end_index, ignored_regions):
+    def extract(self, page, start_index, end_index, ignored_regions, **kwargs):
         """repeatedly find regions bounded by the repeated 
         prefix and suffix and extract them
         """
@@ -231,7 +231,7 @@ class RepeatedDataExtractor(object):
     def apply(template, extractors):
         tokens = template.page_tokens
         output_extractors = []
-        group_key = lambda x: x.extracted_item()
+        group_key = lambda x: (x.extracted_item(), x.annotation.variant_id)
         for extr_key, extraction_group in groupby(extractors, group_key):
             extraction_group = list(extraction_group)
             if extr_key is None or len(extraction_group) == 1:
