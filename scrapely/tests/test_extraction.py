@@ -873,7 +873,7 @@ ANNOTATED_PAGE28 = u"""
 &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">"XX Large"</ins>
 </span>
 <div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: false,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}"">Price: 45</div>
+&quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">Price: 45</div>
 """
 
 EXTRACT_PAGE28 = u"""
@@ -891,6 +891,29 @@ EXTRACT_PAGE28 = u"""
 <div>Price: 45</div>
 """
 
+ANNOTATED_PAGE29 = u"""
+<table>
+<tr><td data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">Name 1</td><td data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">Desc 1</td><td><span data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;tag&quot;}}">Tag 1</span><span>Tag2</span><span data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;tag&quot;}}">Tag 3</span></td></tr>
+<tr><td>Name 2</td><td>Desc 2</td><td><span>Tag 7</span><span>Tag 8</span></span>Tag 9</span></td></tr>
+<tr><td data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">Name 3</td><td data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">Desc 3</td><td><span data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;tag&quot;}}">Tag 4</span><span>Tag5</span><span data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;tag&quot;}}">Tag 6</span></td></tr>
+</table>
+"""
+
+EXTRACT_PAGE29 = u"""
+<table>
+<tr><td>Name 1</td><td>Desc 1</td><td><span>Tag 1</span><span>Tag 2</span><span>Tag 3</span></td></tr>
+<tr><td>Name 2</td><td>Desc 2</td><td><span>Tag 4</span><span>Tag 5</span><span>Tag 6</span></td></tr>
+<tr><td>Name 3</td><td>Desc 3</td><td><span>Tag 7</span><span>Tag 8</span><span>Tag 9</span></td></tr>
+</table>
+"""
 
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
         'item test, removes tags from description attribute',
@@ -1146,6 +1169,14 @@ TEST_DATA = [
                     {"name": ['"X Large"'], "site_id": ["45"]},
                     {"name": ['"XX Large"'], "site_id": ["46"]}]
             }
+    ),
+    ('repeated annotation inside variants', [ANNOTATED_PAGE29], EXTRACT_PAGE29, DEFAULT_DESCRIPTOR, 
+            {'variants': [
+                {u'tag': [u'Tag 1', u'Tag 2', u'Tag 3'], u'description': [u'Desc 1'], u'name': [u'Name 1']},
+                {u'tag': [u'Tag 4', u'Tag 5', u'Tag 6'], u'description': [u'Desc 2'], u'name': [u'Name 2']},
+                {u'tag': [u'Tag 7', u'Tag 8', u'Tag 9'], u'description': [u'Desc 3'], u'name': [u'Name 3']}]
+            }
+
     ),
 ]
 
