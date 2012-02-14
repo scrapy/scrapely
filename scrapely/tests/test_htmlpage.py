@@ -4,12 +4,9 @@ htmlpage.py tests
 import os
 from unittest import TestCase
 
-from scrapely import json
-from scrapely.tests import path
+from scrapely.tests import iter_samples
 from scrapely.htmlpage import parse_html, HtmlTag, HtmlDataFragment
 from scrapely.tests.test_htmlpage_data import *
-
-SAMPLES_FILE_PREFIX = os.path.join(path, "samples/samples_htmlpage")
 
 def _encode_element(el):
     """
@@ -78,16 +75,9 @@ class TestParseHtml(TestCase):
         
     def test_site_samples(self):
         """test parse_html from real cases"""
-        count = 0
-        fname = "%s_%d.json" % (SAMPLES_FILE_PREFIX, count)
-        while os.path.exists(fname):
-            source = open("%s_%d.html" % (SAMPLES_FILE_PREFIX, count), "rb").read()
-            source = source.decode('utf-8')
-            parsed = json.loads(open(fname, "rb").read().decode('utf-8'), \
-                    object_hook=_decode_element)
-            self._test_sample(source, parsed, count)
-            count += 1
-            fname = "%s_%d.json" % (SAMPLES_FILE_PREFIX, count)
+        for i, (source, parsed) in enumerate(
+                iter_samples('htmlpage', object_hook=_decode_element)):
+            self._test_sample(source, parsed, i)
  
     def test_bad(self):
         """test parsing of bad html layout"""

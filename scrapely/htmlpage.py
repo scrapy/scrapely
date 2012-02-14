@@ -5,8 +5,28 @@ Container objects for representing html pages and their parts in the IBL
 system. This encapsulates page related information and prevents parsing
 multiple times.
 """
-import re
-import hashlib
+import re, hashlib, urllib2
+from w3lib.encoding import html_to_unicode
+
+def url_to_page(url, encoding=None):
+    """Fetch a URL, using python urllib2, and return an HtmlPage object.
+
+    The `url` may be a string, or a `urllib2.Request` object. The `encoding`
+    argument can be used to force the interpretation of the page encoding.
+
+    Redirects are followed, and the `url` property of the returned HtmlPage object
+    is the url of the final page redirected to.
+    """
+    fh = urllib2.urlopen(url)
+    info = fh.info()
+    body_str = fh.read()
+    # guess content encoding if not specified
+    if encoding is None:
+        content_type_header = info.getheader("content-encoding")
+        encoding, body = html_to_unicode(content_type_header, body_str)
+    else:
+        body = body_str.decode(encoding)
+    return HtmlPage(fh.geturl(), headers=info.dict, body=body, encoding=encoding)
 
 def dict_to_page(jsonpage, body_key='body'):
     """Create an HtmlPage object from a dict object.
