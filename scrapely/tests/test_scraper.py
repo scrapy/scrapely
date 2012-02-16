@@ -2,21 +2,35 @@ from unittest import TestCase
 from cStringIO import StringIO
 
 from scrapely import Scraper
+from scrapely.htmlpage import HtmlPage
+from scrapely.tests import iter_samples
 
 class ScraperTest(TestCase):
+    
+    def _assert_extracted(self, extracted, expected):
+        # FIXME: this is a very weak test - we should assert the 
+        # extracted data matches, fixing issues that prevent it
+        expect_keys = sorted(expected.keys())
+        found_keys = sorted(extracted[0].keys())
+        self.assertEqual(expect_keys, found_keys)
 
-    def test_train_store_load_scrape(self):
-        url1 = 'http://www.icone.co.uk/lighting-suspension/copper-shade-by-tom-dixon/tom-dixon/tom-dixon/MSS45UKC/'
-        data = {'name': 'Copper Shade by Tom Dixon', 'designer': 'Tom Dixon', 'price': '320'}
-        s = Scraper()
-        s.train(url1, data, encoding='latin1')
+    def test_extraction(self):
 
+        samples_encoding = 'latin1'
+        [(html1, data1), (html2, data2)] = list(iter_samples(
+            'scraper_loadstore', html_encoding=samples_encoding))
+        sc = Scraper()
+        page1 = HtmlPage(body=html1, encoding=samples_encoding)
+        sc.train_from_htmlpage(page1, data1)
+
+        page2 = HtmlPage(body=html2, encoding=samples_encoding)
+        extracted_data = sc.scrape_page(page2)
+        self._assert_extracted(extracted_data, data2)
+
+        # check still works after serialize/deserialize 
         f = StringIO()
-        s.tofile(f)
-
+        sc.tofile(f)
         f.seek(0)
-        s = Scraper.fromfile(f)
-
-        url2 = 'http://www.icone.co.uk/lighting-wall-and-ceiling/mesmeri-halo-chrome/artemide/eric-sole/0916024A/'
-        data = s.scrape(url2, encoding='latin1')
-        self.assertEqual(sorted(data[0].keys()), ['designer', 'name', 'price'])
+        sc = Scraper.fromfile(f)
+        extracted_data = sc.scrape_page(page2)
+        self._assert_extracted(extracted_data, data2)

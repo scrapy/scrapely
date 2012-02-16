@@ -4,7 +4,7 @@ try:
 except ImportError:
     import simplejson as json
 
-from scrapely.htmlpage import HtmlPage, page_to_dict
+from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
@@ -12,7 +12,8 @@ class Scraper(object):
 
     def __init__(self, templates=None):
         """Initialize an empty scraper."""
-        self.templates = templates or []
+        self._templates = templates or []
+        self._ex = None
 
     @classmethod
     def fromfile(cls, file):
@@ -21,31 +22,38 @@ class Scraper(object):
         """
         templates = [HtmlPage(**x) for x in json.load(file)['templates']]
         return cls(templates)
-
+    
     def tofile(self, file):
         """Store the scraper into the given file-like object"""
-        tpls = [page_to_dict(x) for x in self.templates]
+        tpls = [page_to_dict(x) for x in self._templates]
         json.dump({'templates': tpls}, file)
+    
+    def add_template(self, template):
+        self._templates.append(template)
+        self._ex = None
 
-    def train(self, url, data, encoding='utf-8'):
+    def train_from_htmlpage(self, htmlpage, data):
         assert data, "Cannot train with empty data"
-        page = self._get_page(url, encoding)
-        tm = TemplateMaker(page)
+        tm = TemplateMaker(htmlpage)
         for field, values in data.items():
             if not hasattr(values, '__iter__'):
                 values = [values]
             for value in values:
                 if isinstance(value, str):
-                    value = value.decode(encoding)
+                    value = value.decode(htmlpage.encoding or 'utf-8')
                 tm.annotate(field, best_match(value))
-        self.templates.append(tm.get_template())
+        self.add_template(tm.get_template())
 
-    def scrape(self, url, encoding='utf-8'):
-        page = self._get_page(url, encoding)
-        ex = InstanceBasedLearningExtractor((t, None) for t in self.templates)
-        return ex.extract(page)[0]
+    def train(self, url, data, encoding=None):
+        page = url_to_page(url, encoding)
+        self.train_from_htmlpage(page, data)
 
-    @staticmethod
-    def _get_page(url, encoding):
-        body = urllib.urlopen(url).read().decode(encoding)
-        return HtmlPage(url, body=body, encoding=encoding)
+    def scrape(self, url, encoding=None):
+        page = url_to_page(url, encoding)
+        return self.scrape_page(page)
+
+    def scrape_page(self, page):
+        if self._ex is None:
+            self._ex = InstanceBasedLearningExtractor((t, None) for t in 
+                    self._templates)
+        return self._ex.extract(page)[0]

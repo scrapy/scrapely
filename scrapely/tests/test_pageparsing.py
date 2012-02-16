@@ -6,9 +6,8 @@ from cStringIO import StringIO
 from unittest import TestCase
 import numpy
 
-from scrapely import json
 from scrapely.htmlpage import HtmlPage
-from scrapely.tests import path
+from scrapely.tests import iter_samples
 from scrapely.extraction.pageparsing import (
     InstanceLearningParser, TemplatePageParser, ExtractionPageParser)
 from scrapely.extraction.pageobjects import TokenDict, TokenType
@@ -309,13 +308,7 @@ class TestPageParsing(TestCase):
         """
         Tests from real pages. More reliable and easy to build for more complicated structures
         """
-        SAMPLES_FILE_PREFIX = os.path.join(path, "samples/samples_pageparsing")
-        count = 0
-        fname = "%s_%d.json" % (SAMPLES_FILE_PREFIX, count)
-        while os.path.exists(fname):
-            source = open("%s_%d.html" % (SAMPLES_FILE_PREFIX, count), "rb").read()
-            source = source.decode('utf-8')
-            annotations = json.loads(open(fname, "rb").read().decode('utf-8'))
+        for source, annotations in iter_samples('pageparsing'):
             template = HtmlPage(body=source)
             parser = TemplatePageParser(TokenDict())
             parser.feed(template)
@@ -328,6 +321,3 @@ class TestPageParsing(TestCase):
                     else:
                         self.assertEqual(getattr(annotation, s), test_annotation[s])
             self.assertEqual(annotations, [])
-            count += 1
-            fname = "%s_%d.json" % (SAMPLES_FILE_PREFIX, count)
-
