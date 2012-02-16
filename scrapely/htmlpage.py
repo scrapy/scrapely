@@ -8,7 +8,7 @@ multiple times.
 import re, hashlib, urllib2
 from w3lib.encoding import html_to_unicode
 
-def url_to_page(url, encoding=None):
+def url_to_page(url, encoding=None, default_encoding='utf-8'):
     """Fetch a URL, using python urllib2, and return an HtmlPage object.
 
     The `url` may be a string, or a `urllib2.Request` object. The `encoding`
@@ -16,6 +16,10 @@ def url_to_page(url, encoding=None):
 
     Redirects are followed, and the `url` property of the returned HtmlPage object
     is the url of the final page redirected to.
+
+    If the encoding of the page is known, it can be passed as a keyword argument. If
+    unspecified, the encoding is guessed using `w3lib.encoding.html_to_unicode`. 
+    `default_encoding` is used if the encoding cannot be determined.
     """
     fh = urllib2.urlopen(url)
     info = fh.info()
@@ -23,7 +27,8 @@ def url_to_page(url, encoding=None):
     # guess content encoding if not specified
     if encoding is None:
         content_type_header = info.getheader("content-encoding")
-        encoding, body = html_to_unicode(content_type_header, body_str)
+        encoding, body = html_to_unicode(content_type_header, body_str, 
+                default_encoding=default_encoding)
     else:
         body = body_str.decode(encoding)
     return HtmlPage(fh.geturl(), headers=info.dict, body=body, encoding=encoding)
