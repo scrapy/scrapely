@@ -2,7 +2,7 @@ from __future__ import with_statement
 import sys, os, re, cmd, shlex, json, optparse, json, urllib, pprint
 from cStringIO import StringIO
 
-from scrapely.htmlpage import HtmlPage, page_to_dict
+from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
@@ -17,7 +17,7 @@ class IblTool(cmd.Cmd):
     def do_ta(self, line):
         """ta <url> [--encoding ENCODING] - add template"""
         opts, (url,) = parse_at(line)
-        t = get_page(url, opts.encoding)
+        t = url_to_page(url, opts.encoding)
         templates = self._load_templates()
         templates.append(t)
         self._save_templates(templates)
@@ -82,11 +82,12 @@ class IblTool(cmd.Cmd):
                 remove_annotation(tm.selected_data(i)))
 
     def do_s(self, url):
-        """s <url> - scrape url (uses encoding from templates)"""
+        """s <url> - scrape url"""
         templates = self._load_templates()
         if assert_or_print(templates, "no templates available"):
             return
-        page = get_page(url, templates[0].encoding)
+        # fall back to the template encoding if none is specified
+        page = url_to_page(url, default_encoding=templates[0].encoding)
         ex = InstanceBasedLearningExtractor((t, None) for t in templates)
         pprint.pprint(ex.extract(page)[0])
 
@@ -126,13 +127,9 @@ class IblTool(cmd.Cmd):
             templates = [page_to_dict(t) for t in templates]
             return json.dump({'templates': templates}, f)
         
-def get_page(url, encoding):
-    body = urllib.urlopen(url).read().decode(encoding)
-    return HtmlPage(url, body=body, encoding=encoding)
-
 def parse_at(ta_line):
     p = optparse.OptionParser()
-    p.add_option('-e', '--encoding', default='utf-8', help='page encoding')
+    p.add_option('-e', '--encoding', help='page encoding')
     return p.parse_args(shlex.split(ta_line))
 
 def parse_criteria(criteria_str):
