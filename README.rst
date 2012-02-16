@@ -93,20 +93,19 @@ To annotate some fields on the template::
 
     scrapely> a 0 w3lib 1.0 -n 1 -f name
     [new] (name) u'<h1>w3lib 1.0</h1>'
-    scrapely> a 0 Scrapy project -n 1 -f author
-    [new] u'<span>Scrapy project &lt;info at scrapy org&gt;</span>'
+    scrapely> a 0 Scrapy project -n 0 -f author
+    [new] u'<span>Scrapy project</span>'
 
 To list annotations on a template::
 
     scrapely> al 0
     [0-0] (name) u'<h1>w3lib 1.0</h1>'
-    [0-1] (author) u'<span>Scrapy project &lt;info at scrapy org&gt;</span>'
+    [0-1] (author) u'<span>Scrapy project</span>'
 
 To scrape another similar page with the already added templates::
 
     scrapely> s http://pypi.python.org/pypi/Django/1.3
-    [{u'author': [u'Django Software Foundation &lt;foundation at djangoproject com&gt;'],
-      u'name': [u'Django 1.3']}]
+    [{u'author': [u'Django Software Foundation'], u'name': [u'Django 1.3']}]
 
 
 Requirements
