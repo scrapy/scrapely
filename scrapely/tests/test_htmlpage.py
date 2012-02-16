@@ -19,7 +19,7 @@ def _encode_element(el):
         return {"tag": el.tag, "attributes": el.attributes,
             "start": el.start, "end": el.end, "tag_type": el.tag_type}
     if isinstance(el, HtmlDataFragment):
-        return {"start": el.start, "end": el.end}
+        return {"start": el.start, "end": el.end, "is_text_content": el.is_text_content}
     raise TypeError
 
 def _decode_element(dct):
@@ -30,7 +30,7 @@ def _decode_element(dct):
         return HtmlTag(dct["tag_type"], dct["tag"], \
             dct["attributes"], dct["start"], dct["end"])
     if "start" in dct:
-        return HtmlDataFragment(dct["start"], dct["end"])
+        return HtmlDataFragment(dct["start"], dct["end"], dct.get("is_text_content", True))
     return dct
 
 class TestParseHtml(TestCase):
@@ -64,6 +64,12 @@ class TestParseHtml(TestCase):
                 self.assertEqual(element.tag, expected.tag)
                 self.assertEqual(element.attributes, expected.attributes)
                 self.assertEqual(element.tag_type, expected.tag_type)
+            if type(element) == HtmlDataFragment:
+                msg = "Got: %s Expected: %s in sample: %d [%d:%d] (%s)" % \
+                        (element.is_text_content, expected.is_text_content, samplecount, element.start, element.end, repr(element_text)) \
+                        if samplecount is not None else None
+                self.assertEqual(element.is_text_content, expected.is_text_content, msg)
+
         if expected_parsed:
             errstring = "Expected %s" % repr(expected_parsed)
             if samplecount is not None:

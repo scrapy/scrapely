@@ -96,6 +96,10 @@ class FragmentedHtmlPageRegion(HtmlPageRegion):
     def parsed_fragments(self):
         return chain(*(r.parsed_fragments for r in self.regions))
 
+    @property
+    def text_content(self):
+        return chain(*(r.text_content for r in self.regions))
+
 class Page(object):
     """Basic representation of a page. This consists of a reference to a
     dictionary of tokens and an array of raw token ids
