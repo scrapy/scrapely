@@ -211,15 +211,18 @@
         },
         {       
                 "start": 1073,
-                "end": 1074
+                "end": 1074,
+                "is_text_content": false
         },
         {
                 "start": 1074, 
-                "end": 2052
+                "end": 2052,
+                "is_text_content": false
         },
         {
                 "start": 2052,
-                "end": 2053
+                "end": 2053,
+                "is_text_content": false
         },
         {
                 "attributes": {}, 

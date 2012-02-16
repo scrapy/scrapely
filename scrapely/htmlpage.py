@@ -95,6 +95,15 @@ class HtmlPage(object):
         """portion of the body corresponding to the HtmlDataFragment"""
         return self.body[data_fragment.start:data_fragment.end]
 
+class TextPage(HtmlPage):
+    """An HtmlPage with one unique HtmlDataFragment, needed to have a
+    convenient text with same interface as html page but avoiding unnecesary
+    reparsing"""
+    def _set_body(self, text): 
+        self._body = text
+        self.parsed_body = [HtmlDataFragment(0, len(self._body), True)]
+    body = property(lambda x: x._body, _set_body, doc="raw text for the page")
+
 class HtmlPageRegion(unicode):
     """A Region of an HtmlPage that has been extracted
     """
@@ -107,7 +116,11 @@ class HtmlPageRegion(unicode):
         htmlpage is the original page and data is the raw html
         """
         self.htmlpage = htmlpage
-    
+ 
+    @property
+    def text_content(self):
+        return self
+        
 class HtmlPageParsedRegion(HtmlPageRegion):
     """A region of an HtmlPage that has been extracted
 
@@ -131,20 +144,31 @@ class HtmlPageParsedRegion(HtmlPageRegion):
         end = self.end_index + 1 if self.end_index is not None else None
         return self.htmlpage.parsed_body[self.start_index:end]
 
+    @property
+    def text_content(self):
+        """Text content of this parsed region"""
+        text_all = u" ".join(self.htmlpage.body[_element.start:_element.end] \
+                for _element in self.parsed_fragments if \
+                not isinstance(_element, HtmlTag) and _element.is_text_content)
+        return TextPage(self.htmlpage.url, self.htmlpage.headers, \
+                text_all, encoding=self.htmlpage.encoding).subregion()
+
+
 class HtmlTagType(object):
     OPEN_TAG = 1
     CLOSE_TAG = 2 
     UNPAIRED_TAG = 3
 
 class HtmlDataFragment(object):
-    __slots__ = ('start', 'end')
+    __slots__ = ('start', 'end', 'is_text_content')
     
-    def __init__(self, start, end):
+    def __init__(self, start, end, is_text_content=False):
         self.start = start
         self.end = end
+        self.is_text_content = is_text_content
         
     def __str__(self):
-        return "<HtmlDataFragment [%s:%s]>" % (self.start, self.end)
+        return "<HtmlDataFragment [%s:%s] is_text_content: %s>" % (self.start, self.end, self.is_text_content)
 
     def __repr__(self):
         return str(self)
@@ -191,7 +215,7 @@ def parse_html(text):
         end = match.end()
             
         if start > prev_end:
-            yield HtmlDataFragment(prev_end, start)
+            yield HtmlDataFragment(prev_end, start, True)
 
         if match.groups()[0] is not None: # comment
             yield HtmlDataFragment(start, end)
@@ -203,7 +227,7 @@ def parse_html(text):
         prev_end = end
     textlen = len(text)
     if prev_end < textlen:
-        yield HtmlDataFragment(prev_end, textlen)
+        yield HtmlDataFragment(prev_end, textlen, True)
 
 def _parse_script(match):
     """parse a <script>...</script> region matched by _HTML_REGEXP"""

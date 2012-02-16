@@ -915,6 +915,28 @@ EXTRACT_PAGE29 = u"""
 </table>
 """
 
+ANNOTATED_PAGE30 = u"""
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: false,
+ &quot;annotations&quot;: {&quot;content&quot;: &quot;phone&quot;}}"><span>029349293</span></div>
+"""
+
+EXTRACT_PAGE30a = u"""
+<div><span style="font-size:100%">Any text</span></div>
+"""
+
+EXTRACT_PAGE30b = u"""
+<div><span style="font-size:100%">029847272</span></div>
+"""
+
+EXTRACT_PAGE30c = u"""
+<div><span><!--item no. 100--></span></div>
+"""
+
+EXTRACT_PAGE30d = u"""
+<div><span><script>var myvar= 10;</script></span></div>
+"""
+
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
         'item test, removes tags from description attribute',
         [A('description', 'description field without tags', notags)])
@@ -934,6 +956,9 @@ SAMPLE_DESCRIPTOR2 = ItemDescriptor('test', 'item test', [
                 contains_any_numbers),
     ])
 
+SAMPLE_DESCRIPTOR3 = ItemDescriptor('test', 
+        'item test',
+        [A('phone', 'phone number', lambda x: contains_any_numbers(x.text_content))])
 
 # A list of (test name, [templates], page, extractors, expected_result)
 TEST_DATA = [
@@ -1178,6 +1203,19 @@ TEST_DATA = [
             }
 
     ),
+    ('avoid false positives by allowing to extract only from text content', [ANNOTATED_PAGE30], EXTRACT_PAGE30a, SAMPLE_DESCRIPTOR3,
+        {}
+    ),
+    ('only extract from text content', [ANNOTATED_PAGE30], EXTRACT_PAGE30b, SAMPLE_DESCRIPTOR3,
+        {u'phone': [u'029847272']}
+    ),
+    ('avoid false positives on comments', [ANNOTATED_PAGE30], EXTRACT_PAGE30c, SAMPLE_DESCRIPTOR3,
+        {}
+    ),
+    ('avoid false positives on scripts', [ANNOTATED_PAGE30], EXTRACT_PAGE30d, SAMPLE_DESCRIPTOR3,
+        {}
+    ),
+
 ]
 
 class TestIbl(TestCase):
