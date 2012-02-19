@@ -1,0 +1,15 @@
+Scrapely release notes
+======================
+
+Version 0.10
+------------
+(release date to be announced)
+
+- Allow training the Scraper class with an HtmlPage
+- Some bug fixes and minor improvements to the IBL extraction logic
+
+Version 0.9
+-----------
+(released on April 19th, 2011)
+
+First release of Scrapely.
