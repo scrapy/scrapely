@@ -35,8 +35,7 @@ Scrapely has a powerful API, including a template format that can be edited
 externally, that you can use to build very capable scrapers.
 
 What follows is a quick example of the simplest possible usage, that you can
-run in the Python shell. This example is also available in the ``example.py``
-script, located at the root of the repository.
+run in a Python shell.
 
 Start by importing and instantiating the Scraper class::
 
@@ -44,7 +43,8 @@ Start by importing and instantiating the Scraper class::
     >>> s = Scraper()
 
 Then, proceed to train the scraper by adding some page and the data you expect
-to scrape from there::
+to scrape from there (note that all keys and values in the data you pass must
+be strings)::
 
     >>> url1 = 'http://pypi.python.org/pypi/w3lib'
     >>> data = {'name': 'w3lib 1.0', 'author': 'Scrapy project', 'description': 'Library of web-related functions'}
@@ -156,6 +156,12 @@ And then install scrapely with::
 
     aptitude install python-scrapely
 
+Tests
+=====
+
+`nose`_ is the preferred way to run tests. Just run: ``nosetests`` from the
+root directory.
+
 Architecture
 ============
 
@@ -183,7 +189,8 @@ the other hand, the extraction code is reliable and production-ready. So, if
 you want to use Scrapely in production, you should use train() with caution and
 make sure it annotates the area of the page you intent being annotated.
 
-Alternatively, you can use the Scrapely tool to annotate pages.
+Alternatively, you can use the Scrapely command line tool to annotate pages,
+which provides more manual control for higher accuracy.
 
 License
 =======
@@ -197,3 +204,4 @@ Scrapely library is licensed under the BSD license.
 .. _same Github account: https://github.com/scrapy
 .. _slybot: https://github.com/scrapy/slybot
 .. _selectors: http://doc.scrapy.org/en/latest/topics/selectors.html
+.. _nose: http://readthedocs.org/docs/nose/en/latest/

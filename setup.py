@@ -25,7 +25,6 @@ args = dict(
 
 try:
     from setuptools import setup
-    args['test_suite'] = 'scrapely.tests.suite'
     args['install_requires'] = ['numpy', 'w3lib']
     if sys.version_info < (2, 6):
         args['install_requires'] += ['simplejson']
