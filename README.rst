@@ -1,10 +1,32 @@
 ========
-scrapely
+Scrapely
 ========
 
 Scrapely is a library for extracting structured data from HTML pages. Given
 some example web pages and the data to be extracted, scrapely constructs a
 parser for all similar pages.
+
+How does Scrapely relate to `Scrapy`_?
+======================================
+
+Despite the similarity in their names, Scrapely and `Scrapy`_ are quite
+different things. The only similarity they share is that they both depend on
+`w3lib`_, and they are both maintained by the same group of developers (which
+is why both are hosted on the `same Github account`_).
+
+Scrapy is an application framework for building web crawlers, while Scrapely is
+a library for extracting structured data from HTML pages. If anything, Scrapely
+is more similar to `BeautifulSoup`_ or `lxml`_ than Scrapy.
+
+Scrapely doesn't depend on Scrapy nor the other way around. In fact, it is
+quite common to use Scrapy without Scrapely, and viceversa.
+
+If you are looking for a complete crawler-scraper solution, there is (at least)
+one project called `Slybot`_ that integrates both, but you can definitely use
+Scrapely on other web crawlers since it's just a library.
+
+Scrapy has a builtin extraction mechanism called `selectors`_ which (unlike
+Scrapely) is based on XPaths.
 
 Usage (API)
 ===========
@@ -111,10 +133,13 @@ To scrape another similar page with the already added templates::
 Requirements
 ============
 
-    * numpy
-    * w3lib
-    * simplejson or Python 2.6+
+Scrapely depends on the following libraries:
 
+* numpy
+* w3lib
+* simplejson or Python 2.6+
+
+Note that Scrapely **does not** depend on `Scrapy`_ in any way.
 
 Installation
 ============
@@ -130,7 +155,6 @@ http://doc.scrapy.org/topics/ubuntu.html
 And then install scrapely with::
 
     aptitude install python-scrapely
-
 
 Architecture
 ============
@@ -165,3 +189,11 @@ License
 =======
 
 Scrapely library is licensed under the BSD license.
+
+.. _Scrapy: http://scrapy.org/
+.. _w3lib: https://github.com/scrapy/w3lib
+.. _BeautifulSoup: http://www.crummy.com/software/BeautifulSoup/
+.. _lxml: http://lxml.de/
+.. _same Github account: https://github.com/scrapy
+.. _slybot: https://github.com/scrapy/slybot
+.. _selectors: http://doc.scrapy.org/en/latest/topics/selectors.html
