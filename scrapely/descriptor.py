@@ -40,7 +40,7 @@ class ItemDescriptor(object):
         """simply checks that all mandatory attributes are present"""
         variant_attrs = set(chain(*
             [v.keys() for v in item.get('variants', [])]))
-        return all([(name in item or name in variant_attrs) \
+        return item and all([(name in item or name in variant_attrs) \
                 for name in self._required_attributes])
 
     def get_required_attributes(self):
