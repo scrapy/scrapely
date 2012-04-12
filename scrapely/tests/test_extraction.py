@@ -1092,7 +1092,7 @@ TEST_DATA = [
            'name': [u'A product']}
     ),
     ('consistency check', [ANNOTATED_PAGE14], EXTRACT_PAGE14, DEFAULT_DESCRIPTOR,
-          {},
+          None,
     ),
     ('consecutive nesting', [ANNOTATED_PAGE15], EXTRACT_PAGE15, DEFAULT_DESCRIPTOR,
           {'description': [u'Description\n \n'],
@@ -1204,18 +1204,17 @@ TEST_DATA = [
 
     ),
     ('avoid false positives by allowing to extract only from text content', [ANNOTATED_PAGE30], EXTRACT_PAGE30a, SAMPLE_DESCRIPTOR3,
-        {}
+        None
     ),
     ('only extract from text content', [ANNOTATED_PAGE30], EXTRACT_PAGE30b, SAMPLE_DESCRIPTOR3,
         {u'phone': [u'029847272']}
     ),
     ('avoid false positives on comments', [ANNOTATED_PAGE30], EXTRACT_PAGE30c, SAMPLE_DESCRIPTOR3,
-        {}
+        None
     ),
     ('avoid false positives on scripts', [ANNOTATED_PAGE30], EXTRACT_PAGE30d, SAMPLE_DESCRIPTOR3,
-        {}
+        None
     ),
-
 ]
 
 class TestIbl(TestCase):
@@ -1223,14 +1222,21 @@ class TestIbl(TestCase):
     def _run_extraction(self, name, templates, page, descriptor, expected_output):
         self.trace = None
         template_pages = [HtmlPage(None, {}, t) for t in templates]
+        # extracts with trace enabled in order to generate traceback
         extractor = InstanceBasedLearningExtractor([(t, descriptor) for t in template_pages], True)
         actual_output, _ = extractor.extract(HtmlPage(None, {}, page))
-        if not actual_output:
+        if actual_output is not None:
+            actual_output = actual_output[0]
+            self.trace = ["Extractor:\n%s" % extractor] + actual_output.pop('trace')
+        # extracts again with trace disabled in order to get the pure output
+        extractor = InstanceBasedLearningExtractor([(t, descriptor) for t in template_pages])
+        actual_output, _ = extractor.extract(HtmlPage(None, {}, page))
+        if actual_output is None:
             if expected_output is None:
                 return
             assert False, "failed to extract data for test '%s'" % name
-        actual_output = actual_output[0]
-        self.trace = ["Extractor:\n%s" % extractor] + actual_output.pop('trace', [])
+        else:
+            actual_output = actual_output[0]
         expected_names = set(expected_output.keys())
         actual_names = set(actual_output.keys())
         
