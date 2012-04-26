@@ -960,6 +960,10 @@ SAMPLE_DESCRIPTOR3 = ItemDescriptor('test',
         'item test',
         [A('phone', 'phone number', lambda x: contains_any_numbers(x.text_content))])
 
+SAMPLE_DESCRIPTOR4 =  ItemDescriptor('test', 
+        'item test, removes tags from description attribute',
+        [A('description', 'description field without tags', lambda x: x.text_content)])
+
 # A list of (test name, [templates], page, extractors, expected_result)
 TEST_DATA = [
     # extract from a similar page
@@ -1047,6 +1051,14 @@ TEST_DATA = [
     # ignored regions
     (
     'ignored_regions', [ANNOTATED_PAGE8], EXTRACT_PAGE8, DEFAULT_DESCRIPTOR,
+          {
+             'description': [u'\n A very nice product for all intelligent people \n \n'],
+             'price': [u'\n12.00\n(VAT exc.)'],
+          }
+    ),
+    # ignored regions and text content extraction
+    (
+    'ignored_regions', [ANNOTATED_PAGE8], EXTRACT_PAGE8, SAMPLE_DESCRIPTOR4,
           {
              'description': [u'\n A very nice product for all intelligent people \n \n'],
              'price': [u'\n12.00\n(VAT exc.)'],
