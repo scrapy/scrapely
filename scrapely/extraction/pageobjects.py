@@ -7,7 +7,7 @@ and annotations) used in the instance based learning algorithm.
 from itertools import chain
 from numpy import array, ndarray
 
-from scrapely.htmlpage import HtmlTagType, HtmlPageRegion
+from scrapely.htmlpage import HtmlTagType, HtmlPageRegion, HtmlPageParsedRegion
 
 class TokenType(HtmlTagType):
     """constants for token types"""
@@ -82,7 +82,7 @@ class PageRegion(object):
     def __repr__(self):
         return str(self)
 
-class FragmentedHtmlPageRegion(HtmlPageRegion):
+class FragmentedHtmlPageRegion(HtmlPageParsedRegion, HtmlPageRegion):
     """An HtmlPageRegion consisting of possibly non-contiguous sub-regions"""
     def __new__(cls, htmlpage, regions):
         text = u''.join(regions)
@@ -95,11 +95,7 @@ class FragmentedHtmlPageRegion(HtmlPageRegion):
     @property
     def parsed_fragments(self):
         return chain(*(r.parsed_fragments for r in self.regions))
-
-    @property
-    def text_content(self):
-        return chain(*(r.text_content for r in self.regions))
-
+        
 class Page(object):
     """Basic representation of a page. This consists of a reference to a
     dictionary of tokens and an array of raw token ids
