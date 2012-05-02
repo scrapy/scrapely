@@ -47,7 +47,7 @@ to scrape from there (note that all keys and values in the data you pass must
 be strings)::
 
     >>> url1 = 'http://pypi.python.org/pypi/w3lib'
-    >>> data = {'name': 'w3lib 1.0', 'author': 'Scrapy project', 'description': 'Library of web-related functions'}
+    >>> data = {'name': 'w3lib 1.1', 'author': 'Scrapy project', 'description': 'Library of web-related functions'}
     >>> s.train(url1, data)
 
 Finally, tell the scraper to scrape any other similar page and it will return
@@ -101,27 +101,27 @@ To list available templates from a scraper::
 
 To add a new annotation, you usually test the selection criteria first::
 
-    scrapely> a 0 w3lib 1.0
-    [0] u'<a href="/pypi/w3lib/1.0">w3lib 1.0</a>'
-    [1] u'<h1>w3lib 1.0</h1>'
-    [2] u'<title>Python Package Index : w3lib 1.0</title>'
+    scrapely> a 0 w3lib 1.1
+    [0] u'<a href="/pypi/w3lib/1.1">w3lib 1.1</a>'
+    [1] u'<h1>w3lib 1.1</h1>'
+    [2] u'<title>Python Package Index : w3lib 1.1</title>'
     
 You can refine by position. To take the one in position [1]::
 
-    scrapely> a 0 w3lib 1.0 -n 1
-    [0] u'<h1>w3lib 1.0</h1>'
+    scrapely> a 0 w3lib 1.1 -n 1
+    [0] u'<h1>w3lib 1.1</h1>'
 
 To annotate some fields on the template::
 
-    scrapely> a 0 w3lib 1.0 -n 1 -f name
-    [new] (name) u'<h1>w3lib 1.0</h1>'
+    scrapely> a 0 w3lib 1.1 -n 1 -f name
+    [new] (name) u'<h1>w3lib 1.1</h1>'
     scrapely> a 0 Scrapy project -n 0 -f author
     [new] u'<span>Scrapy project</span>'
 
 To list annotations on a template::
 
     scrapely> al 0
-    [0-0] (name) u'<h1>w3lib 1.0</h1>'
+    [0-0] (name) u'<h1>w3lib 1.1</h1>'
     [0-1] (author) u'<span>Scrapy project</span>'
 
 To scrape another similar page with the already added templates::
