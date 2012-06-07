@@ -46,7 +46,7 @@ Then, proceed to train the scraper by adding some page and the data you expect
 to scrape from there (note that all keys and values in the data you pass must
 be strings)::
 
-    >>> url1 = 'http://pypi.python.org/pypi/w3lib'
+    >>> url1 = 'http://pypi.python.org/pypi/w3lib/1.1'
     >>> data = {'name': 'w3lib 1.1', 'author': 'Scrapy project', 'description': 'Library of web-related functions'}
     >>> s.train(url1, data)
 
