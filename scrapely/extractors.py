@@ -99,6 +99,23 @@ def text(region):
     text = u''.join(chunks)
     return _WS.sub(u' ', text).strip()
 
+class SafeTableStructChecker:
+    struct = ("table", "tbody", "tr", "td")
+
+    def __init__(self, allowed_tags, replace_tags, tags_to_purge):
+        self.struct = tuple([replace_tags.get(s, s) for s in self.struct if s not in tags_to_purge and s in allowed_tags])
+        self.stack = []
+
+    def check_open(self, tag):
+        if tag.tag in self.struct:
+            for t in self.struct:
+                if t == tag.tag:
+                    break
+                if t not in self.stack:
+                    self.stack.append(t)
+                    yield t
+            self.stack.append(tag.tag)
+    
 def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     tags_to_purge=_TAGS_TO_PURGE):
     """Creates an HTML subset, using a whitelist of HTML tags.
@@ -141,15 +158,35 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     >>> t(u'<p>test <i><br/><b>test</p>')
     u'<p>test <em><br/><strong>test</strong></em></p>'
 
+    Safely enclose table elements inside <table> tags
+    >>> t(u'<span>pre text</span><tr><td>hello world</td></tr>')
+    u'pre text<table><tbody><tr><td>hello world</td></tr></tbody></table>'
+
+    But don't break correct cases
+    >>> t(u'<span>pre text</span><table><tr><td>hello world</td></tr></table>')
+    u'pre text<table><tbody><tr><td>hello world</td></tr></tbody></table>'
+
+    Test other table combinations
+    >>> t(u'<span>pre text</span><tr><td>hello <i>world</td></tr>')
+    u'pre text<table><tbody><tr><td>hello <em>world</em></td></tr></tbody></table>'
+
+    >>> t(u'<span>pre text</span><tr><td>hello</td><td>my <b>world!</td></tr>')
+    u'pre text<table><tbody><tr><td>hello</td><td>my <strong>world!</strong></td></tr></tbody></table>'
     """
     tagstack = []
+    table_checker = SafeTableStructChecker(allowed_tags, replace_tags, tags_to_purge)
     def _process_tag(tag):
         tagstr = replace_tags.get(tag.tag, tag.tag)
         if tagstr not in allowed_tags:
             return
         if tag.tag_type == HtmlTagType.OPEN_TAG:
+            text = ""
+            for prefix in table_checker.check_open(tag):
+                text += u"<%s>" % prefix
+                tagstack.append(prefix)
+            text += u"<%s>" % tagstr
             tagstack.append(tagstr)
-            return u"<%s>" % tagstr
+            return text
         elif tag.tag_type == HtmlTagType.CLOSE_TAG:
             try:
                 last = tagstack.pop()
@@ -170,6 +207,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     chunks = list(_process_markup(region, lambda text: text, 
         _process_tag, tags_to_purge)) + ["</%s>" % t for t in reversed(tagstack)]
     return u''.join(chunks).strip()
+
 
 def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
     fragments = getattr(region, 'parsed_fragments', None)
