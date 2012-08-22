@@ -5,7 +5,7 @@ import os
 from unittest import TestCase
 
 from scrapely.tests import iter_samples
-from scrapely.htmlpage import parse_html, HtmlTag, HtmlDataFragment
+from scrapely.htmlpage import parse_html, HtmlTag, HtmlDataFragment, HtmlPage
 from scrapely.tests.test_htmlpage_data import *
 
 def _encode_element(el):
@@ -135,3 +135,6 @@ class TestParseHtml(TestCase):
         parsed = [_decode_element(d) for d in PARSED9]
         self._test_sample(PAGE9, parsed)
 
+    def test_empty_subregion(self):
+        htmlpage = HtmlPage(body=u"")
+        self.assertEqual(htmlpage.subregion(), u"")

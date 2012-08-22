@@ -133,9 +133,11 @@ class HtmlPageParsedRegion(HtmlPageRegion):
     fragments contained within this region
     """
     def __new__(cls, htmlpage, start_index, end_index):
-        text_start = htmlpage.parsed_body[start_index].start
-        text_end = htmlpage.parsed_body[end_index or -1].end
-        text = htmlpage.body[text_start:text_end]
+        text = htmlpage.body
+        if text:
+            text_start = htmlpage.parsed_body[start_index].start
+            text_end = htmlpage.parsed_body[end_index or -1].end
+            text = htmlpage.body[text_start:text_end]
         return HtmlPageRegion.__new__(cls, htmlpage, text)
 
     def __init__(self, htmlpage, start_index, end_index):
