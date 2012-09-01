@@ -201,7 +201,7 @@ class RepeatedDataExtractor(object):
         self.annotation = copy.copy(self.extractor.annotation)
         self.annotation.end_index = extractors[-1].annotation.end_index
 
-    def extract(self, page, start_index, end_index, ignored_regions, **kwargs):
+    def extract(self, page, start_index, end_index, ignored_regions=None, **kwargs):
         """repeatedly find regions bounded by the repeated 
         prefix and suffix and extract them
         """
@@ -328,7 +328,7 @@ class RecordExtractor(object):
         start_index = min(e.annotation.start_index for e in extractors)
         end_index = max(e.annotation.end_index for e in extractors)
         self.annotation = AnnotationTag(start_index, end_index)
-    
+
     def extract(self, page, start_index=0, end_index=None, ignored_regions=None, **kwargs):
         """extract data from an extraction page
         
@@ -357,7 +357,7 @@ class RecordExtractor(object):
         items += variant_records
         return [_attrs2dict(items)]
     
-    def _doextract(self, page, region_elements, start_index, end_index, nested_regions=None, ignored_regions=None, **kwargs):
+    def _doextract(self, page, region_elements, start_index, end_index, nested_regions=None, ignored_regions=None, use_region=False, **kwargs):
         """Carry out extraction of records using the given annotations
         in the page tokens bounded by start_index and end_index
         """
@@ -380,16 +380,18 @@ class RecordExtractor(object):
         # end_index is inclusive, but similar_region treats it as exclusive
         end_region = None if end_index is None else end_index + 1
         labelled = _labelled(first_region)
+        if use_region:
+            kwargs["region"] = first_region
         score, pindex, sindex = \
             similar_region(page.page_tokens, self.template_tokens,
-                labelled, start_index, end_region, **kwargs)
+                labelled, start_index, end_region, target=page, **kwargs)
         if score > 0:
             if isinstance(labelled, AnnotationTag):
                 similar_ignored_regions = []
                 start = pindex
                 for i in ignored_regions:
                     s, p, e = similar_region(page.page_tokens, self.template_tokens, \
-                              i, start, sindex, **kwargs)
+                              i, start, sindex, target=page, **kwargs)
                     if s > 0:
                         similar_ignored_regions.append(PageRegion(p, e))
                         start = e or start
@@ -404,15 +406,20 @@ class RecordExtractor(object):
             if following_regions:
                 _, _, following_data = self._doextract(page, following_regions, sindex or start_index, end_index, **kwargs)
                 extracted_data += following_data
-        
         elif following_regions:
             end_index, _, following_data = self._doextract(page, following_regions, start_index, end_index, **kwargs)
             if end_index is not None:
                 pindex, sindex, extracted_data = self._doextract(page, [first_region], start_index, end_index - 1, nested_regions, ignored_regions, **kwargs)
                 extracted_data += following_data
+            elif not use_region:
+                pindex, sindex, extracted_data = self._doextract(page, [first_region], start_index, end_index, use_region=True, **kwargs)
+                extracted_data += following_data
         elif nested_regions:
             _, _, nested_data = self._doextract(page, nested_regions, start_index, end_index, **kwargs)
             extracted_data += nested_data
+        elif not use_region:
+            pindex, sindex, retry_data = self._doextract(page, [first_region], start_index, end_index, use_region=True, **kwargs)
+            extracted_data += retry_data
         return pindex, sindex, extracted_data
                 
     @classmethod
@@ -513,7 +520,7 @@ extracted
                 self.tprefix, self.annotation, self.tsuffix, [r for r in ret if 'trace' not in r])
         return pre_summary, post_summary
 
-    def extract(self, page, start, end, ignored_regions, **kwargs):
+    def extract(self, page, start, end, ignored_regions=None, **kwargs):
         ret = self.traced.extract(page, start, end, ignored_regions, **kwargs)
         if not ret:
             return []

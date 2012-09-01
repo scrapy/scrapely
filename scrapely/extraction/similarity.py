@@ -39,12 +39,18 @@ def common_prefix(*sequences):
     return prefix
 
 def longest_unique_subsequence(to_search, subsequence, range_start=0, 
-        range_end=None):
+        range_end=None, validator=None):
     """Find the longest unique subsequence of items in a list or array.  This
     searches the to_search list or array looking for the longest overlapping
     match with subsequence. If the largest match is unique (there is no other
     match of equivalent length), the index and length of match is returned.  If
     there is no match, (None, None) is returned.
+
+    If the largest match is not unique, it will use the validator function to decide.
+    This validator takes as only argument, the index of the candidate in the sequence,
+    and will be tried on each longest candidate until it returns the first true value.
+    The first longest candidate for which the validator returns true, will be picked
+    and returned as a match.
 
     Please see section 3.2 of Extracting Web Data Using Instance-Based
     Learning by Yanhong Zhai and Bing Liu
@@ -54,8 +60,19 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
     >>> longest_unique_subsequence(to_search, [2, 4, 3])
     (2, 3)
     
-    When there are two equally long subsequences, it does not generate a match
+    When there are two (or more) equally long subsequences, it does not generate a match
     >>> longest_unique_subsequence(to_search, [3, 2])
+    (None, None)
+
+    Unless a validator function be provided
+    >>> validator = lambda x: to_search[x + 2] == 5
+    >>> longest_unique_subsequence(to_search, [3, 2], validator=validator)
+    (4, 2)
+    >>> validator = lambda x: to_search[x - 1] == 6
+    >>> longest_unique_subsequence(to_search, [3, 2], validator=validator)
+    (1, 2)
+    >>> validator = lambda x: to_search[x - 1] == 3
+    >>> longest_unique_subsequence(to_search, [3, 2], validator=validator)
     (None, None)
 
     range_start and range_end specify a range in which the match must begin
@@ -70,12 +87,19 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
     
     # the comparison to startval ensures only matches of length >= 1 and 
     # reduces the number of calls to the common_length function
-    matches = ((i, common_prefix_length(to_search[i:], subsequence)) \
-        for i in xrange(range_start, range_end) if startval == to_search[i])
+    matches = [(i, common_prefix_length(to_search[i:], subsequence)) \
+        for i in xrange(range_start, range_end) if startval == to_search[i]]
     best2 = nlargest(2, matches, key=itemgetter(1))
     # if there is a single unique best match, return that
     if len(best2) == 1 or len(best2) == 2 and best2[0][1] != best2[1][1]:
         return best2[0]
+    # if not, and there are multiple candidates, try to choose with help of validator
+    elif best2 and validator is not None:
+        candidates = filter(lambda x:x[1]==best2[0][1], matches)
+        for candidate in candidates: 
+            extracted = validator(candidate[0])
+            if extracted:
+                return candidate
     return None, None
 
 def similar_region(extracted_tokens, template_tokens, labelled_region, 
@@ -93,6 +117,9 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
 
     start_index and end_index specify a range in which the match must begin
     """
+    region = kwargs.pop("region", None)
+    page = kwargs.pop("target")
+
     data_length = len(extracted_tokens)
     if range_end is None:
         range_end = data_length
@@ -100,13 +127,12 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     # reverse order
     reverse_prefix = template_tokens[labelled_region.start_index::-1]
     reverse_tokens = extracted_tokens[::-1]
+    validator = (lambda x: region.extract(page, data_length - x - 1, range_end - 1)) if region else None
     (rpi, pscore) = longest_unique_subsequence(reverse_tokens, reverse_prefix,
-            data_length - range_end, data_length - range_start)
-
+            data_length - range_end, data_length - range_start, validator)
     # None means nothing extracted. Index 0 means there cannot be a suffix.
     if not rpi:
         return 0, None, None
-    
     # convert to an index from the start instead of in reverse
     prefix_index = len(extracted_tokens) - rpi - 1
  
@@ -114,13 +140,13 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
         return pscore, prefix_index, None
     elif kwargs.get("suffix_max_length", None) == 0:
         return pscore, prefix_index, range_start + 1
-
+ 
     suffix = template_tokens[labelled_region.end_index:]
-
+    validator = (lambda x: region.extract(page, prefix_index, x)) if region else None
     # if it's not a paired tag, use the best match between prefix & suffix
     if labelled_region.start_index == labelled_region.end_index:
         (match_index, sscore) = longest_unique_subsequence(extracted_tokens,
-            suffix, prefix_index, range_end)
+            suffix, prefix_index, range_end, validator)
         if match_index == prefix_index:
             return (pscore + sscore, prefix_index, match_index)
         elif pscore > sscore:
@@ -132,7 +158,7 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     # calculate the suffix match on the tokens following the prefix. We could
     # consider the whole page and require a good match.
     (match_index, sscore) = longest_unique_subsequence(extracted_tokens,
-            suffix, prefix_index + 1, range_end)
+            suffix, prefix_index + 1, range_end, validator)
     if match_index is None:
         return 0, None, None
     return (pscore + sscore, prefix_index, match_index)
