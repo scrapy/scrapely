@@ -178,6 +178,18 @@ LABELLED_PAGE11 = u"""
 </body></html>
 """
 
+LABELLED_PAGE12 = u"""
+<head>
+<meta name="description" content="This is the description" data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: false, &quot;text-content&quot;: &quot;text-content:&quot;, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}" />
+</head>
+"""
+
+LABELLED_PAGE13 = u"""
+<head>
+<meta name="description" content="This is the description" data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: false, &quot;text-content&quot;: &quot;text-content&quot;, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;, &quot;text-content&quot;: &quot;name&quot;}}">This is the name</meta>
+</head>
+"""
+
 def _parse_page(parser_class, pagetext):
     htmlpage = HtmlPage(None, {}, pagetext)
     parser = parser_class(TokenDict())
@@ -303,6 +315,22 @@ class TestPageParsing(TestCase):
         """
         annotations = _parse_page(TemplatePageParser, LABELLED_PAGE11).annotations
         self.assertEqual(annotations[0].variant_id, 1)
+
+    def test_content_attribute(self):
+        """
+        Test that attribute with name content is unambiguously interpreted
+        """
+        annotations = _parse_page(TemplatePageParser, LABELLED_PAGE12).annotations
+        self.assertEqual(annotations[0].surrounds_attribute, None)
+        self.assertEqual(annotations[0].tag_attributes, [("content", "description")])
+
+    def test_content_and_content_attribute(self):
+        """
+        Test that attribute with name content and the content itself are unambiguously interpreted
+        """
+        annotations = _parse_page(TemplatePageParser, LABELLED_PAGE13).annotations
+        self.assertEqual(annotations[0].surrounds_attribute, 'name')
+        self.assertEqual(annotations[0].tag_attributes, [("content", "description")])
 
     def test_site_pages(self):
         """
