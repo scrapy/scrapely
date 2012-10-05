@@ -125,8 +125,9 @@ class TemplatePageParser(InstanceLearningParser):
                 
             annotation = AnnotationTag(self.next_tag_index, self.next_tag_index + 1)
             attribute_annotations = jannotation.pop('annotations', {}).items()
+            content_key = jannotation.pop('text-content', 'content')
             for extract_attribute, tag_value in attribute_annotations:
-                if extract_attribute == 'content':
+                if extract_attribute == content_key:
                     annotation.surrounds_attribute = tag_value
                     self.unpairedtag_stack.append(annotation)
                 else:
@@ -200,8 +201,9 @@ class TemplatePageParser(InstanceLearningParser):
         self.extra_required_attrs.extend(jannotation.pop('required', []))
         
         attribute_annotations = jannotation.pop('annotations', {}).items()
+        content_key = jannotation.pop('text-content', 'content')
         for extract_attribute, tag_value in attribute_annotations:
-            if extract_attribute == 'content':
+            if extract_attribute == content_key:
                 annotation.surrounds_attribute = tag_value
             else:
                 annotation.tag_attributes.append((extract_attribute, tag_value))
