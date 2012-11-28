@@ -936,6 +936,29 @@ EXTRACT_PAGE30d = u"""
 <div><span><script>var myvar= 10;</script></span></div>
 """
 
+ANNOTATED_PAGE31 = u"""
+<html><body>
+<div>
+<span data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">Product name</span>
+<div><p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">60.00</p>
+<span data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">description</span>
+<span data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;features&quot;}}">features</span>
+<img data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;src&quot;: &quot;image_urls&quot;}}" src="image.jpg" />
+<table></table>
+</div></div>
+</body></html>
+"""
+
+EXTRACT_PAGE31 = u"""
+<html><body>
+<div>
+<span>Product name</span>
+<div><p>60.00</p>
+<img src="http://example.com/image.jpg" />
+<table></table>
+</div></div>
+</body></html>
+"""
 
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
         'item test, removes tags from description attribute',
@@ -946,6 +969,15 @@ SAMPLE_DESCRIPTOR1 = ItemDescriptor('test', 'product test', [
             A('price', "Product price, including any discounts and tax or vat", 
                 contains_any_numbers, True),    
             A('image_urls', "URLs for one or more images", image_url, True),
+            A('description', "The full description of the product", html),
+            ]
+        )
+
+SAMPLE_DESCRIPTOR1a = ItemDescriptor('test', 'product test', [
+            A('name', "Product name"),
+            A('price', "Product price, including any discounts and tax or vat", 
+                contains_any_numbers),    
+            A('image_urls', "URLs for one or more images", image_url),
             A('description', "The full description of the product", html),
             ]
         )
@@ -1227,6 +1259,13 @@ TEST_DATA = [
     ('avoid false positives on scripts', [ANNOTATED_PAGE30], EXTRACT_PAGE30d, SAMPLE_DESCRIPTOR3,
         None
     ),
+    ('correctly extract regions that follows more than one consecutive misses', [ANNOTATED_PAGE31], EXTRACT_PAGE31, SAMPLE_DESCRIPTOR1a,
+        {
+            u'price': [u'60.00'],
+            u'name': [u'Product name'],
+            u'image_urls': [['http://example.com/image.jpg']]
+        }
+    )
 ]
 
 class TestIbl(TestCase):
