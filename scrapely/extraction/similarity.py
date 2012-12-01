@@ -133,6 +133,11 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     # consider the whole page and require a good match.
     (match_index, sscore) = longest_unique_subsequence(extracted_tokens,
             suffix, prefix_index + 1, range_end)
+    if match_index is None and range_end < data_length:
+        # do a second try with range end increased by one. This help in immediate
+        # consecutive regions that shares a token
+        (match_index, sscore) = longest_unique_subsequence(extracted_tokens,
+            suffix, prefix_index + 1, range_end + 1)
     if match_index is None:
         return 0, None, None
     return (pscore + sscore, prefix_index, match_index)
