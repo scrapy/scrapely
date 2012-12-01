@@ -960,6 +960,35 @@ EXTRACT_PAGE31 = u"""
 </body></html>
 """
 
+ANNOTATED_PAGE32 = u"""
+<h3 data-scrapy-annotate="{&quot;required&quot;: [&quot;_sticky1&quot;], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;_sticky1&quot;}}">
+Primary Office Location</h3>
+<p data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;orgname&quot;}, &quot;generated&quot;: false}">
+Children\'s Hospital Colorado Child Health Clinic<br/>
+13123 E. 16th Avenue<br/>B032<br/>Aurora,&nbsp;CO&nbsp;80045-7106<br/>
+<a href="http://www.mapquest.com/maps? &city=Aurora&state=CO&address=13123 E. 16th Avenue+B032+&zipcode=80045-7106" target="_blank">
+View Map / Driving Directions</a><br/>
+<p data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;phone_number&quot;}, &quot;generated&quot;: false}">
+Ph: 720-777-2740<br/>Fax: 720-777-7149
+<h3>Locations</h3>
+<ul><li><a href="/about/locations/locationsdetails.aspx?locationID=472">Children\'s Hospital Colorado</a></li></ul>
+</p>\r\n\t\t\t</div>\r\n\t\t\t
+<h2>Medical Education and Training</h2>\r\n\t\t\t
+"""
+
+EXTRACT_PAGE32 = u"""
+<h3>Primary Office Location</h3>
+<p>Colorado Allergy and Asthma Centers-Lowry<br />
+125 Rampart Way<br />Ste. 100<br />
+Denver,&nbsp;CO&nbsp;80230-6405<br />
+<a href="http://www.mapquest.com/maps? &city=Denver&state=CO&address=125 Rampart Way+Ste. 100+&zipcode=80230-6405" target="_blank">
+View Map / Driving Directions</a><br />
+<p>Ph: 720-858-7600<br />Fax: 720-858-7605</p>\r\n\t\t\t
+</div>\r\n\t\t\t
+<h2>Medical Education and Training</h2>\r\n\t\t\t
+<p><br /><br /><br />
+"""
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
         'item test, removes tags from description attribute',
         [A('description', 'description field without tags', notags)])
@@ -1265,7 +1294,16 @@ TEST_DATA = [
             u'name': [u'Product name'],
             u'image_urls': [['http://example.com/image.jpg']]
         }
-    )
+    ),
+    ('Test extraction when in two immediate consecutive annotations that shares the same token, the first one is not matched in first \
+    instance (but must match after the second matched)',
+            [ANNOTATED_PAGE32], EXTRACT_PAGE32, DEFAULT_DESCRIPTOR,
+        {
+            u'_sticky1': [u'Primary Office Location'],
+            u'orgname': [u'Colorado Allergy and Asthma Centers-Lowry<br />\n125 Rampart Way<br />Ste. 100<br />\nDenver,&nbsp;CO&nbsp;80230-6405<br />\n<a href="http://www.mapquest.com/maps? &city=Denver&state=CO&address=125 Rampart Way+Ste. 100+&zipcode=80230-6405" target="_blank">\nView Map / Driving Directions</a><br />\n'],
+            u'phone_number': [u'Ph: 720-858-7600<br />Fax: 720-858-7605'], 
+        },
+    ),
 ]
 
 class TestIbl(TestCase):
