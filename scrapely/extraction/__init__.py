@@ -26,7 +26,7 @@ class InstanceBasedLearningExtractor(object):
     extract data from web pages.
     """
 
-    def __init__(self, td_pairs, trace=False):
+    def __init__(self, td_pairs, trace=False, apply_extrarequired=True):
         """Initialise this extractor
 
         td_pairs is a list of (template, item descriptor) pairs.
@@ -54,7 +54,7 @@ class InstanceBasedLearningExtractor(object):
         modified_parsed_tdpairs = []
         # apply extra required attributes
         for parsed, (t, descriptor) in parsed_tdpairs:
-            if descriptor is not None:
+            if descriptor is not None and apply_extrarequired:
                 descriptor = descriptor.copy()
                 for attr in parsed.extra_required_attrs:
                     descriptor._required_attributes.append(attr)
