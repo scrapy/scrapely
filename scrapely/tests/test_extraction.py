@@ -960,6 +960,24 @@ EXTRACT_PAGE31 = u"""
 </body></html>
 """
 
+# repeated elements with ignored region only in one of them
+ANNOTATED_PAGE32 = u"""
+<ul>
+<li data-scrapy-annotate="{&quot;variant&quot;: 0, 
+    &quot;annotations&quot;: {&quot;content&quot;: &quot;features&quot;}}">feature1<span data-scrapy-ignore="true"> ignore this</span></li>
+<li data-scrapy-annotate="{&quot;variant&quot;: 0, 
+    &quot;annotations&quot;: {&quot;content&quot;: &quot;features&quot;}}">feature2</li>
+</ul>
+"""
+
+EXTRACT_PAGE32 = u"""
+<ul>
+<li>feature1<span> ignore this</span></li>
+<li>feature2</li>
+<li>feature3</li>
+</ul>
+"""
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test', 
         'item test, removes tags from description attribute',
         [A('description', 'description field without tags', notags)])
@@ -1265,7 +1283,10 @@ TEST_DATA = [
             u'name': [u'Product name'],
             u'image_urls': [['http://example.com/image.jpg']]
         }
-    )
+    ),
+    ('single ignored region inside a repeated structure', [ANNOTATED_PAGE32], EXTRACT_PAGE32, DEFAULT_DESCRIPTOR,
+        {'features': [u'feature1', u'feature2', u'feature3']}
+    ),
 ]
 
 class TestIbl(TestCase):

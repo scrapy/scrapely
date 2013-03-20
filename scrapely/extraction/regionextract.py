@@ -107,13 +107,9 @@ class BasicTypeExtractor(object):
             self._extract_attribute(page, start_index, end_index, ignored_regions)
 
     def _extract_content(self, extraction_page, start_index, end_index, ignored_regions=None, **kwargs):
-        # extract content between annotation indexes
-        if not ignored_regions:
-            region = extraction_page.htmlpage_region_inside(start_index, end_index)
-        else:
-            # assumes ignored_regions are completely contained within start and end index
-            assert (start_index <= ignored_regions[0].start_index and 
-                end_index >= ignored_regions[-1].end_index)
+        """extract content between annotation indexes"""
+        if ignored_regions and (start_index <= ignored_regions[0].start_index and
+                    end_index >= ignored_regions[-1].end_index):
             starts = [start_index] + [i.end_index for i in ignored_regions if i.end_index is not None]
             ends = [i.start_index for i in ignored_regions]
             if starts[-1] is not None:
@@ -123,6 +119,8 @@ class BasicTypeExtractor(object):
                 included_regions.next()
             regions = starmap(extraction_page.htmlpage_region_inside, included_regions)
             region = FragmentedHtmlPageRegion(extraction_page.htmlpage, list(regions))
+        else:
+            region = extraction_page.htmlpage_region_inside(start_index, end_index)
         validated = self.content_validate(region)
         return [(self.annotation.surrounds_attribute, validated)] if validated else []
     
