@@ -162,6 +162,15 @@ Tests
 `nose`_ is the preferred way to run tests. Just run: ``nosetests`` from the
 root directory.
 
+Support
+=======
+
+* Mailing list: https://groups.google.com/forum/#!forum/scrapely
+* IRC: `scrapy@freenode`_
+
+Scrapely is created and maintained by the Scrapy group, so you can get help
+through the usual support channels described in the `Scrapy community`_ page.
+
 Architecture
 ============
 
@@ -205,3 +214,5 @@ Scrapely library is licensed under the BSD license.
 .. _slybot: https://github.com/scrapy/slybot
 .. _selectors: http://doc.scrapy.org/en/latest/topics/selectors.html
 .. _nose: http://readthedocs.org/docs/nose/en/latest/
+.. _scrapy@freenode: http://webchat.freenode.net/?channels=scrapy
+.. _Scrapy community: http://scrapy.org/community/
