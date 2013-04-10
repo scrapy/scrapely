@@ -138,3 +138,10 @@ class TestParseHtml(TestCase):
     def test_empty_subregion(self):
         htmlpage = HtmlPage(body=u"")
         self.assertEqual(htmlpage.subregion(), u"")
+
+    def test_ignore_xml_declaration(self):
+        """Ignore xml declarations inside html"""
+        parsed = list(parse_html(u"<p>The text</p><?xml:namespace blabla/><p>is here</p>"))
+        self.assertFalse(parsed[3].is_text_content)
+
+
