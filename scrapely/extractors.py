@@ -47,7 +47,6 @@ _TAGS_TO_REPLACE = {
     'b' : 'strong',
     'i' : 'em',
 }
-
 # tags whoose content will be completely removed (recursively)
 # (overrides tags_to_keep and tags_to_replace)
 _TAGS_TO_PURGE = ('script', 'img', 'input')
@@ -91,12 +90,11 @@ def text(region):
     HTML entities are converted to text
     >>> t(u"only &pound;42")
     u'only \\xa342'
+
+    >>> t(u"<p>The text</p><?xml:namespace blabla/><p>is here</p>")
+    u'The text is here'
     """
-    chunks = _process_markup(region, 
-        lambda text: remove_entities(text, encoding=region.htmlpage.encoding),
-        lambda tag: u' '
-    )
-    text = u''.join(chunks)
+    text = remove_entities(region.text_content, encoding=region.htmlpage.encoding)
     return _WS.sub(u' ', text).strip()
 
 def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
