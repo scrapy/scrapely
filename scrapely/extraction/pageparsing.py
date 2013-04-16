@@ -66,7 +66,14 @@ class InstanceLearningParser(object):
         pass
 
 _END_UNPAIREDTAG_TAGS = ["form", "div", "p", "table", "tr", "td"]
-
+_AUTO_CLOSE_TAGS_ON_OPEN = {
+    # the given keys closes the tags in the list
+    "p": ["p"],
+    "option": ["option"],
+}
+_AUTO_CLOSE_TAGS_ON_CLOSE = {
+    "select": ["option"],
+}
 class TemplatePageParser(InstanceLearningParser):
     """Template parsing for instance based learning algorithm"""
 
@@ -169,19 +176,15 @@ class TemplatePageParser(InstanceLearningParser):
                 self._close_unpaired_tag()
             else:
                 self.unpairedtag_stack.append(html_tag.tag)
-            
-        # can't be a p inside another p. Also, an open p element closes
-        # a previous open p element.
-        if html_tag.tag == "p" and html_tag.tag in self.labelled_tag_stacks:
-            annotation = self.labelled_tag_stacks.pop(html_tag.tag)[0]
-            annotation.end_index = self.next_tag_index
-            self.annotations.append(annotation)
-                
+        
+        tagname = replacement or self._update_replacement_stack(html_tag)
+        self._handle_unclosed_tags(tagname, _AUTO_CLOSE_TAGS_ON_OPEN)
+               
         jannotation = self._read_template_annotation(html_tag)
         if not jannotation:
-            if html_tag.tag in self.labelled_tag_stacks:
+            if tagname in self.labelled_tag_stacks:
                 # add this tag to the stack to match correct end tag
-                self.labelled_tag_stacks[html_tag.tag].append(None)
+                self.labelled_tag_stacks[tagname].append(None)
             self.next_tag_index += 1
             return
         
@@ -227,7 +230,7 @@ class TemplatePageParser(InstanceLearningParser):
         
         # look for a closing tag if the content is important
         if annotation.surrounds_attribute:
-            self.labelled_tag_stacks[html_tag.tag].append(annotation)
+            self.labelled_tag_stacks[tagname].append(annotation)
         else:
             annotation.end_index = annotation.start_index + 1
             self.annotations.append(annotation)
@@ -239,6 +242,7 @@ class TemplatePageParser(InstanceLearningParser):
                 self.unpairedtag_stack.pop()
             else:
                 self._close_unpaired_tag()
+
         ignored_tags = self.ignored_tag_stacks.get(html_tag.tag)
         if ignored_tags is not None:
             tag = ignored_tags.pop()
@@ -250,15 +254,10 @@ class TemplatePageParser(InstanceLearningParser):
             if len(ignored_tags) == 0:
                 del self.ignored_tag_stacks[html_tag.tag]
 
-        if html_tag.tag in self.replacement_stacks:
-            replacement = self.replacement_stacks[html_tag.tag].pop()
-            if replacement:
-                self.token_list.pop()
-                self._add_token(replacement, html_tag.tag_type, html_tag.start, html_tag.end)
-            if len(self.replacement_stacks[html_tag.tag]) == 0:
-                del self.replacement_stacks[html_tag.tag]
+        tagname = self._update_replacement_stack(html_tag)
+        self._handle_unclosed_tags(tagname, _AUTO_CLOSE_TAGS_ON_CLOSE)
 
-        labelled_tags = self.labelled_tag_stacks.get(html_tag.tag)
+        labelled_tags = self.labelled_tag_stacks.get(tagname)
         if labelled_tags is None:
             self.next_tag_index += 1
             return
@@ -274,12 +273,35 @@ class TemplatePageParser(InstanceLearningParser):
             else:
                 self.next_tag_index += 1
             if len(labelled_tags) == 0:
-                del self.labelled_tag_stacks[html_tag.tag]
+                del self.labelled_tag_stacks[tagname]
             if annotation.variant_id and self.variant_stack:
                 prev = self.variant_stack.pop()
                 if prev != annotation.variant_id:
                     raise ValueError("unbalanced variant annotation tags")
                     
+    def _update_replacement_stack(self, html_tag):
+        replacement = html_tag.tag
+        if html_tag.tag in self.replacement_stacks:
+            replacement = self.replacement_stacks[html_tag.tag].pop()
+            if replacement:
+                self.token_list.pop()
+                self._add_token(replacement, html_tag.tag_type, html_tag.start, html_tag.end)
+            if len(self.replacement_stacks[html_tag.tag]) == 0:
+                del self.replacement_stacks[html_tag.tag]
+        return replacement
+
+    def _handle_unclosed_tags(self, tagname, auto_close_tags):
+        """I.e. can't be a p inside another p. Also, an open p element closes
+        a previous open p element"""
+        if tagname in auto_close_tags:
+            for _close_tag in auto_close_tags[tagname]:
+                if _close_tag in self.labelled_tag_stacks:
+                    annotation = self.labelled_tag_stacks.pop(_close_tag)[0]
+                    annotation.end_index = self.next_tag_index
+                    self.annotations.append(annotation)
+                    break
+        return tagname
+
     def handle_data(self, html_data_fragment, index):
         fragment_text = self.html_page.fragment_data(html_data_fragment)
         self._process_text(fragment_text)

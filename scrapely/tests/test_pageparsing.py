@@ -117,6 +117,20 @@ LABELLED_PAGE5 = u"""
 </body></html>
 """
 
+LABELLED_PAGE5a = u"""
+<ul data-scrapy-replacement="select" name="txtvariant" class="smalltextblk">
+<li data-scrapy-replacement="option" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}, &quot;generated&quot;: false}" value="BLUE">Blue&nbsp;$9.95 - In Stock</li> 
+<li data-scrapy-replacement="option" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}, &quot;generated&quot;: false}" value="RED">Red&nbsp;$9.95 - In Stock</li>
+</ul>
+"""
+
+LABELLED_PAGE5b = u"""
+<ul data-scrapy-replacement="select" name="txtvariant" class="smalltextblk">
+<li data-scrapy-replacement="option" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}, &quot;generated&quot;: false}" value="BLUE">Blue&nbsp;$9.95 - In Stock
+<li data-scrapy-replacement="option" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}, &quot;generated&quot;: false}" value="RED">Red&nbsp;$9.95 - In Stock
+</ul>
+"""
+
 LABELLED_PAGE6 = u"""
 <html><body>
 Text A
@@ -266,6 +280,29 @@ class TestPageParsing(TestCase):
         p = _parse_page(TemplatePageParser, LABELLED_PAGE5)
         self.assertEqual(_tags(p, bool), ['<html>', '<body>', '<select>', '<option>',
                     '</option>', '<li>', '</li>', '<option>', '</option>', '</select>', '</body>', '</html>'])
+
+    def test_replacement2(self):
+        """Replacement, with annotations"""
+        p = _parse_page(TemplatePageParser, LABELLED_PAGE5a)
+        self.assertEqual(_tags(p, bool), [u'<select>', u'<option>', u'</option>', u'<option>', u'</option>', u'</select>'])
+        self.assertEqual(p.annotations[0].surrounds_attribute, 'price')
+        self.assertEqual(p.annotations[0].start_index, 1)
+        self.assertEqual(p.annotations[0].end_index, 2)
+        self.assertEqual(p.annotations[1].surrounds_attribute, 'price')
+        self.assertEqual(p.annotations[1].start_index, 3)
+        self.assertEqual(p.annotations[1].end_index, 4)
+
+
+    def test_replacement3(self):
+        """A second case of replacement, with annotations, not closed replaced tags"""
+        p = _parse_page(TemplatePageParser, LABELLED_PAGE5b)
+        self.assertEqual(_tags(p, bool), [u'<select>', u'<option>', u'<option>', u'</select>'])
+        self.assertEqual(p.annotations[0].surrounds_attribute, 'price')
+        self.assertEqual(p.annotations[0].start_index, 1)
+        self.assertEqual(p.annotations[0].end_index, 2)
+        self.assertEqual(p.annotations[1].surrounds_attribute, 'price')
+        self.assertEqual(p.annotations[1].start_index, 2)
+        self.assertEqual(p.annotations[1].end_index, 3)
         
     def test_partial(self):
         """Test partial annotation parsing"""
