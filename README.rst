@@ -101,7 +101,7 @@ To list available templates from a scraper::
 
 To add a new annotation, you usually test the selection criteria first::
 
-    scrapely> a 0 w3lib 1.1
+    scrapely> t 0 w3lib 1.1
     [0] u'<a href="/pypi/w3lib/1.1">w3lib 1.1</a>'
     [1] u'<h1>w3lib 1.1</h1>'
     [2] u'<title>Python Package Index : w3lib 1.1</title>'

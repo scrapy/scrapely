@@ -40,7 +40,7 @@ class IblTool(cmd.Cmd):
             print "template not found: %s" % template_id
 
     def do_t(self, line):
-        """ts <template> <text> - test selection text"""
+        """t <template> <text> - test selection text"""
         template_id, criteria = line.split(' ', 1)
         t = self._load_template(template_id)
         criteria = parse_criteria(criteria)
