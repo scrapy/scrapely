@@ -106,6 +106,11 @@ To add a new annotation, you usually test the selection criteria first::
     [1] u'<h1>w3lib 1.1</h1>'
     [2] u'<title>Python Package Index : w3lib 1.1</title>'
     
+You can also quote the text, if you need to specify an arbitrary number of
+spaces, for example::
+
+    scrapely> t 0 "w3lib 1.1"
+
 You can refine by position. To take the one in position [1]::
 
     scrapely> a 0 w3lib 1.1 -n 1
