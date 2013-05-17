@@ -155,7 +155,7 @@ To install scrapely on any platform use::
 
 If you're using Ubuntu (9.10 or above), you can install scrapely from the
 Scrapy Ubuntu repos. Just add the Ubuntu repos as described here:
-http://doc.scrapy.org/topics/ubuntu.html
+http://doc.scrapy.org/en/latest/topics/ubuntu.html
 
 And then install scrapely with::
 
