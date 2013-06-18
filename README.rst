@@ -138,13 +138,14 @@ To scrape another similar page with the already added templates::
 Requirements
 ============
 
-Scrapely depends on the following libraries:
-
+* Python 2.6 or 2.7
 * numpy
 * w3lib
-* simplejson or Python 2.6+
 
-Note that Scrapely **does not** depend on `Scrapy`_ in any way.
+A couple of notes regarding dependencies:
+
+* Scrapely **does not** depend on `Scrapy`_ in any way
+* Python 3 is not supported yet (pull requests welcome!)
 
 Installation
 ============
