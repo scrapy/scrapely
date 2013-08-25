@@ -228,11 +228,11 @@ class TestPageParsing(TestCase):
         self.assertEqual(_tags(pp, closep), ['</p>', '</html>'])
     
     def _validate_annotation(self, parser, lable_region, name, start_tag, end_tag):
-        assert lable_region.surrounds_attribute == name
+        self.assertEqual(lable_region.surrounds_attribute, name)
         start_token = parser.token_list[lable_region.start_index]
-        assert parser.token_dict.token_string(start_token) == start_tag
+        self.assertEqual(parser.token_dict.token_string(start_token), start_tag)
         end_token = parser.token_list[lable_region.end_index]
-        assert parser.token_dict.token_string(end_token) == end_tag
+        self.assertEqual(parser.token_dict.token_string(end_token), end_tag)
 
     def test_template_parsing(self):
         lp = _parse_page(TemplatePageParser, LABELLED_PAGE1)
@@ -246,16 +246,16 @@ class TestPageParsing(TestCase):
     def test_extraction_page_parsing(self):
         epp = _parse_page(ExtractionPageParser, SIMPLE_PAGE)
         ep = epp.to_extraction_page()
-        assert len(ep.page_tokens) == 4
-        assert ep.htmlpage.fragment_data(ep.htmlpage_tag(0)) == '<html>'
-        assert ep.htmlpage.fragment_data(ep.htmlpage_tag(1)) == '<p some-attr="foo">'
+        self.assertEqual(len(ep.page_tokens), 4)
+        self.assertEqual(ep.htmlpage.fragment_data(ep.htmlpage_tag(0)), '<html>')
+        self.assertEqual(ep.htmlpage.fragment_data(ep.htmlpage_tag(1)), '<p some-attr="foo">')
         
-        assert ep.htmlpage_region_inside(1, 2) == 'this is a test'
-        assert ep.htmlpage_region_inside(1, 3) == 'this is a test</p> '
+        self.assertEqual(ep.htmlpage_region_inside(1, 2), 'this is a test')
+        self.assertEqual(ep.htmlpage_region_inside(1, 3), 'this is a test</p> ')
 
     def test_invalid_html(self):
         p = _parse_page(InstanceLearningParser, BROKEN_PAGE)
-        assert p
+        self.assertTrue(p)
         
     def test_ignore_region(self):
         """Test ignored regions"""
