@@ -4,7 +4,8 @@ tests for page parsing
 Page parsing effectiveness is measured through the evaluation system. These
 tests should focus on specific bits of functionality work correctly.
 """
-from functools import partial
+from unittest import TestCase
+from nose_parameterized import parameterized
 
 from scrapely.htmlpage import HtmlPage
 from scrapely.descriptor import (FieldDescriptor as A, 
@@ -1288,34 +1289,14 @@ TEST_DATA = [
     ),
 ]
 
-def _run_extraction(name, templates, page, descriptor, expected_output):
-    template_pages = [HtmlPage(None, {}, t) for t in templates]
 
-    extractor = InstanceBasedLearningExtractor([(t, descriptor) for t in template_pages])
-    actual_output, _ = extractor.extract(HtmlPage(None, {}, page))
-    if actual_output is None:
-        assert not expected_output, "failed to extract data for test '%s'" % name
-        return
-    else:
-        actual_output = actual_output[0]
-    expected_names = set(expected_output.keys())
-    actual_names = set(actual_output.keys())
-    
-    missing_in_output = filter(None, expected_names - actual_names)
-    error = "attributes '%s' were expected but were not present in test '%s'" % \
-            ("', '".join(missing_in_output), name)
-    assert not missing_in_output, error
 
-    unexpected = actual_names - expected_names
-    error = "unexpected attributes %s in test '%s'" % \
-            (', '.join(unexpected), name)
-    assert not unexpected, error
+class TestExtraction(TestCase):
+    @parameterized.expand(TEST_DATA)
+    def test_extraction(self, name, templates, page, descriptor, expected_output):
+        template_pages = [HtmlPage(None, {}, t) for t in templates]
 
-    for k, v in expected_output.items():
-        extracted = actual_output[k]
-        assert v == extracted, "in test '%s' for attribute '%s', " \
-            "expected value '%s' but got '%s'" % (name, k, v, extracted)
+        extractor = InstanceBasedLearningExtractor([(t, descriptor) for t in template_pages])
+        actual_output, _ = extractor.extract(HtmlPage(None, {}, page))
 
-def test_generator():
-    for data in TEST_DATA:
-        yield partial(_run_extraction, *data)
+        self.assertEqual(expected_output, actual_output and actual_output[0])
