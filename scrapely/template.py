@@ -1,6 +1,6 @@
 import copy
+import json
 
-from scrapely import json
 from scrapely.htmlpage import HtmlTag, HtmlTagType
 
 class AnnotationError(Exception):

@@ -3,10 +3,10 @@ Page parsing
 
 Parsing of web pages for extraction task.
 """
+import json
 from collections import defaultdict
 from numpy import array
 
-from scrapely import json
 from scrapely.htmlpage import HtmlTagType, HtmlTag, HtmlPage
 from scrapely.extraction.pageobjects import (AnnotationTag,
     TemplatePage, ExtractionPage, AnnotationText, TokenDict, FragmentedHtmlPageRegion)

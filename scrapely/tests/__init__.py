@@ -1,7 +1,7 @@
 import sys
+import json
 from os import path
 from itertools import count
-from scrapely import json
 
 _PATH  = path.abspath(path.dirname(__file__))
 

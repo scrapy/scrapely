@@ -1,8 +1,5 @@
 import urllib
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
