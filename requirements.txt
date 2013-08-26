@@ -1,0 +1,2 @@
+numpy
+w3lib
