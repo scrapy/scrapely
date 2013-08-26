@@ -147,6 +147,11 @@ A couple of notes regarding dependencies:
 * Scrapely **does not** depend on `Scrapy`_ in any way
 * Python 3 is not supported yet (pull requests welcome!)
 
+Additional requirements for running tests:
+
+* nose
+* nose-parameterized
+
 Installation
 ============
 
