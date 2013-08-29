@@ -207,7 +207,7 @@ The training implementation is currently very simple and is only provided for
 references purposes, to make it easier to test Scrapely and play with it. On
 the other hand, the extraction code is reliable and production-ready. So, if
 you want to use Scrapely in production, you should use train() with caution and
-make sure it annotates the area of the page you intent being annotated.
+make sure it annotates the area of the page you intended.
 
 Alternatively, you can use the Scrapely command line tool to annotate pages,
 which provides more manual control for higher accuracy.
