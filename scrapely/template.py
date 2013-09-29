@@ -92,7 +92,7 @@ def best_match(text):
     """Function to use in TemplateMaker.annotate()"""
     def func(fragment, page):
         fdata = page.fragment_data(fragment).strip()
-        if text.decode('utf8') in fdata:
+        if text in fdata:
             return float(len(text)) / len(fdata) - (1e-6 * fragment.start)
         else:
             return 0.0

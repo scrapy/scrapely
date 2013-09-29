@@ -179,7 +179,10 @@ def parse_criteria(criteria_str):
 
 def apply_criteria(criteria, tm):
     """Apply the given criteria object to the given template"""
-    func = best_match(criteria.text) if criteria.text else lambda x, y: False
+    text = criteria.text
+    if text and isinstance(text, str):
+        text = text.decode(tm.get_template().encoding or 'utf-8')
+    func = best_match(text) if text else lambda x, y: False
     sel = tm.select(func)
     if criteria.number is not None:
         if criteria.number < len(sel):
