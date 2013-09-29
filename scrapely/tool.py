@@ -6,6 +6,21 @@ from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
+REPR_UNICODE_CHAR = re.compile(r'(?<!\\)(\\u[0-9a-f]{4,4})')
+
+
+def readable_repr(obj):
+    '''Return printing-friendly unicode repr string
+
+    Make CJK characters still readable like ASCII if you print it.
+    '''
+    def replace_unicode_char(repr_char):
+        return unichr(int(str(repr_char.group())[2:], base=16))
+
+    repr_string = repr(obj)
+    return REPR_UNICODE_CHAR.sub(replace_unicode_char, repr_string)
+
+
 class IblTool(cmd.Cmd):
 
     prompt = 'scrapely> '
@@ -17,6 +32,8 @@ class IblTool(cmd.Cmd):
     def do_ta(self, line):
         """ta <url> [--encoding ENCODING] - add template"""
         opts, (url,) = parse_at(line)
+        if assert_or_print(url, "missing url"):
+            return
         t = url_to_page(url, opts.encoding)
         templates = self._load_templates()
         templates.append(t)
@@ -31,7 +48,11 @@ class IblTool(cmd.Cmd):
 
     def do_td(self, template_id):
         """dt <template> - delete template"""
+        if assert_or_print(template_id, "missing template id"):
+            return
         templates = self._load_templates()
+        if assert_or_print(teamplates, "no templates available"):
+            return
         try:
             del templates[int(template_id)]
             self._save_templates(templates)
@@ -41,13 +62,20 @@ class IblTool(cmd.Cmd):
 
     def do_t(self, line):
         """t <template> <text> - test selection text"""
+        if assert_or_print(line, "missing template id or selection text"):
+            return
+        if assert_or_print(' ' in line, "missing template id or selection text"):
+            return
         template_id, criteria = line.split(' ', 1)
         t = self._load_template(template_id)
+        if assert_or_print(t, "template not found: %s" % template_id):
+            return
         criteria = parse_criteria(criteria)
         tm = TemplateMaker(t)
         selection = apply_criteria(criteria, tm)
         for n, i in enumerate(selection):
-            print "[%d] %r" % (n, remove_annotation(tm.selected_data(i)))
+            print "[%d] %s" % (n,
+                               readable_repr(remove_annotation(tm.selected_data(i))))
 
     def do_a(self, line):
         """a <template> <data> [-n number] [-f field]- add or test annotation
@@ -55,8 +83,14 @@ class IblTool(cmd.Cmd):
         Add a new annotation (if -f is passed) or test what would be annotated
         otherwise
         """
+        if assert_or_print(line, "missing template id and selection text"):
+            return
+        if assert_or_print(' ' in line, "missing template id or selection text"):
+            return
         template_id, criteria = line.split(' ', 1)
         t = self._load_template(template_id)
+        if assert_or_print(t, "template not found: %s" % template_id):
+            return
         criteria = parse_criteria(criteria)
         tm = TemplateMaker(t)
         selection = apply_criteria(criteria, tm)
@@ -65,26 +99,30 @@ class IblTool(cmd.Cmd):
                 index = selection[0]
                 tm.annotate_fragment(index, criteria.field)
                 self._save_template(template_id, tm.get_template())
-                print "[new] (%s) %r" % (criteria.field,
-                    remove_annotation(tm.selected_data(index)))
+                print "[new] (%s) %s" % (criteria.field,
+                    readable_repr(remove_annotation(tm.selected_data(index))))
         else:
             for n, i in enumerate(selection):
-                print "[%d] %r" % (n, remove_annotation(tm.selected_data(i)))
+                print "[%d] %s" % (n, readable_repr(remove_annotation(tm.selected_data(i))))
 
     def do_al(self, template_id):
         """al <template> - list annotations"""
         if assert_or_print(template_id, "missing template id"):
             return
         t = self._load_template(template_id)
+        if assert_or_print(t, "template not found: %s" % template_id):
+            return
         tm = TemplateMaker(t)
         for n, (a, i) in enumerate(tm.annotations()):
-            print "[%s-%d] (%s) %r" % (template_id, n, a['annotations']['content'], 
-                remove_annotation(tm.selected_data(i)))
+            print "[%s-%d] (%s) %s" % (template_id, n, a['annotations']['content'], 
+                readable_repr(remove_annotation(tm.selected_data(i))))
 
     def do_s(self, url):
         """s <url> - scrape url"""
         templates = self._load_templates()
         if assert_or_print(templates, "no templates available"):
+            return
+        if assert_or_print(url, "missing url"):
             return
         # fall back to the template encoding if none is specified
         page = url_to_page(url, default_encoding=templates[0].encoding)
@@ -143,7 +181,10 @@ def parse_criteria(criteria_str):
 
 def apply_criteria(criteria, tm):
     """Apply the given criteria object to the given template"""
-    func = best_match(criteria.text) if criteria.text else lambda x, y: False
+    text = criteria.text
+    if text and isinstance(text, str):
+        text = text.decode(tm.get_template().encoding or 'utf-8')
+    func = best_match(text) if text else lambda x, y: False
     sel = tm.select(func)
     if criteria.number is not None:
         if criteria.number < len(sel):

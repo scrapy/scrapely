@@ -1,3 +1,5 @@
+# encoding: utf8
+
 from unittest import TestCase
 
 from scrapely.htmlpage import HtmlPage
@@ -5,7 +7,19 @@ from scrapely.template import TemplateMaker, FragmentNotFound, \
     FragmentAlreadyAnnotated, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
-class TemplateMakerTest(TestCase):
+
+class BaseTestCase(TestCase):
+    PAGE = HtmlPage("http://www.example.com", body=u'')
+
+    def _matches(self, text):
+        bm = best_match(text)
+        matches = [(bm(f, self.PAGE), f) for f in self.PAGE.parsed_body]
+        matches = [x for x in matches if x[0]]
+        matches.sort(reverse=True)
+        return [self.PAGE.fragment_data(x[1]) for x in matches]
+
+
+class TemplateMakerTest(BaseTestCase):
 
     PAGE = HtmlPage("http://www.example.com", body=u"""
     <html>
@@ -72,9 +86,19 @@ class TemplateMakerTest(TestCase):
         self.assertEquals(self._matches('text to annotate'),
             ['Some text to annotate here', 'Another text to annotate there'])
 
-    def _matches(self, text):
-        bm = best_match(text)
-        matches = [(bm(f, self.PAGE), f) for f in self.PAGE.parsed_body]
-        matches = [x for x in matches if x[0]]
-        matches.sort(reverse=True)
-        return [self.PAGE.fragment_data(x[1]) for x in matches]
+
+class TemplateMakerCJKTest(BaseTestCase):
+
+    PAGE = HtmlPage("http://www.example.com", body=u"""
+    <html>
+      <body>
+        <h1>标题</h1>
+        <p>段落</p>
+        <h2>另一个标题</h2>
+        <p>另一个段落</p>
+      </body>
+    </html>
+    """)
+
+    def test_best_match(self):
+        self.assertEquals(self._matches(u'标题'), [u'标题', u'另一个标题'])
