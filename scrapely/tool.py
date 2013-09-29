@@ -11,6 +11,8 @@ REPR_UNICODE_CHAR = re.compile(r'(?<!\\)(\\u[0-9a-f]{4,4})')
 
 def readable_repr(obj):
     '''Return printing-friendly unicode repr string
+
+    Make CJK characters still readable like ASCII if you print it.
     '''
     def replace_unicode_char(repr_char):
         return unichr(int(str(repr_char.group())[2:], base=16))
