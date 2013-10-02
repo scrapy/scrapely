@@ -43,7 +43,7 @@ class IblTool(cmd.Cmd):
         """t <template> <text> - test selection text"""
         template_id, criteria = line.split(' ', 1)
         t = self._load_template(template_id)
-        criteria = parse_criteria(criteria)
+        criteria = self._parse_criteria(criteria)
         tm = TemplateMaker(t)
         selection = apply_criteria(criteria, tm)
         for n, i in enumerate(selection):
@@ -57,7 +57,7 @@ class IblTool(cmd.Cmd):
         """
         template_id, criteria = line.split(' ', 1)
         t = self._load_template(template_id)
-        criteria = parse_criteria(criteria)
+        criteria = self._parse_criteria(criteria)
         tm = TemplateMaker(t)
         selection = apply_criteria(criteria, tm)
         if criteria.field:
@@ -126,20 +126,21 @@ class IblTool(cmd.Cmd):
         with open(self.filename, 'w') as f:
             templates = [page_to_dict(t) for t in templates]
             return json.dump({'templates': templates}, f)
-        
+
+    def _parse_criteria(self, criteria_str):
+        """Parse the given criteria string and returns a criteria object"""
+        p = optparse.OptionParser()
+        p.add_option('-f', '--field', help='field to annotate')
+        p.add_option('-n', '--number', type="int", help='number of result to select')
+        o, a = p.parse_args(shlex.split(criteria_str))
+        o.text = ' '.join(a).decode(self.stdin.encoding or 'ascii')
+        return o
+
+
 def parse_at(ta_line):
     p = optparse.OptionParser()
     p.add_option('-e', '--encoding', help='page encoding')
     return p.parse_args(shlex.split(ta_line))
-
-def parse_criteria(criteria_str):
-    """Parse the given criteria string and returns a criteria object"""
-    p = optparse.OptionParser()
-    p.add_option('-f', '--field', help='field to annotate')
-    p.add_option('-n', '--number', type="int", help='number of result to select')
-    o, a = p.parse_args(shlex.split(criteria_str))
-    o.text = ' '.join(a)
-    return o
 
 def apply_criteria(criteria, tm):
     """Apply the given criteria object to the given template"""
