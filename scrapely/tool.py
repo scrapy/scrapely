@@ -51,7 +51,7 @@ class IblTool(cmd.Cmd):
 
     def do_a(self, line):
         """a <template> <data> [-n number] [-f field]- add or test annotation
-        
+
         Add a new annotation (if -f is passed) or test what would be annotated
         otherwise
         """
@@ -78,7 +78,7 @@ class IblTool(cmd.Cmd):
         t = self._load_template(template_id)
         tm = TemplateMaker(t)
         for n, (a, i) in enumerate(tm.annotations()):
-            print "[%s-%d] (%s) %r" % (template_id, n, a['annotations']['content'], 
+            print "[%s-%d] (%s) %r" % (template_id, n, a['annotations']['content'],
                 remove_annotation(tm.selected_data(i)))
 
     def do_s(self, url):
@@ -133,7 +133,9 @@ class IblTool(cmd.Cmd):
         p.add_option('-f', '--field', help='field to annotate')
         p.add_option('-n', '--number', type="int", help='number of result to select')
         o, a = p.parse_args(shlex.split(criteria_str))
-        o.text = ' '.join(a).decode(self.stdin.encoding or 'ascii')
+
+        encoding = getattr(self.stdin, 'encoding', None) or sys.stdin.encoding
+        o.text = ' '.join(a).decode(encoding or 'ascii')
         return o
 
 
