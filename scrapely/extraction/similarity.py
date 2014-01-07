@@ -79,10 +79,9 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
     return None, None
 
 def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=None):
-    """
-    Find the first longest subsequence of the items in a list or array.
-    range_start and range_end specify a range in which the match must begin
-    n specify the number of subsequences to return.
+    """Find the first longest subsequence of the items in a list or array.
+
+    range_start and range_end specify a range in which the match must begin.
 
     For example, the longest match occurs at index 2 and has length 3
     >>> to_search = [6, 3, 2, 4, 3, 2, 5]
@@ -93,6 +92,8 @@ def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=N
     >>> first_longest_subsequence(to_search, [3, 2])
     (1, 2)
 
+    >>> first_longest_subsequence([], [3, 2])
+    (None, None)
     """
     startval = subsequence[0]
     if range_end is None:
@@ -100,14 +101,13 @@ def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=N
 
     # the comparison to startval ensures only matches of length >= 1 and
     # reduces the number of calls to the common_length function
-    matches = ((i, common_prefix_length(to_search[i:], subsequence)) \
-        for i in xrange(range_start, range_end) if startval == to_search[i])
+    matches = [(i, common_prefix_length(to_search[i:], subsequence)) \
+        for i in xrange(range_start, range_end) if startval == to_search[i]]
 
+    if not matches:
+        return None, None
     # secondary sort on position and prefer the smaller one (near)
-    best = nlargest(1, matches, key=lambda x: (x[1], -x[0]))
-    if best:
-        return best[0]
-    return None, None
+    return max(matches, key=lambda x: (x[1], -x[0]))
 
 def similar_region(extracted_tokens, template_tokens, labelled_region, 
         range_start=0, range_end=None, best_match=longest_unique_subsequence, **kwargs):
