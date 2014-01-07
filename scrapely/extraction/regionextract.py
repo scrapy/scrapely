@@ -19,24 +19,18 @@ from scrapely.extraction.similarity import (similar_region,
 from scrapely.extraction.pageobjects import (AnnotationTag,
     PageRegion, FragmentedHtmlPageRegion)
 
-def build_extraction_tree(template, type_descriptor, trace=True):
-    """Build a tree of region extractors corresponding to the 
-    template
-    """
-    attribute_map = type_descriptor.attribute_map if type_descriptor else None
-    extractors = BasicTypeExtractor.create(template.annotations, attribute_map)
-    if trace:
-        extractors = TraceExtractor.apply(template, extractors)
-    for cls in (RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor,
-            RecordExtractor):
-        extractors = cls.apply(template, extractors)
-        if trace:
-            extractors = TraceExtractor.apply(template, extractors)
-
-    return TemplatePageExtractor(template, extractors)
-
 _EXTRACT_HTML = lambda x: x
 _DEFAULT_DESCRIPTOR = FieldDescriptor('none', None)
+
+__all__ = ['BasicTypeExtractor',
+           'TraceExtractor',
+           'RepeatedDataExtractor',
+           'AdjacentVariantExtractor',
+           'RecordExtractor',
+           'TemplatePageExtractor',
+           'TextRegionDataExtractor',
+           '_attrs2dict',
+           '_labelled']
 
 def _labelled(obj):
     """
@@ -326,6 +320,7 @@ class RecordExtractor(object):
         start_index = min(e.annotation.start_index for e in extractors)
         end_index = max(e.annotation.end_index for e in extractors)
         self.annotation = AnnotationTag(start_index, end_index)
+        self.best_match = longest_unique_subsequence
     
     def extract(self, page, start_index=0, end_index=None, ignored_regions=None, **kwargs):
         """extract data from an extraction page
@@ -380,14 +375,14 @@ class RecordExtractor(object):
         labelled = _labelled(first_region)
         score, pindex, sindex = \
             similar_region(page.page_tokens, self.template_tokens,
-                labelled, start_index, end_region, **kwargs)
+                labelled, start_index, end_region, self.best_match, **kwargs)
         if score > 0:
             if isinstance(labelled, AnnotationTag):
                 similar_ignored_regions = []
                 start = pindex
                 for i in ignored_regions:
                     s, p, e = similar_region(page.page_tokens, self.template_tokens, \
-                              i, start, sindex, **kwargs)
+                              i, start, sindex, self.best_match, **kwargs)
                     if s > 0:
                         similar_ignored_regions.append(PageRegion(p, e))
                         start = e or start
