@@ -37,7 +37,8 @@ class TemplateMaker(object):
         if best_match:
             del indexes[1:]
         for i in indexes:
-            self.annotate_fragment(i, field)
+            if self.annotate_fragment(i, field, best_match):
+                break
 
     def select(self, score_func):
         """Return the indexes of fragment where score_func returns a positive
@@ -71,17 +72,21 @@ class TemplateMaker(object):
                     anlist.append((an, i))
         return anlist
 
-    def annotate_fragment(self, index, field):
+    def annotate_fragment(self, index, field, best_match):
         for f in self.htmlpage.parsed_body[index::-1]:
             if isinstance(f, HtmlTag) and f.tag_type == HtmlTagType.OPEN_TAG:
                 if 'data-scrapy-annotate' in f.attributes:
-                    fstr = self.htmlpage.fragment_data(f)
-                    raise FragmentAlreadyAnnotated("Fragment already annotated: %s" % fstr)
+                    if best_match:
+                        fstr = self.htmlpage.fragment_data(f)
+                        raise FragmentAlreadyAnnotated("Fragment already annotated: %s" % fstr)
+                    else:
+                        return False
                 d = {'annotations': {'content': field}}
                 a = ' data-scrapy-annotate="%s"' % json.dumps(d).replace('"', '&quot;')
                 p = self.htmlpage
                 p.body = p.body[:f.end-1] + a + p.body[f.end-1:]
-                break
+                return True
+        return False
 
     def get_template(self):
         """Return the generated template as a HtmlPage object"""
