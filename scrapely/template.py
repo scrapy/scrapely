@@ -81,7 +81,8 @@ class TemplateMaker(object):
                 a = ' data-scrapy-annotate="%s"' % json.dumps(d).replace('"', '&quot;')
                 p = self.htmlpage
                 p.body = p.body[:f.end-1] + a + p.body[f.end-1:]
-                break
+                return True
+        return False
 
     def get_template(self):
         """Return the generated template as a HtmlPage object"""

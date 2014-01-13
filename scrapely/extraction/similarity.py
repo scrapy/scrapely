@@ -78,8 +78,39 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
         return best2[0]
     return None, None
 
+def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=None):
+    """Find the first longest subsequence of the items in a list or array.
+
+    range_start and range_end specify a range in which the match must begin.
+
+    For example, the longest match occurs at index 2 and has length 3
+    >>> to_search = [6, 3, 2, 4, 3, 2, 5]
+    >>> first_longest_subsequence(to_search, [2, 4, 3])
+    (2, 3)
+
+    When there are two equally long subsequences, it return the nearest one)
+    >>> first_longest_subsequence(to_search, [3, 2])
+    (1, 2)
+
+    >>> first_longest_subsequence([], [3, 2])
+    (None, None)
+    """
+    startval = subsequence[0]
+    if range_end is None:
+        range_end = len(to_search)
+
+    # the comparison to startval ensures only matches of length >= 1 and
+    # reduces the number of calls to the common_length function
+    matches = [(i, common_prefix_length(to_search[i:], subsequence)) \
+        for i in xrange(range_start, range_end) if startval == to_search[i]]
+
+    if not matches:
+        return None, None
+    # secondary sort on position and prefer the smaller one (near)
+    return max(matches, key=lambda x: (x[1], -x[0]))
+
 def similar_region(extracted_tokens, template_tokens, labelled_region, 
-        range_start=0, range_end=None, **kwargs):
+        range_start=0, range_end=None, best_match=longest_unique_subsequence, **kwargs):
     """Given a labelled section in a template, identify a similar region
     in the extracted tokens.
 
@@ -100,7 +131,7 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     # reverse order
     reverse_prefix = template_tokens[labelled_region.start_index::-1]
     reverse_tokens = extracted_tokens[::-1]
-    (rpi, pscore) = longest_unique_subsequence(reverse_tokens, reverse_prefix,
+    (rpi, pscore) = best_match(reverse_tokens, reverse_prefix,
             data_length - range_end, data_length - range_start)
 
     # None means nothing extracted. Index 0 means there cannot be a suffix.
@@ -119,7 +150,7 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
 
     # if it's not a paired tag, use the best match between prefix & suffix
     if labelled_region.start_index == labelled_region.end_index:
-        (match_index, sscore) = longest_unique_subsequence(extracted_tokens,
+        (match_index, sscore) = best_match(extracted_tokens,
             suffix, prefix_index, range_end)
         if match_index == prefix_index:
             return (pscore + sscore, prefix_index, match_index)
@@ -131,7 +162,7 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
 
     # calculate the suffix match on the tokens following the prefix. We could
     # consider the whole page and require a good match.
-    (match_index, sscore) = longest_unique_subsequence(extracted_tokens,
+    (match_index, sscore) = best_match(extracted_tokens,
             suffix, prefix_index + 1, range_end)
     if match_index is None:
         return 0, None, None

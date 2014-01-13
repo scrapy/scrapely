@@ -17,9 +17,11 @@ Main departures from the original algorithm:
       suffix.
 """
 from operator import itemgetter
-from .regionextract import build_extraction_tree
 from .pageparsing import parse_template, parse_extraction_page
 from .pageobjects import TokenDict
+from .regionextract import (BasicTypeExtractor, TraceExtractor, RepeatedDataExtractor, \
+                            AdjacentVariantExtractor, RecordExtractor, TemplatePageExtractor)
+
 
 class InstanceBasedLearningExtractor(object):
     """Implementation of the instance based learning algorithm to 
@@ -66,10 +68,26 @@ class InstanceBasedLearningExtractor(object):
         # templates with more attributes are considered first
         sorted_tdpairs = sorted(modified_parsed_tdpairs, \
                 key=lambda x: _annotation_count(itemgetter(0)(x)), reverse=True)
-        self.extraction_trees = [build_extraction_tree(p, td[1], 
+        self.extraction_trees = [self.build_extraction_tree(p, td[1],
             trace) for p, td in sorted_tdpairs]
         self.validated = dict((td[0].page_id, td[1].validated if td[1] else \
                 self._filter_not_none) for _, td in sorted_tdpairs)
+
+    def build_extraction_tree(self, template, type_descriptor, trace=True):
+        """Build a tree of region extractors corresponding to the
+        template
+        """
+        attribute_map = type_descriptor.attribute_map if type_descriptor else None
+        extractors = BasicTypeExtractor.create(template.annotations, attribute_map)
+        if trace:
+            extractors = TraceExtractor.apply(template, extractors)
+        for cls in (RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor,
+                    RecordExtractor):
+            extractors = cls.apply(template, extractors)
+            if trace:
+                extractors = TraceExtractor.apply(template, extractors)
+
+        return TemplatePageExtractor(template, extractors)
 
     def extract(self, html, pref_template_id=None):
         """extract data from an html page
