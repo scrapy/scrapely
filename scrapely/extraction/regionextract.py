@@ -29,10 +29,10 @@ __all__ = ['BasicTypeExtractor',
            'RecordExtractor',
            'TemplatePageExtractor',
            'TextRegionDataExtractor',
-           '_attrs2dict',
-           '_labelled']
+           'attrs2dict',
+           'labelled_element']
 
-def _labelled(obj):
+def labelled_element(obj):
     """
     Returns labelled element of the object (extractor or labelled region)
     """
@@ -276,13 +276,13 @@ class TransposedDataExtractor(object):
 
 _namef = operator.itemgetter(0)
 _valuef = operator.itemgetter(1)
-def _attrs2dict(attributes):
+def attrs2dict(attributes):
     """convert a list of attributes (name, value) tuples
     into a dict of lists. 
 
     For example:
     >>> l = [('name', 'sofa'), ('colour', 'red'), ('colour', 'green')]
-    >>> _attrs2dict(l) == {'name': ['sofa'], 'colour': ['red', 'green']}
+    >>> attrs2dict(l) == {'name': ['sofa'], 'colour': ['red', 'green']}
     True
     """
     grouped_data = groupby(sorted(attributes, key=_namef), _namef)
@@ -330,7 +330,7 @@ class RecordExtractor(object):
         """
         if ignored_regions is None:
             ignored_regions = []
-        region_elements = sorted(self.extractors + ignored_regions, key=lambda x: _labelled(x).start_index)
+        region_elements = sorted(self.extractors + ignored_regions, key=lambda x: labelled_element(x).start_index)
         _, _, attributes = self._doextract(page, region_elements, start_index, 
                 end_index, **kwargs)
         # collect variant data, maintaining the order of variants
@@ -345,10 +345,10 @@ class RecordExtractor(object):
             else:
                 items.append((k, v))
         
-        variant_records = [('variants', _attrs2dict(variants[vid])) \
+        variant_records = [('variants', attrs2dict(variants[vid])) \
                 for vid in variant_ids]
         items += variant_records
-        return [_attrs2dict(items)]
+        return [attrs2dict(items)]
     
     def _doextract(self, page, region_elements, start_index, end_index, nested_regions=None, ignored_regions=None, **kwargs):
         """Carry out extraction of records using the given annotations
@@ -359,20 +359,20 @@ class RecordExtractor(object):
         nested_regions = nested_regions or []
         ignored_regions = ignored_regions or []
         first_region, following_regions = region_elements[0], region_elements[1:]
-        while following_regions and _labelled(following_regions[0]).start_index \
-                < _labelled(first_region).end_index:
+        while following_regions and labelled_element(following_regions[0]).start_index \
+                < labelled_element(first_region).end_index:
             region = following_regions.pop(0)
-            labelled = _labelled(region)
+            labelled = labelled_element(region)
             if isinstance(labelled, AnnotationTag) or (nested_regions and \
-                    _labelled(nested_regions[-1]).start_index < labelled.start_index \
-                    < _labelled(nested_regions[-1]).end_index):
+                    labelled_element(nested_regions[-1]).start_index < labelled.start_index \
+                    < labelled_element(nested_regions[-1]).end_index):
                 nested_regions.append(region)
             else:
                 ignored_regions.append(region)
         extracted_data = []
         # end_index is inclusive, but similar_region treats it as exclusive
         end_region = None if end_index is None else end_index + 1
-        labelled = _labelled(first_region)
+        labelled = labelled_element(first_region)
         score, pindex, sindex = \
             similar_region(page.page_tokens, self.template_tokens,
                 labelled, start_index, end_region, self.best_match, **kwargs)

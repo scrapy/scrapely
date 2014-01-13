@@ -19,7 +19,8 @@ Main departures from the original algorithm:
 from operator import itemgetter
 from .pageparsing import parse_template, parse_extraction_page
 from .pageobjects import TokenDict
-from .regionextract import *
+from .regionextract import (BasicTypeExtractor, TraceExtractor, RepeatedDataExtractor, \
+                            AdjacentVariantExtractor, RecordExtractor, TemplatePageExtractor)
 
 
 class InstanceBasedLearningExtractor(object):
