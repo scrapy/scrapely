@@ -9,7 +9,7 @@ from numpy import array
 
 from scrapely.htmlpage import HtmlTagType, HtmlTag, HtmlPage
 from scrapely.extraction.pageobjects import (AnnotationTag,
-    TemplatePage, ExtractionPage, AnnotationText, TokenDict, FragmentedHtmlPageRegion)
+    TemplatePage, ExtractionPage, AnnotationText, TokenDict)
 
 def parse_strings(template_html, extraction_html):
     """Create a template and extraction page from raw strings
@@ -39,11 +39,15 @@ class InstanceLearningParser(object):
     
     This does not require correct HTML and the parsing method should not alter
     the original tag order. It is important that parsing results do not vary.
+
+    it needs to also maintain a mapping from token index to the original content
+    so that once regions are identified, the original content can be extracted.
     """
     def __init__(self, token_dict):
         self.token_dict = token_dict
         self.token_list = []
-    
+        self.page_token_indexes = []
+
     def _add_token(self, token, token_type, start, end):
         tid = self.token_dict.tokenid(token, token_type)
         self.token_list.append(tid)
@@ -53,6 +57,7 @@ class InstanceLearningParser(object):
         self.previous_element_class = None
         for index, data in enumerate(html_page.parsed_body):
             if isinstance(data, HtmlTag):
+                self.page_token_indexes.append(index)
                 self._add_token(data.tag, data.tag_type, data.start, data.end)
                 self.handle_tag(data, index)
             else:
@@ -95,7 +100,7 @@ class TemplatePageParser(InstanceLearningParser):
     def handle_tag(self, html_tag, index):
         if self.last_text_region:
             self._process_text('')
-        
+
         if html_tag.tag_type == HtmlTagType.OPEN_TAG:
             self._handle_open_tag(html_tag)
         elif html_tag.tag_type == HtmlTagType.CLOSE_TAG:
@@ -314,24 +319,14 @@ class TemplatePageParser(InstanceLearningParser):
 
     def to_template(self):
         """create a TemplatePage from the data fed to this parser"""
-        return TemplatePage(self.token_dict, self.token_list, self.annotations,
-                self.html_page.page_id, self.ignored_regions, self.extra_required_attrs)
+        return TemplatePage(self.html_page, self.token_dict, self.token_list, self.page_token_indexes, \
+                            self.annotations, self.html_page.page_id, self.ignored_regions, \
+                            self.extra_required_attrs)
 
 class ExtractionPageParser(InstanceLearningParser):
     """Parse an HTML page for extraction using the instance based learning
-    algorithm
-
-    This needs to extract the tokens in a similar way to LabelledPageParser,
-    it needs to also maintain a mapping from token index to the original content
-    so that once regions are identified, the original content can be extracted.
+    algorithm.
     """
-    def __init__(self, token_dict):
-        InstanceLearningParser.__init__(self, token_dict)
-        self._page_token_indexes = []
-
-    def handle_tag(self, html_tag, index):
-        self._page_token_indexes.append(index)
-    
     def to_extraction_page(self):
-        return ExtractionPage(self.html_page, self.token_dict, array(self.token_list), 
-                self._page_token_indexes)
+        return ExtractionPage(self.html_page, self.token_dict, array(self.token_list),
+                self.page_token_indexes)

@@ -4,6 +4,8 @@ Similarity calculation for Instance based extraction algorithm.
 from itertools import izip, count
 from operator import itemgetter
 from heapq import nlargest
+from scrapely.htmlpage import HtmlTagType
+
 
 def common_prefix_length(a, b):
     """Calculate the length of the common prefix in both sequences passed.
@@ -38,8 +40,34 @@ def common_prefix(*sequences):
             break
     return prefix
 
-def longest_unique_subsequence(to_search, subsequence, range_start=0, 
-        range_end=None):
+def _html_tags(page):
+    return [page.htmlpage_tag(i) for i in range(len(page.page_tokens))]
+
+def calculate_score(start, page_tokens, template_tokens, **kwargs):
+    """Calculate the score of region on page_tokens.
+
+    The score is first calculated from the common prefix of page_tokens (search start from `start`) and template_tokens.
+    the intuition is the similar region usually has same tag sequence.
+
+    Then extra data are used to fix up the score. e.g. if html tag's class attribute match,
+    or html data (usually text content) match, etc.
+
+    """
+    score = length = common_prefix_length(page_tokens[start:], template_tokens)
+
+    # check if class attributes match
+    page_tags = kwargs.pop('page_tags', [])
+    template_tags = kwargs.pop('template_tags', [])
+    if page_tags and template_tags:
+        for i in range(length):
+            page_tag_class = page_tags[start + i].attributes.get('class', '')
+            template_tag_class = template_tags[i].attributes.get('class', '')
+            if page_tag_class and page_tag_class == template_tag_class:
+                score += 10
+
+    return score
+
+def longest_unique_subsequence(page_tokens, template_tokens, range_start=0, range_end=None, **kwargs):
     """Find the longest unique subsequence of items in a list or array.  This
     searches the to_search list or array looking for the longest overlapping
     match with subsequence. If the largest match is unique (there is no other
@@ -64,24 +92,26 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
     >>> longest_unique_subsequence(to_search, [3, 2], 0, 2)
     (1, 2)
     """
-    startval = subsequence[0]
+
+    startval = template_tokens[0]
     if range_end is None:
-        range_end = len(to_search)
+        range_end = len(page_tokens)
     
     # the comparison to startval ensures only matches of length >= 1 and 
     # reduces the number of calls to the common_length function
-    matches = ((i, common_prefix_length(to_search[i:], subsequence)) \
-        for i in xrange(range_start, range_end) if startval == to_search[i])
+    matches = ((i, calculate_score(i, page_tokens, template_tokens, **kwargs)) \
+        for i in xrange(range_start, range_end) if startval == page_tokens[i])
     best2 = nlargest(2, matches, key=itemgetter(1))
     # if there is a single unique best match, return that
     if len(best2) == 1 or len(best2) == 2 and best2[0][1] != best2[1][1]:
         return best2[0]
     return None, None
 
-def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=None):
-    """Find the first longest subsequence of the items in a list or array.
-
-    range_start and range_end specify a range in which the match must begin.
+def first_longest_subsequence(page_tokens, template_tokens, range_start=0, range_end=None, **kwargs):
+    """
+    Find the first longest subsequence of the items in a list or array.
+    range_start and range_end specify a range in which the match must begin
+    n specify the number of subsequences to return.
 
     For example, the longest match occurs at index 2 and has length 3
     >>> to_search = [6, 3, 2, 4, 3, 2, 5]
@@ -92,27 +122,26 @@ def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=N
     >>> first_longest_subsequence(to_search, [3, 2])
     (1, 2)
 
-    >>> first_longest_subsequence([], [3, 2])
-    (None, None)
     """
-    startval = subsequence[0]
+    startval = template_tokens[0]
     if range_end is None:
-        range_end = len(to_search)
+        range_end = len(page_tokens)
 
     # the comparison to startval ensures only matches of length >= 1 and
     # reduces the number of calls to the common_length function
-    matches = [(i, common_prefix_length(to_search[i:], subsequence)) \
-        for i in xrange(range_start, range_end) if startval == to_search[i]]
+    matches = [(i, calculate_score(i, page_tokens, template_tokens, **kwargs)) \
+        for i in xrange(range_start, range_end) if startval == page_tokens[i]]
 
     if not matches:
         return None, None
     # secondary sort on position and prefer the smaller one (near)
+
     return max(matches, key=lambda x: (x[1], -x[0]))
 
-def similar_region(extracted_tokens, template_tokens, labelled_region, 
-        range_start=0, range_end=None, best_match=longest_unique_subsequence, **kwargs):
+def similar_region(page, template, labelled_region,
+        range_start=0, range_end=None, best_match=first_longest_subsequence, **kwargs):
     """Given a labelled section in a template, identify a similar region
-    in the extracted tokens.
+    in the extracted page.
 
     The start and end index of the similar region in the extracted tokens
     is returned.
@@ -124,23 +153,36 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
 
     start_index and end_index specify a range in which the match must begin
     """
+    extracted_tokens = page.page_tokens
+    extracted_tags = _html_tags(page)
+
+    template_tokens = template.page_tokens
+    template_tags = _html_tags(template)
+
     data_length = len(extracted_tokens)
     if range_end is None:
         range_end = data_length
+
     # calculate the prefix score by finding a longest subsequence in 
     # reverse order
-    reverse_prefix = template_tokens[labelled_region.start_index::-1]
+
     reverse_tokens = extracted_tokens[::-1]
+    reverse_tags = extracted_tags[::-1]
+
+    reverse_prefix = template_tokens[labelled_region.start_index::-1]
+    reverse_prefix_tags = template_tags[labelled_region.start_index::-1]
+
     (rpi, pscore) = best_match(reverse_tokens, reverse_prefix,
-            data_length - range_end, data_length - range_start)
+            data_length - range_end, data_length - range_start, \
+            page_tags=reverse_tags, template_tags=reverse_prefix_tags)
 
     # None means nothing extracted. Index 0 means there cannot be a suffix.
     if not rpi:
         return 0, None, None
-    
+
     # convert to an index from the start instead of in reverse
     prefix_index = len(extracted_tokens) - rpi - 1
- 
+
     if labelled_region.end_index is None:
         return pscore, prefix_index, None
     elif kwargs.get("suffix_max_length", None) == 0:
@@ -160,11 +202,22 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
             return sscore, match_index, match_index
         return 0, None, None
 
+    # if the labelled_region is inside a single tag
+    # search the same tag start from prefix_index + 1 in
+    # extraction page
+    if labelled_region.start_index == labelled_region.end_index - 1 and \
+            template.htmlpage_tag(labelled_region.end_index).tag_type == HtmlTagType.CLOSE_TAG:
+        open_tag = page.htmlpage_tag(prefix_index)
+        for i in range(prefix_index + 1, len(page.page_tokens)):
+            tag = page.htmlpage_tag(i)
+            if tag.tag == open_tag.tag:
+                return pscore + 1, prefix_index, i
+
     # calculate the suffix match on the tokens following the prefix. We could
     # consider the whole page and require a good match.
     (match_index, sscore) = best_match(extracted_tokens,
             suffix, prefix_index + 1, range_end)
     if match_index is None:
         return 0, None, None
-    return (pscore + sscore, prefix_index, match_index)
+    return pscore + sscore, prefix_index, match_index
 
