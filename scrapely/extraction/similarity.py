@@ -6,6 +6,7 @@ from operator import itemgetter
 from heapq import nlargest
 from scrapely.htmlpage import HtmlTagType
 
+_SELF_CLOSING_TAGS = ['img', 'meta']
 
 def common_prefix_length(a, b):
     """Calculate the length of the common prefix in both sequences passed.
@@ -213,14 +214,14 @@ def similar_region(page, template, labelled_region,
     if pscore > 10 and labelled_region.start_index == labelled_region.end_index - 1 and \
             template.htmlpage_tag(labelled_region.end_index).tag_type == HtmlTagType.CLOSE_TAG:
         open_tag = page.htmlpage_tag(prefix_index)
-        # img is self-closing
-        if open_tag.tag == 'img' and (open_tag.tag_type == HtmlTagType.OPEN_TAG or \
-                                              open_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
+        if open_tag.tag in _SELF_CLOSING_TAGS and (open_tag.tag_type == HtmlTagType.OPEN_TAG or
+                                                           open_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
             return pscore + 1, prefix_index, prefix_index
+
         for i in range(prefix_index + 1, len(page.page_tokens)):
             close_tag = page.htmlpage_tag(i)
-            if close_tag.tag == open_tag.tag and close_tag.tag_type == HtmlTagType.CLOSE_TAG or \
-                close_tag.tag_type == HtmlTagType.UNPAIRED_TAG:
+            if close_tag.tag == open_tag.tag and (close_tag.tag_type == HtmlTagType.CLOSE_TAG or
+                                                          close_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
                 return pscore + 1, prefix_index, i
 
     # calculate the suffix match on the tokens following the prefix. We could
