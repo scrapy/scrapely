@@ -4,9 +4,6 @@ Similarity calculation for Instance based extraction algorithm.
 from itertools import izip, count
 from operator import itemgetter
 from heapq import nlargest
-from scrapely.htmlpage import HtmlTagType
-
-_SELF_CLOSING_TAGS = ['img', 'meta']
 
 def common_prefix_length(a, b):
     """Calculate the length of the common prefix in both sequences passed.
@@ -72,6 +69,13 @@ def calculate_score(start, page_tokens, template_tokens, **kwargs):
             template_tag_class = template_tags[i].attributes.get('class', '')
             if page_tag_class and page_tag_class == template_tag_class:
                 score += 10
+
+    # penalize with the distance to the prefix_index
+    prefix_index = kwargs.pop('prefix_index', '')
+    if prefix_index:
+        distance = start - prefix_index
+        if distance > 100:
+            score = 0
     return score
 
 def longest_unique_subsequence(page_tokens, template_tokens, range_start=0, range_end=None, **kwargs):
@@ -209,25 +213,10 @@ def similar_region(page, template, labelled_region,
             return sscore, match_index, match_index
         return 0, None, None
 
-    #if we're confident on prefix matches, and labelled_region is inside a single tag
-    # search the same tag start from prefix_index + 1 in extraction page
-    if pscore > 10 and labelled_region.start_index == labelled_region.end_index - 1 and \
-            template.htmlpage_tag(labelled_region.end_index).tag_type == HtmlTagType.CLOSE_TAG:
-        open_tag = page.htmlpage_tag(prefix_index)
-        if open_tag.tag in _SELF_CLOSING_TAGS and (open_tag.tag_type == HtmlTagType.OPEN_TAG or
-                                                           open_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
-            return pscore + 1, prefix_index, prefix_index
-
-        for i in range(prefix_index + 1, len(page.page_tokens)):
-            close_tag = page.htmlpage_tag(i)
-            if close_tag.tag == open_tag.tag and (close_tag.tag_type == HtmlTagType.CLOSE_TAG or
-                                                          close_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
-                return pscore + 1, prefix_index, i
-
     # calculate the suffix match on the tokens following the prefix. We could
     # consider the whole page and require a good match.
     (match_index, sscore) = best_match(extracted_tokens,
-            suffix, prefix_index + 1, range_end)
+            suffix, prefix_index + 1, range_end, prefix_index=prefix_index + 1)
     if match_index is None:
         return 0, None, None
     return pscore + sscore, prefix_index, match_index

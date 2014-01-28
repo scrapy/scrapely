@@ -991,6 +991,8 @@ ANNOTATED_PAGE35, EXTRACT_PAGE35A = get_page('annotated_page_35'), get_page('ext
 
 ANNOTATED_PAGE37, EXTRACT_PAGE37A = get_page('annotated_page_37'), get_page('extract_page_37a')
 
+ANNOTATED_PAGE38, EXTRACT_PAGE38A = get_page('annotated_page_38'), get_page('extract_page_38a')
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test',
         'item test, removes tags from description attribute',
         [A('description', 'description field without tags', notags)])
@@ -1401,6 +1403,22 @@ TEST_IBL_DATA = [
                  "2013"
              ],
         }
+    ),
+    ('873/seedevolution pages 2', InstanceBasedLearningExtractor, [ANNOTATED_PAGE38], EXTRACT_PAGE38A, PAGE35_DESCRIPTOR,
+         {
+             u"bild": [
+                 ["images/product_images/popup_images/1029_0.jpg"]
+             ],
+             u"titel": [
+                 u"Aufb\u00fcgelbilder Kids"
+             ],
+             u"beschreibung": [
+                 u"Genau das richtige zum Verschönern von Taschen oder Kleidung. Anleitung: Aufbügelmotiv auf gewünschter Stelle platzieren. Mit einem Baumwolltuch abdecken und 20-30 Sekunden mit einem heißen Bügeleisen (Hitze je nach Verträglichkeit des Trägerstoffes wählen) bearbeiten. Stoff wenden und auf der Gegenseite noch einmal bügeln falls notwendig. Nur auf Baumwollstoffen aufbügeln!"
+             ],
+             u"preis": [
+                 "3.95"
+             ],
+         }
     ),
     ('302/chasexy pages 1', InstanceBasedLearningExtractor, [ANNOTATED_PAGE37], EXTRACT_PAGE37A, PAGE37_DESCRIPTOR,
         {
