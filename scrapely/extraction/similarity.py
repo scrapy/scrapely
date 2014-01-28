@@ -58,13 +58,19 @@ def calculate_score(start, page_tokens, template_tokens, **kwargs):
     # check if class attributes match
     page_tags = kwargs.pop('page_tags', [])
     template_tags = kwargs.pop('template_tags', [])
+
     if page_tags and template_tags:
+        page_tag_class = page_tags[start].attributes.get('class', '')
+        template_tag_class = template_tags[0].attributes.get('class', '')
+        if page_tag_class and page_tag_class != template_tag_class:
+            # no extra score if first tag class not match
+            return score
+
         for i in range(length):
             page_tag_class = page_tags[start + i].attributes.get('class', '')
             template_tag_class = template_tags[i].attributes.get('class', '')
             if page_tag_class and page_tag_class == template_tag_class:
                 score += 10
-
     return score
 
 def longest_unique_subsequence(page_tokens, template_tokens, range_start=0, range_end=None, **kwargs):
