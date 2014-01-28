@@ -6,6 +6,7 @@ from operator import itemgetter
 from heapq import nlargest
 from scrapely.htmlpage import HtmlTagType
 
+_SELF_CLOSING_TAGS = ['img', 'meta']
 
 def common_prefix_length(a, b):
     """Calculate the length of the common prefix in both sequences passed.
@@ -58,13 +59,19 @@ def calculate_score(start, page_tokens, template_tokens, **kwargs):
     # check if class attributes match
     page_tags = kwargs.pop('page_tags', [])
     template_tags = kwargs.pop('template_tags', [])
+
     if page_tags and template_tags:
+        page_tag_class = page_tags[start].attributes.get('class', '')
+        template_tag_class = template_tags[0].attributes.get('class', '')
+        if page_tag_class and page_tag_class != template_tag_class:
+            # no extra score if first tag class not match
+            return score
+
         for i in range(length):
             page_tag_class = page_tags[start + i].attributes.get('class', '')
             template_tag_class = template_tags[i].attributes.get('class', '')
             if page_tag_class and page_tag_class == template_tag_class:
                 score += 10
-
     return score
 
 def longest_unique_subsequence(page_tokens, template_tokens, range_start=0, range_end=None, **kwargs):
@@ -207,14 +214,14 @@ def similar_region(page, template, labelled_region,
     if pscore > 10 and labelled_region.start_index == labelled_region.end_index - 1 and \
             template.htmlpage_tag(labelled_region.end_index).tag_type == HtmlTagType.CLOSE_TAG:
         open_tag = page.htmlpage_tag(prefix_index)
-        # img is self-closing
-        if open_tag.tag == 'img' and (open_tag.tag_type == HtmlTagType.OPEN_TAG or \
-                                              open_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
+        if open_tag.tag in _SELF_CLOSING_TAGS and (open_tag.tag_type == HtmlTagType.OPEN_TAG or
+                                                           open_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
             return pscore + 1, prefix_index, prefix_index
+
         for i in range(prefix_index + 1, len(page.page_tokens)):
             close_tag = page.htmlpage_tag(i)
-            if close_tag.tag == open_tag.tag and close_tag.tag_type == HtmlTagType.CLOSE_TAG or \
-                close_tag.tag_type == HtmlTagType.UNPAIRED_TAG:
+            if close_tag.tag == open_tag.tag and (close_tag.tag_type == HtmlTagType.CLOSE_TAG or
+                                                          close_tag.tag_type == HtmlTagType.UNPAIRED_TAG):
                 return pscore + 1, prefix_index, i
 
     # calculate the suffix match on the tokens following the prefix. We could

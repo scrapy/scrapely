@@ -989,6 +989,8 @@ ANNOTATED_PAGE34, EXTRACT_PAGE34A, EXTRACT_PAGE34B = get_page('annotated_page_34
 
 ANNOTATED_PAGE35, EXTRACT_PAGE35A = get_page('annotated_page_35'), get_page('extract_page_35a')
 
+ANNOTATED_PAGE37, EXTRACT_PAGE37A = get_page('annotated_page_37'), get_page('extract_page_37a')
+
 DEFAULT_DESCRIPTOR = ItemDescriptor('test',
         'item test, removes tags from description attribute',
         [A('description', 'description field without tags', notags)])
@@ -1041,6 +1043,11 @@ PAGE35_DESCRIPTOR =  ItemDescriptor('test', 'class test', [
     A('titel', 'title', text),
     A('preis', 'price', extract_price),
     A('rabattpreis', 'price', extract_price)])
+
+PAGE37_DESCRIPTOR =  ItemDescriptor('test', 'class test', [
+    A('Imagem', 'image', image_url),
+    A('Nome', 'name', text),
+    A('Preco', 'price', extract_price)])
 
 # A list of (test name, [templates], page, extractors, expected_result)
 TEST_DATA = [
@@ -1338,65 +1345,75 @@ class Page33IBLExtractor(InstanceBasedLearningExtractor):
 # test bundles with different IBL extractor tree
 TEST_IBL_DATA = [
     ('match with class attributes', Page33IBLExtractor, [ANNOTATED_PAGE33], EXTRACT_PAGE33, SAMPLE_DESCRIPTOR33,
-    {
-         u'date': [u'10/10/2011'],
-         u'text': [u'review goes here. test..'],
-         u'author': [u'Jennifer M.']
-    }
+        {
+             u'date': [u'10/10/2011'],
+             u'text': [u'review goes here. test..'],
+             u'author': [u'Jennifer M.']
+        }
     ),
-
     ('1131/cgarsltd.co.uk pages 1', InstanceBasedLearningExtractor, [ANNOTATED_PAGE34], EXTRACT_PAGE34A, PAGE34_DESCRIPTOR,
-    {
-         u"1_description": [
-             u"10 year old cask strength whisky slightly smoky, spicy and with a rich, long-lasting finish"
-         ],
-         u"1_image": [
-             ["images/thumbs/380x380_Glenfarclas105_35cl.JPG"]
-         ],
-         u"1_name": [
-             u"Glenfarclas 105 - 35cl 60%"
-         ],
-         u"1_price": [
-             u"31.99"
-         ]
-    }
+        {
+             u"1_description": [
+                 u"10 year old cask strength whisky slightly smoky, spicy and with a rich, long-lasting finish"
+             ],
+             u"1_image": [
+                 ["images/thumbs/380x380_Glenfarclas105_35cl.JPG"]
+             ],
+             u"1_name": [
+                 u"Glenfarclas 105 - 35cl 60%"
+             ],
+             u"1_price": [
+                 u"31.99"
+             ]
+        }
     ),
-
-    ('1131/cgarsltd.co.uk random pages 2', InstanceBasedLearningExtractor, [ANNOTATED_PAGE34], EXTRACT_PAGE34B, PAGE34_DESCRIPTOR,
-    {
-         u"1_description": [
-             "Packaging Pack of 5 Petit Corona size Ring Gauge 30 Length 5\" Tasting Notes Hand Rolled in the Dominican Republic. individually cello wrapped cigars. All of the flavours are made from natural ingredients. Long filler, and binder tobacco from Dominica. Indonesian Sumatra wrapper."
-         ],
-         u"1_image": [
-             ["images/thumbs/380x475_Flavoured5pack_RUM_1.jpg"]
-         ],
-         u"1_name": [
-             "Heaven Petit Corona Raging Rum Cigar - 5 Pack"
-         ],
-         u"1_price": [
-             "30.49"
-         ]
-    }
+    ('1131/cgarsltd.co.uk pages 2', InstanceBasedLearningExtractor, [ANNOTATED_PAGE34], EXTRACT_PAGE34B, PAGE34_DESCRIPTOR,
+        {
+             u"1_description": [
+                 "Packaging Pack of 5 Petit Corona size Ring Gauge 30 Length 5\" Tasting Notes Hand Rolled in the Dominican Republic. individually cello wrapped cigars. All of the flavours are made from natural ingredients. Long filler, and binder tobacco from Dominica. Indonesian Sumatra wrapper."
+             ],
+             u"1_image": [
+                 ["images/thumbs/380x475_Flavoured5pack_RUM_1.jpg"]
+             ],
+             u"1_name": [
+                 "Heaven Petit Corona Raging Rum Cigar - 5 Pack"
+             ],
+             u"1_price": [
+                 "30.49"
+             ]
+        }
     ),
-
-    ('873/seedevolution random pages 1', InstanceBasedLearningExtractor, [ANNOTATED_PAGE35], EXTRACT_PAGE35A, PAGE35_DESCRIPTOR,
-     {
-         u"bild": [
-             ["http://www.meinwoody.de/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/t/o/topf_banderole_600x600px_wildbirne2.jpg"]
-         ],
-         u"titel": [
-             "Pflanzset Wildbirne Baum"
-         ],
-         u"beschreibung": [
-             u"Wildbirne: Als eine wirkliche Seltenheit, ja fast schon als Sensation ist die Wildbirne eine traumhafter Anblick. Sie erreicht meist eine Höhe von bis zu 20 Metern und vereint mit seiner saftigen Frucht hervorragende Eigenschaften in sich. Die Wildbirne hat einen festfleischigen, säuerlich-süßes Aroma und ist als Kompott ein echter Klassiker. Der Wildbirnenbaum wird im Sommer von einer weißen Blütenpracht geschmückt. Das Holz der Wildbirne ist sehr begehrt, da die Bestände sehr gering und die Preise hoch sind. In manche Regionen gilt der Wildbirnenbaum als gefährdete Art. Dabei ermöglicht er zahlreichen Tierarten das Leben und Überleben in freier Wildbahn. Wildbirne als Heilmittel Wildbirne: Die Frucht der Wildbirne gilt als Heilmittel bei Durchfall, Migräne und Pleuritis. Die Blüten des Wildbirnenbaums werden häufig als Tee bei Nierenbeckenentzündung eingesetzt. Der Birnensaft dient ebenfalls als Kur zur Entgiftung des Körpers. Jetzt Wildbirne Baum Pflanzset kaufen"
-         ],
-         u"rabattpreis": [
-             "100"
-         ],
-         u"preis": [
-             "2013"
-         ],
-     }
+    ('873/seedevolution pages 1', InstanceBasedLearningExtractor, [ANNOTATED_PAGE35], EXTRACT_PAGE35A, PAGE35_DESCRIPTOR,
+        {
+             u"bild": [
+            ["http://www.meinwoody.de/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/t/o/topf_banderole_600x600px_wildbirne2.jpg"]
+        ],
+             u"titel": [
+                 "Pflanzset Wildbirne Baum"
+             ],
+             u"beschreibung": [
+                 u"Wildbirne: Als eine wirkliche Seltenheit, ja fast schon als Sensation ist die Wildbirne eine traumhafter Anblick. Sie erreicht meist eine Höhe von bis zu 20 Metern und vereint mit seiner saftigen Frucht hervorragende Eigenschaften in sich. Die Wildbirne hat einen festfleischigen, säuerlich-süßes Aroma und ist als Kompott ein echter Klassiker. Der Wildbirnenbaum wird im Sommer von einer weißen Blütenpracht geschmückt. Das Holz der Wildbirne ist sehr begehrt, da die Bestände sehr gering und die Preise hoch sind. In manche Regionen gilt der Wildbirnenbaum als gefährdete Art. Dabei ermöglicht er zahlreichen Tierarten das Leben und Überleben in freier Wildbahn. Wildbirne als Heilmittel Wildbirne: Die Frucht der Wildbirne gilt als Heilmittel bei Durchfall, Migräne und Pleuritis. Die Blüten des Wildbirnenbaums werden häufig als Tee bei Nierenbeckenentzündung eingesetzt. Der Birnensaft dient ebenfalls als Kur zur Entgiftung des Körpers. Jetzt Wildbirne Baum Pflanzset kaufen"
+             ],
+             u"rabattpreis": [
+                 "100"
+             ],
+             u"preis": [
+                 "2013"
+             ],
+        }
+    ),
+    ('302/chasexy pages 1', InstanceBasedLearningExtractor, [ANNOTATED_PAGE37], EXTRACT_PAGE37A, PAGE37_DESCRIPTOR,
+        {
+            u"Imagem": [
+                ["http://www.chasexy.com.br/media/catalog/product/cache/1/image/265x265/05a6ecf64b09a2402cf2b444174c1c75/s/e/separador_pernas_chasexy_01.jpg"]
+            ],
+            u"Nome": [
+                u"Separador de Pernas com bastão e algemas em couro sintético - Chá Sexy Shop"
+            ],
+            u"Preco": [
+                "45.00"
+            ],
+        }
     ),
 ]
 
