@@ -45,29 +45,27 @@ def calculate_score(start, page_tokens, template_tokens, **kwargs):
     """Calculate the score of region on page_tokens.
 
     The score is first calculated from the common prefix of page_tokens (search start from `start`) and template_tokens.
-    the intuition is the similar region usually has same tag sequence.
-
     Then extra data are used to fix up the score. e.g. if html tag's class attribute match,
     or html data (usually text content) match, etc.
 
     """
     score = length = common_prefix_length(page_tokens[start:], template_tokens)
 
-    # check if class attributes match
+    # check if class attribute match
     page_tags = kwargs.pop('page_tags', [])
     template_tags = kwargs.pop('template_tags', [])
 
     if page_tags and template_tags:
         page_tag_class = page_tags[start].attributes.get('class', '')
         template_tag_class = template_tags[0].attributes.get('class', '')
-        if page_tag_class and page_tag_class != template_tag_class:
+        if page_tag_class != template_tag_class:
             # no extra score if first tag class not match
             return score
 
         for i in range(length):
-            page_tag_class = page_tags[start + i].attributes.get('class', '')
+            page_tag_class = page_tags[start+i].attributes.get('class', '')
             template_tag_class = template_tags[i].attributes.get('class', '')
-            if page_tag_class and page_tag_class == template_tag_class:
+            if (page_tag_class or template_tag_class) and (page_tag_class == template_tag_class):
                 score += 10
 
     # penalize with the distance to the prefix_index
