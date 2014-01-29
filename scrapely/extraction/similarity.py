@@ -72,8 +72,8 @@ def calculate_score(start, page_tokens, template_tokens, **kwargs):
     prefix_index = kwargs.pop('prefix_index', '')
     if prefix_index:
         distance = start - prefix_index
-        if distance > 100:
-            score = 0
+        if distance > 500:
+            score /= 2
     return score
 
 def longest_unique_subsequence(page_tokens, template_tokens, range_start=0, range_end=None, **kwargs):
@@ -143,8 +143,8 @@ def first_longest_subsequence(page_tokens, template_tokens, range_start=0, range
 
     if not matches:
         return None, None
-    # secondary sort on position and prefer the smaller one (near)
 
+    # secondary sort on position and prefer the smaller one (near)
     return max(matches, key=lambda x: (x[1], -x[0]))
 
 def similar_region(page, template, labelled_region,
