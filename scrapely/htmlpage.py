@@ -6,6 +6,7 @@ system. This encapsulates page related information and prevents parsing
 multiple times.
 """
 import re, hashlib, urllib2
+from copy import deepcopy
 from w3lib.encoding import html_to_unicode
 
 def url_to_page(url, encoding=None, default_encoding='utf-8'):
@@ -144,6 +145,16 @@ class HtmlPageParsedRegion(HtmlPageRegion):
         self.htmlpage = htmlpage
         self.start_index = start_index
         self.end_index = end_index
+
+    def __copy__(self, page=None):
+        page = page or self.htmlpage
+        obj = HtmlPageParsedRegion.__new__(HtmlPageParsedRegion, page, self.start_index, self.end_index)
+        HtmlPageParsedRegion.__init__(obj, page, self.start_index, self.end_index)
+        return obj
+
+    def __deepcopy__(self, memo):
+        page = deepcopy(self.htmlpage)
+        return self.__copy__(page)
 
     @property
     def parsed_fragments(self):
