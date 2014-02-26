@@ -1,7 +1,7 @@
 """
 htmlpage.py tests
 """
-import os
+import os, copy
 from unittest import TestCase
 
 from scrapely.tests import iter_samples
@@ -144,4 +144,19 @@ class TestParseHtml(TestCase):
         parsed = list(parse_html(u"<p>The text</p><?xml:namespace blabla/><p>is here</p>"))
         self.assertFalse(parsed[3].is_text_content)
 
+    def test_copy(self):
+        """Test copy/deepcopy"""
+        page = HtmlPage(url='http://www.example.com', body=PAGE)
+        region = page.subregion(10, 15)
+        
+        regioncopy = copy.copy(region)
+        self.assertEqual(regioncopy.start_index, 10)
+        self.assertEqual(regioncopy.end_index, 15)
+        self.assertFalse(region is regioncopy)
+        self.assertTrue(region.htmlpage is regioncopy.htmlpage)
 
+        regiondeepcopy = copy.deepcopy(region)
+        self.assertEqual(regiondeepcopy.start_index, 10)
+        self.assertEqual(regiondeepcopy.end_index, 15)
+        self.assertFalse(region is regiondeepcopy)
+        self.assertFalse(region.htmlpage is regiondeepcopy.htmlpage)
