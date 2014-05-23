@@ -310,12 +310,13 @@ class RecordExtractor(object):
     [{u'description': [u'description'], u'name': [u'name']}]
     """
     
-    def __init__(self, extractors, template_tokens):
+    def __init__(self, extractors, template):
         """Construct a RecordExtractor for the given annotations and their
         corresponding region extractors
         """
         self.extractors = extractors
-        self.template_tokens = template_tokens
+        self.template = template
+        self.template_tokens = template.page_tokens
         self.template_ignored_regions = []
         start_index = min(e.annotation.start_index for e in extractors)
         end_index = max(e.annotation.end_index for e in extractors)
@@ -374,14 +375,14 @@ class RecordExtractor(object):
         end_region = None if end_index is None else end_index + 1
         labelled = labelled_element(first_region)
         score, pindex, sindex = \
-            similar_region(page.page_tokens, self.template_tokens,
+            similar_region(page, self.template,
                 labelled, start_index, end_region, self.best_match, **kwargs)
         if score > 0:
             if isinstance(labelled, AnnotationTag):
                 similar_ignored_regions = []
                 start = pindex
                 for i in ignored_regions:
-                    s, p, e = similar_region(page.page_tokens, self.template_tokens, \
+                    s, p, e = similar_region(page, self.template, \
                               i, start, sindex, self.best_match, **kwargs)
                     if s > 0:
                         similar_ignored_regions.append(PageRegion(p, e))
@@ -410,7 +411,7 @@ class RecordExtractor(object):
                 
     @classmethod
     def apply(cls, template, extractors):
-        return [cls(extractors, template.page_tokens)]
+        return [cls(extractors, template)]
     
     def extracted_item(self):
         return [self.__class__.__name__] + \
@@ -457,7 +458,7 @@ class AdjacentVariantExtractor(RecordExtractor):
         for variant, group_seq in groupby(extractors, variantf):
             group_seq = list(group_seq)
             if variant in adjacent_variants:
-                record_extractor = AdjacentVariantExtractor(group_seq, template.page_tokens)
+                record_extractor = AdjacentVariantExtractor(group_seq, template)
                 new_extractors.append(record_extractor)
             else:
                 new_extractors += group_seq
