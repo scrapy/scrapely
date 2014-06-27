@@ -125,7 +125,7 @@ class IblTool(cmd.Cmd):
         templates = self._load_templates()
         try:
             return templates[int(template_id)]
-        except:
+        except (IndexError, ValueError):
             print('Could not load template: %s' % template_id)
 
     def _load_templates(self):
