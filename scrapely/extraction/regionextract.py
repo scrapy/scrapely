@@ -8,16 +8,18 @@ import operator
 import copy
 import pprint
 import cStringIO
+import json
 from itertools import groupby, izip, starmap
 
 from numpy import array
 
 from scrapely.descriptor import FieldDescriptor
-from scrapely.htmlpage import HtmlPageRegion
+from scrapely.htmlpage import HtmlPage, HtmlPageRegion
 from scrapely.extraction.similarity import (similar_region,
-    longest_unique_subsequence, common_prefix)
+    longest_unique_subsequence, common_prefix, common_prefix_length)
 from scrapely.extraction.pageobjects import (AnnotationTag,
     PageRegion, FragmentedHtmlPageRegion)
+from scrapely.extraction.pageparsing import parse_extraction_page
 
 _EXTRACT_HTML = lambda x: x
 _DEFAULT_DESCRIPTOR = FieldDescriptor('none', None)
@@ -466,6 +468,140 @@ class AdjacentVariantExtractor(RecordExtractor):
     def __repr__(self):
         return str(self)
 
+
+class MdrExtractor(object):
+    """Extractor use mdr to detect and extract listing data """
+    def __init__(self, token_dict, xpath, record, extractors):
+        self.token_dict = token_dict
+        self.xpath = xpath
+        self.record = record
+        self.extractors = dict([extractor.annotation.surrounds_attribute, extractor] for extractor in extractors)
+
+    def extract(self, page, start_index=0, end_index=None, ignored_regions=None, **kwargs):
+        from lxml.html import document_fromstring, tostring
+        from mdr.mdr import MDR
+
+        mdr = MDR()
+
+        doc = document_fromstring(page.htmlpage.body)
+        element = doc.xpath(self.xpath)
+        items = {}
+        if element:
+            mappings, reverse_mappings, _ = mdr.extract(element[0], seed_record=self.record)
+            for elem, seed_elem in reverse_mappings.iteritems():
+                annotation = self._read_template_annotation(elem)
+                if annotation:
+                    name = annotation.get('annotations', {}).get('content')
+                    ex = self.extractors[name]
+                    for tree, mapping in mappings.iteritems():
+                        if elem != mapping.get(seed_elem) and mapping.get(seed_elem) != None:
+                            target = mapping.get(seed_elem)
+                            smallpage = HtmlPage(None, {}, tostring(target, encoding='unicode'))
+                            parsed_page = parse_extraction_page(self.token_dict, smallpage)
+                            items.setdefault(name, []).extend([v for _, v in ex.extract(parsed_page, 0, len(parsed_page.page_tokens) -1)])
+        return [items]
+
+    @classmethod
+    def apply(cls, template, extractors):
+        try:
+            from lxml.html import document_fromstring
+            from mdr.mdr import MDR, Record
+        except ImportError:
+            import warnings
+            warnings.warn("can not import lxml or mdr")
+            return None, extractors
+
+        mdr = MDR()
+        htmlpage = template.htmlpage.body
+
+        candidates, doc = mdr.list_candidates(htmlpage.encode('utf8'))
+
+        # no repated data detected
+        if not candidates:
+            return None, extractors
+
+        candidate_xpaths = [doc.getpath(candidate) for candidate in candidates]
+
+        listing_data_annotations = [annotation for annotation in template.annotations if annotation.metadata.get('listingData')]
+        listing_data_elements = MdrExtractor._get_listingdata_elements(doc)
+
+        # no annotation has listingData set
+        if not listing_data_annotations:
+            return None, extractors
+
+        ancestor_xpath = MdrExtractor._get_common_ancestor(doc, listing_data_elements)
+        candidate_xpath = max(candidate_xpaths, key=lambda x: common_prefix_length(x.split('/'), ancestor_xpath.split(('/'))))
+
+        candidate = doc.xpath(candidate_xpath)[0]
+
+        # make sure the record has annotation has largest weight
+        def cmp(record):
+            return sum(100 for _x in record if _x.xpath('.//*[@data-scrapy-annotate]')) + Record.size(record)
+
+        # XXX: use xpath to find the element on target page, but it's also possible to use the similar_region
+        if candidate.xpath('.//*[@data-scrapy-annotate]'):
+            # remove the listing annotation from the template and basic extractor,
+            # since they're going to extract by MdrExtractor in a different way
+            listing_data_extractors = []
+            for annotation in listing_data_annotations:
+                template.annotations.remove(annotation)
+                name = annotation.surrounds_attribute
+                for extractor in list(extractors):
+                    if name == extractor.annotation.surrounds_attribute:
+                        listing_data_extractors.append(extractor)
+                        extractors.remove(extractor)
+            _, _, record = mdr.extract(candidate, cmp=cmp)
+            return cls(template.token_dict, cls._get_candidate_xpath(doc, candidate), record, listing_data_extractors), extractors
+
+        return extractors
+
+    @staticmethod
+    def _get_candidate_xpath(doc, element):
+        _id = element.attrib.get('id')
+        _class = element.attrib.get('class')
+
+        if _id:
+            xpath = '//%s[@id="%s"]' % (element.tag, _id)
+            if len(doc.xpath(xpath)) == 1:
+                return xpath
+
+        if _class:
+            xpath = '//%s[@class="%s"]' % (element.tag, _class)
+            if len(doc.xpath(xpath)) == 1:
+                return xpath
+
+        return doc.getpath(element)
+
+    @staticmethod
+    def _get_listingdata_elements(doc):
+        """ Gets the elements has the listingData in data-scrapy-annotate. """
+        elements = []
+        for element in doc.xpath('//*[@data-scrapy-annotate]'):
+            annotation = MdrExtractor._read_template_annotation(element)
+            if annotation.get('listingData'):
+                elements.append(element)
+        return elements
+
+    @staticmethod
+    def _read_template_annotation(element):
+        template_attr = element.attrib.get('data-scrapy-annotate')
+        if template_attr is None:
+            return None
+        unescaped = template_attr.replace('&quot;', '"')
+        return json.loads(unescaped)
+
+    @staticmethod
+    def _get_common_ancestor(doc, elements):
+        """ Gets the xpath of common ancestor for the given elements. """
+        return "/".join(common_prefix(*[doc.getpath(elem).split('/') for elem in elements]))
+
+    def __repr__(self):
+        return "MDR(%r)" % self.extractors
+
+    def __str__(self):
+        return "MDR(%s)" % self.extractors
+
+
 class TraceExtractor(object):
     """Extractor that wraps other extractors and prints an execution
     trace of the extraction process to aid debugging
@@ -544,18 +680,26 @@ class TemplatePageExtractor(object):
     """Top level extractor for a template page"""
 
     def __init__(self, template, extractors):
-        # fixme: handle multiple items per page
-        self.extractor = extractors[0]
+        self.extractors = extractors
         self.template = template
 
     def extract(self, page, start_index=0, end_index=None):
-        return self.extractor.extract(page, start_index, end_index, self.template.ignored_regions)
+        items = []
+        for extractor in self.extractors:
+            items.extend(extractor.extract(page, start_index, end_index, self.template.ignored_regions))
+        return [self._merge_list_dicts(items)]
+
+    def _merge_list_dicts(self, dicts):
+        item = {}
+        for d in dicts:
+            item.update(d)
+        return item
 
     def __repr__(self):
-        return repr(self.extractor)
+        return repr(self.extractors[0])
 
     def __str__(self):
-        return str(self.extractor)
+        return str(self.extractors[0])
 
 # Based on nltk's WordPunctTokenizer
 _tokenize = re.compile(r'\w+|[^\w\s]+', re.UNICODE | re.MULTILINE | re.DOTALL).findall
