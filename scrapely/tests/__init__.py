@@ -9,7 +9,7 @@ def iter_samples(prefix, html_encoding='utf-8', **json_kwargs):
     """Iterate through (raw_data, extracted_data) for all samples
     beginning with the specified prefix.
 
-    By convention, these are stored in the samples directory in the 
+    By convention, these are stored in the samples directory in the
     format samples_PREFIX_COUNTER.[html|json]
     """
     SAMPLES_FILE_PREFIX = path.join(_PATH, "samples/samples_" + prefix + "_")
@@ -23,3 +23,12 @@ def iter_samples(prefix, html_encoding='utf-8', **json_kwargs):
         html_str = open(html_page, 'rb').read()
         sample_data = json.load(open(fname + '.json'), **json_load_kwargs)
         yield html_str.decode(html_encoding), sample_data
+
+def get_page(prefix, html_encoding='utf-8'):
+    SAMPLES_FILE_PREFIX = path.join(_PATH, "samples/samples_" + prefix)
+    fname = SAMPLES_FILE_PREFIX
+    html_page = fname + ".html"
+    if not path.exists(html_page):
+        return
+    html_str = open(html_page, 'rb').read()
+    return html_str.decode(html_encoding)
