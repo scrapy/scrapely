@@ -6,9 +6,9 @@ from scrapely.htmlpage import HtmlPage
 from scrapely.tests import iter_samples
 
 class ScraperTest(TestCase):
-    
+
     def _assert_extracted(self, extracted, expected):
-        # FIXME: this is a very weak test - we should assert the 
+        # FIXME: this is a very weak test - we should assert the
         # extracted data matches, fixing issues that prevent it
         expect_keys = sorted(expected.keys())
         found_keys = sorted(extracted[0].keys())
@@ -27,7 +27,7 @@ class ScraperTest(TestCase):
         extracted_data = sc.scrape_page(page2)
         self._assert_extracted(extracted_data, data2)
 
-        # check still works after serialize/deserialize 
+        # check still works after serialize/deserialize
         f = StringIO()
         sc.tofile(f)
         f.seek(0)

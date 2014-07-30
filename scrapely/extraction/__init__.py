@@ -10,7 +10,7 @@ extraction algorithm.
 Main departures from the original algorithm:
     * there is no limit in prefix or suffix size
     * we have "attribute adaptors" that allow generic post processing and may
-      affect the extraction process. For example, a price field may require a 
+      affect the extraction process. For example, a price field may require a
       numeric value to be present.
     * tags can be inserted to extract regions not wrapped by html tags. These
       regions are then identified using the longest unique character prefix and
@@ -24,7 +24,7 @@ from .regionextract import (BasicTypeExtractor, TraceExtractor, RepeatedDataExtr
 
 
 class InstanceBasedLearningExtractor(object):
-    """Implementation of the instance based learning algorithm to 
+    """Implementation of the instance based learning algorithm to
     extract data from web pages.
     """
 
@@ -33,17 +33,17 @@ class InstanceBasedLearningExtractor(object):
 
         td_pairs is a list of (template, item descriptor) pairs.
 
-        templates should contain a sequence of strings, each containing 
+        templates should contain a sequence of strings, each containing
         annotated html that will be used as templates for extraction.
 
-        Tags surrounding areas to be extracted must contain a 
+        Tags surrounding areas to be extracted must contain a
         'data-scrapy-annotate' attribute and the value must be the name
-        of the attribute. If the tag was inserted and was not present in the 
+        of the attribute. If the tag was inserted and was not present in the
         original page, the data-scrapy-generated attribute must be present.
-        
+
         item descriptors describe how the item will be extracted from target
         page, using the corresponding template.
-        
+
         if trace is true, the returned extracted data will have a 'trace'
         property that contains a trace of the extraction execution.
         """
@@ -52,7 +52,7 @@ class InstanceBasedLearningExtractor(object):
         parsed_plus_epages = [(p, parse_extraction_page(self.token_dict, td[0]), td) for p, td \
                in parsed_plus_tdpairs if _annotation_count(p)]
         parsed_tdpairs = map(itemgetter(0, 2), parsed_plus_epages)
-        
+
         modified_parsed_tdpairs = []
         # apply extra required attributes
         for parsed, (t, descriptor) in parsed_tdpairs:
@@ -91,13 +91,13 @@ class InstanceBasedLearningExtractor(object):
 
     def extract(self, html, pref_template_id=None):
         """extract data from an html page
-        
-        If pref_template_url is specified, the template with that url will be 
+
+        If pref_template_url is specified, the template with that url will be
         used first.
         """
         extraction_page = parse_extraction_page(self.token_dict, html)
         if pref_template_id is not None:
-            extraction_trees = sorted(self.extraction_trees, 
+            extraction_trees = sorted(self.extraction_trees,
                     key=lambda x: x.template.id != pref_template_id)
         else:
             extraction_trees = self.extraction_trees
@@ -112,7 +112,7 @@ class InstanceBasedLearningExtractor(object):
     def __str__(self):
         return "InstanceBasedLearningExtractor[\n%s\n]" % \
                 (',\n'.join(map(str, self.extraction_trees)))
-    
+
     @staticmethod
     def _filter_not_none(items):
         return [d for d in items if d is not None]

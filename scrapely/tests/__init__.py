@@ -9,7 +9,7 @@ def iter_samples(prefix, html_encoding='utf-8', **json_kwargs):
     """Iterate through (raw_data, extracted_data) for all samples
     beginning with the specified prefix.
 
-    By convention, these are stored in the samples directory in the 
+    By convention, these are stored in the samples directory in the
     format samples_PREFIX_COUNTER.[html|json]
     """
     SAMPLES_FILE_PREFIX = path.join(_PATH, "samples/samples_" + prefix + "_")

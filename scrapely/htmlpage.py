@@ -19,7 +19,7 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
     is the url of the final page redirected to.
 
     If the encoding of the page is known, it can be passed as a keyword argument. If
-    unspecified, the encoding is guessed using `w3lib.encoding.html_to_unicode`. 
+    unspecified, the encoding is guessed using `w3lib.encoding.html_to_unicode`.
     `default_encoding` is used if the encoding cannot be determined.
     """
     fh = urllib2.urlopen(url)
@@ -28,7 +28,7 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
     # guess content encoding if not specified
     if encoding is None:
         content_type_header = info.getheader("content-encoding")
-        encoding, body = html_to_unicode(content_type_header, body_str, 
+        encoding, body = html_to_unicode(content_type_header, body_str,
                 default_encoding=default_encoding)
     else:
         body = body_str.decode(encoding)
@@ -65,7 +65,7 @@ def page_to_dict(page, body_key='body'):
 class HtmlPage(object):
     """HtmlPage
 
-    This is a parsed HTML page. It contains the page headers, url, raw body and parsed 
+    This is a parsed HTML page. It contains the page headers, url, raw body and parsed
     body.
 
     The parsed body is a list of HtmlDataFragment objects.
@@ -83,14 +83,14 @@ class HtmlPage(object):
         if page_id is None and url:
             self.page_id = hashlib.sha1(url).hexdigest()
         else:
-            self.page_id = page_id 
-    
+            self.page_id = page_id
+
     def _set_body(self, body):
         self._body = body
         self.parsed_body = list(parse_html(body))
-        
+
     body = property(lambda x: x._body, _set_body, doc="raw html for the page")
-    
+
     def subregion(self, start=0, end=None):
         """HtmlPageRegion constructed from the start and end index (inclusive)
         into the parsed page
@@ -105,7 +105,7 @@ class TextPage(HtmlPage):
     """An HtmlPage with one unique HtmlDataFragment, needed to have a
     convenient text with same interface as html page but avoiding unnecesary
     reparsing"""
-    def _set_body(self, text): 
+    def _set_body(self, text):
         self._body = text
         self.parsed_body = [HtmlDataFragment(0, len(self._body), True)]
     body = property(lambda x: x._body, _set_body, doc="raw text for the page")
@@ -122,15 +122,15 @@ class HtmlPageRegion(unicode):
         htmlpage is the original page and data is the raw html
         """
         self.htmlpage = htmlpage
- 
+
     @property
     def text_content(self):
         return self
-        
+
 class HtmlPageParsedRegion(HtmlPageRegion):
     """A region of an HtmlPage that has been extracted
 
-    This has a parsed_fragments property that contains the parsed html 
+    This has a parsed_fragments property that contains the parsed html
     fragments contained within this region
     """
     def __new__(cls, htmlpage, start_index, end_index):
@@ -174,23 +174,23 @@ class HtmlPageParsedRegion(HtmlPageRegion):
 
 class HtmlTagType(object):
     OPEN_TAG = 1
-    CLOSE_TAG = 2 
+    CLOSE_TAG = 2
     UNPAIRED_TAG = 3
 
 class HtmlDataFragment(object):
     __slots__ = ('start', 'end', 'is_text_content')
-    
+
     def __init__(self, start, end, is_text_content=False):
         self.start = start
         self.end = end
         self.is_text_content = is_text_content
-        
+
     def __str__(self):
         return "<HtmlDataFragment [%s:%s] is_text_content: %s>" % (self.start, self.end, self.is_text_content)
 
     def __repr__(self):
         return str(self)
-    
+
 class HtmlTag(HtmlDataFragment):
     __slots__ = ('tag_type', 'tag', 'attributes')
 
@@ -203,7 +203,7 @@ class HtmlTag(HtmlDataFragment):
     def __str__(self):
         return "<HtmlTag tag='%s' attributes={%s} type='%d' [%s:%s]>" % (self.tag, ', '.join(sorted\
                 (["%s: %s" % (k, repr(v)) for k, v in self.attributes.items()])), self.tag_type, self.start, self.end)
-    
+
     def __repr__(self):
         return str(self)
 
@@ -231,7 +231,7 @@ def parse_html(text):
     for match in _HTML_REGEXP.finditer(text, start_pos):
         start = match.start()
         end = match.end()
-            
+
         if start > prev_end:
             yield HtmlDataFragment(prev_end, start, True)
 
@@ -258,7 +258,7 @@ def _parse_script(match):
     close_tag = _parse_tag(_HTML_REGEXP.match(close_text))
     close_tag.start = match.end() - len(close_text)
     close_tag.end = match.end()
-    
+
     yield open_tag
     if open_tag.end < close_tag.start:
         start_pos = 0
