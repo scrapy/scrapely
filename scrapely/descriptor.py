@@ -1,7 +1,7 @@
 """
 Extended types for IBL extraction
 """
-from itertools import chain 
+from itertools import chain
 
 from scrapely.extractors import text
 
@@ -14,12 +14,12 @@ class FieldDescriptor(object):
         self.description = description
         self.extractor = extractor
         self.required = required
-    
+
     def __str__(self):
         return "FieldDescriptor(%s)" % self.name
 
 class ItemDescriptor(object):
-    """Simple auto scraping item descriptor. 
+    """Simple auto scraping item descriptor.
 
     This used to describe type-specific operations and may be overridden where
     necessary.
@@ -45,7 +45,7 @@ class ItemDescriptor(object):
 
     def get_required_attributes(self):
         return self._required_attributes
-    
+
     def __str__(self):
         return "ItemDescriptor(%s)" % self.name
 

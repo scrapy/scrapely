@@ -1,5 +1,5 @@
 PAGE = u"""
-<style id="scrapy-style" type="text/css">@import url(http://localhost:8000/as/site_media/clean.css);                           
+<style id="scrapy-style" type="text/css">@import url(http://localhost:8000/as/site_media/clean.css);
 </style>
 <body>
 <div class="scrapy-selected" id="header">
@@ -210,7 +210,7 @@ PARSED5 = [
  {'end': 91, 'start': 76, 'is_text_content': False},
  {'attributes': {}, 'end': 98, 'start': 91, 'tag': u'html', 'tag_type': 2},
 ]
- 
+
 # Test sucessive cleaning elements variant 2
 PAGE6 = u"""<html><body><script>pss<!--comment-->pss</script>all<script>brb</script>\n\n</body></html>"""
 

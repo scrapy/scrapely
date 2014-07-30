@@ -11,7 +11,7 @@ class FragmentNotFound(AnnotationError):
 
 class FragmentAlreadyAnnotated(AnnotationError):
     pass
-    
+
 class TemplateMaker(object):
 
     def __init__(self, htmlpage):
@@ -19,7 +19,7 @@ class TemplateMaker(object):
 
     def annotate(self, field, score_func, best_match=True):
         """Annotate a field.
-        
+
         ``score_func`` is a callable that receives two arguments: (fragment,
         htmlpage) and returns a relevancy score (float) indicating how relevant
         is the fragment. 0 means the fragment is irrelevant. Higher scores
@@ -32,7 +32,7 @@ class TemplateMaker(object):
         """
         indexes = self.select(score_func)
         if not indexes:
-            raise FragmentNotFound("Fragment not found annotating %r using: %s" % 
+            raise FragmentNotFound("Fragment not found annotating %r using: %s" %
                 (field, score_func))
         if best_match:
             del indexes[1:]
@@ -122,6 +122,6 @@ def _enclosing_tags(htmlpage, index):
                     end_tag = f
                     break
     if not end_tag or htmlpage.parsed_body.index(end_tag) < index:
-        # end tag not found or tag found is not enclosing 
+        # end tag not found or tag found is not enclosing
         return f, f
     return start_tag, end_tag

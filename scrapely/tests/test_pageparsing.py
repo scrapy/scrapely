@@ -56,7 +56,7 @@ LABELLED_PAGE2 = u"""
 <tr><td data-scrapy-ignore="true"></td></tr>
 <tr></tr>
 </table>
-<img data-scrapy-ignore="true" src="image2.jpg"> 
+<img data-scrapy-ignore="true" src="image2.jpg">
 <img data-scrapy-ignore="true" src="image3.jpg" />
 <img data-scrapy-ignore-beneath="true" src="image2.jpg">
 <img data-scrapy-ignore-beneath="true" src="image3.jpg" />
@@ -119,7 +119,7 @@ LABELLED_PAGE5 = u"""
 
 LABELLED_PAGE5a = u"""
 <ul data-scrapy-replacement="select" name="txtvariant" class="smalltextblk">
-<li data-scrapy-replacement="option" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}, &quot;generated&quot;: false}" value="BLUE">Blue&nbsp;$9.95 - In Stock</li> 
+<li data-scrapy-replacement="option" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}, &quot;generated&quot;: false}" value="BLUE">Blue&nbsp;$9.95 - In Stock</li>
 <li data-scrapy-replacement="option" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}, &quot;generated&quot;: false}" value="RED">Red&nbsp;$9.95 - In Stock</li>
 </ul>
 """
@@ -226,7 +226,7 @@ class TestPageParsing(TestCase):
         self.assertEqual(_tags(pp, openp), ['<html>', '<p>'])
         closep = lambda x: pp.token_dict.token_type(x) == TokenType.CLOSE_TAG
         self.assertEqual(_tags(pp, closep), ['</p>', '</html>'])
-    
+
     def _validate_annotation(self, parser, lable_region, name, start_tag, end_tag):
         self.assertEqual(lable_region.surrounds_attribute, name)
         start_token = parser.token_list[lable_region.start_index]
@@ -237,26 +237,26 @@ class TestPageParsing(TestCase):
     def test_template_parsing(self):
         lp = _parse_page(TemplatePageParser, LABELLED_PAGE1)
         self.assertEqual(len(lp.annotations), 5)
-        self._validate_annotation(lp, lp.annotations[0], 
+        self._validate_annotation(lp, lp.annotations[0],
                 'name', '<h1>', '</h1>')
-        
+
         # all tags were closed
         self.assertEqual(len(lp.labelled_tag_stacks), 0)
-    
+
     def test_extraction_page_parsing(self):
         epp = _parse_page(ExtractionPageParser, SIMPLE_PAGE)
         ep = epp.to_extraction_page()
         self.assertEqual(len(ep.page_tokens), 4)
         self.assertEqual(ep.htmlpage.fragment_data(ep.htmlpage_tag(0)), '<html>')
         self.assertEqual(ep.htmlpage.fragment_data(ep.htmlpage_tag(1)), '<p some-attr="foo">')
-        
+
         self.assertEqual(ep.htmlpage_region_inside(1, 2), 'this is a test')
         self.assertEqual(ep.htmlpage_region_inside(1, 3), 'this is a test</p> ')
 
     def test_invalid_html(self):
         p = _parse_page(InstanceLearningParser, BROKEN_PAGE)
         self.assertTrue(p)
-        
+
     def test_ignore_region(self):
         """Test ignored regions"""
         p = _parse_page(TemplatePageParser, LABELLED_PAGE2)
@@ -268,13 +268,13 @@ class TestPageParsing(TestCase):
         p = _parse_page(TemplatePageParser, LABELLED_PAGE3)
         self.assertEqual(p.ignored_regions, [(7,12),(15,17),(22,None)])
         self.assertEqual(len(p.ignored_tag_stacks), 0)
-        
+
     def test_ignore_regions3(self):
         """Test ignore-beneath with annotation inside region"""
         p = _parse_page(TemplatePageParser, LABELLED_PAGE4)
         self.assertEqual(p.ignored_regions, [(15,17),(22,None)])
         self.assertEqual(len(p.ignored_tag_stacks), 0)
-        
+
     def test_replacement(self):
         """Test parsing of replacement tags"""
         p = _parse_page(TemplatePageParser, LABELLED_PAGE5)
@@ -303,7 +303,7 @@ class TestPageParsing(TestCase):
         self.assertEqual(p.annotations[1].surrounds_attribute, 'price')
         self.assertEqual(p.annotations[1].start_index, 2)
         self.assertEqual(p.annotations[1].end_index, 3)
-        
+
     def test_partial(self):
         """Test partial annotation parsing"""
         p = _parse_page(TemplatePageParser, LABELLED_PAGE6)
@@ -313,17 +313,17 @@ class TestPageParsing(TestCase):
         text = p.annotations[1].annotation_text
         self.assertEqual(text.start_text, "Description: ")
         self.assertEqual(text.follow_text, '')
-        
+
     def test_ignored_partial(self):
         """Test ignored region declared on partial annotation"""
         p = _parse_page(TemplatePageParser, LABELLED_PAGE7)
         self.assertEqual(p.ignored_regions, [(2, 3)])
-        
+
     def test_extra_required(self):
         """Test parsing of extra required attributes"""
         p = _parse_page(TemplatePageParser, LABELLED_PAGE8)
         self.assertEqual(p.extra_required_attrs, ["description"])
-    
+
     def test_variants(self):
         """Test parsing of variant annotations"""
         annotations = _parse_page(TemplatePageParser, LABELLED_PAGE9).annotations

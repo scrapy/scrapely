@@ -19,12 +19,12 @@ class Scraper(object):
         """
         templates = [HtmlPage(**x) for x in json.load(file)['templates']]
         return cls(templates)
-    
+
     def tofile(self, file):
         """Store the scraper into the given file-like object"""
         tpls = [page_to_dict(x) for x in self._templates]
         json.dump({'templates': tpls}, file)
-    
+
     def add_template(self, template):
         self._templates.append(template)
         self._ex = None
@@ -51,6 +51,6 @@ class Scraper(object):
 
     def scrape_page(self, page):
         if self._ex is None:
-            self._ex = InstanceBasedLearningExtractor((t, None) for t in 
+            self._ex = InstanceBasedLearningExtractor((t, None) for t in
                     self._templates)
         return self._ex.extract(page)[0]

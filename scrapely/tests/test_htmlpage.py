@@ -78,13 +78,13 @@ class TestParseHtml(TestCase):
         parsed = [_decode_element(d) for d in PARSED]
         sample = {"source": PAGE, "parsed": parsed}
         self._test_sample(PAGE, parsed)
-        
+
     def test_site_samples(self):
         """test parse_html from real cases"""
         for i, (source, parsed) in enumerate(
                 iter_samples('htmlpage', object_hook=_decode_element)):
             self._test_sample(source, parsed, i)
- 
+
     def test_bad(self):
         """test parsing of bad html layout"""
         parsed = [_decode_element(d) for d in PARSED2]
@@ -99,17 +99,17 @@ class TestParseHtml(TestCase):
         """test parsing of tags inside scripts"""
         parsed = [_decode_element(d) for d in PARSED4]
         self._test_sample(PAGE4, parsed)
-        
+
     def test_sucessive(self):
         """test parsing of sucesive cleaned elements"""
         parsed = [_decode_element(d) for d in PARSED5]
         self._test_sample(PAGE5, parsed)
-        
+
     def test_sucessive2(self):
         """test parsing of sucesive cleaned elements (variant 2)"""
         parsed = [_decode_element(d) for d in PARSED6]
         self._test_sample(PAGE6, parsed)
-    
+
     def test_special_cases(self):
         """some special cases tests"""
         parsed = list(parse_html("<meta http-equiv='Pragma' content='no-cache' />"))
@@ -148,7 +148,7 @@ class TestParseHtml(TestCase):
         """Test copy/deepcopy"""
         page = HtmlPage(url='http://www.example.com', body=PAGE)
         region = page.subregion(10, 15)
-        
+
         regioncopy = copy.copy(region)
         self.assertEqual(regioncopy.start_index, 10)
         self.assertEqual(regioncopy.end_index, 15)

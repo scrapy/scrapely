@@ -30,9 +30,9 @@ _GENERIC_PATH_RE = re.compile(_BASE_PATH_RE % '', re.I)
 _WS = re.compile("\s+", re.U)
 
 # tags to keep (only for attributes with markup)
-_TAGS_TO_KEEP = frozenset(['br', 'p', 'big', 'em', 'small', 'strong', 'sub', 
+_TAGS_TO_KEEP = frozenset(['br', 'p', 'big', 'em', 'small', 'strong', 'sub',
     'sup', 'ins', 'del', 'code', 'kbd', 'samp', 'tt', 'var', 'pre', 'listing',
-    'plaintext', 'abbr', 'acronym', 'address', 'bdo', 'blockquote', 'q', 
+    'plaintext', 'abbr', 'acronym', 'address', 'bdo', 'blockquote', 'q',
     'cite', 'dfn', 'table', 'tr', 'th', 'td', 'tbody', 'ul', 'ol', 'li', 'dl',
     'dd', 'dt'])
 
@@ -69,24 +69,24 @@ def notags(region, tag_replace=u' '):
 def text(region):
     """Converts HTML to text. There is no attempt at formatting other than
     removing excessive whitespace,
-    
+
     For example:
     >>> t = lambda s: text(htmlregion(s))
     >>> t(u'<h1>test</h1>')
     u'test'
-    
+
     Leading and trailing whitespace are removed
     >>> t(u'<h1> test</h1> ')
     u'test'
-    
+
     Comments are removed
     >>> t(u'test <!-- this is a comment --> me')
     u'test me'
-    
+
     Text between script tags is ignored
     >>> t(u"scripts are<script>n't</script> ignored")
     u'scripts are ignored'
-    
+
     HTML entities are converted to text
     >>> t(u"only &pound;42")
     u'only \\xa342'
@@ -103,7 +103,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
 
     The HTML generated is safe for display on a website,without escaping and
     should not cause formatting problems.
-    
+
     Behaviour can be customized through the following keyword arguments:
         allowed_tags is a set of tags that are allowed
         replace_tags is a mapping of tags to alternative tags to substitute.
@@ -114,7 +114,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     >>> t = lambda s: safehtml(htmlregion(s))
     >>> t(u'<strong>test <blink>test</blink></strong>')
     u'<strong>test test</strong>'
-    
+
     Some tags, like script, are completely removed
     >>> t(u'<script>test </script>test')
     u'test'
@@ -123,7 +123,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     are converted to strong and em.
     >>> t(u'<h2>header</h2> test <b>bold</b> <i>indent</i>')
     u'<strong>header</strong> test <strong>bold</strong> <em>indent</em>'
-    
+
     tags_to_purge defines the tags that have enclosing content removed:
     >>> t(u'<p>test <script>test</script></p>')
     u'<p>test </p>'
@@ -131,7 +131,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     Comments are stripped, but entities are not converted
     >>> t(u'<!-- comment --> only &pound;42')
     u'only &pound;42'
-    
+
     Paired tags are closed
     >>> t(u'<p>test')
     u'<p>test</p>'
@@ -161,11 +161,11 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
                 return u"</%s></%s>" % (last, u"></".join(revtags[:tindex+1]))
             except (ValueError, IndexError):
                 # popped from empty stack or failed to find the tag
-                pass 
+                pass
         else:
             assert tag.tag_type == HtmlTagType.UNPAIRED_TAG, "unrecognised tag type"
             return u"<%s/>" % tag.tag
-    chunks = list(_process_markup(region, lambda text: text, 
+    chunks = list(_process_markup(region, lambda text: text,
         _process_tag, tags_to_purge)) + ["</%s>" % t for t in reversed(tagstack)]
     return u''.join(chunks).strip()
 
@@ -218,7 +218,7 @@ def contains_prices(txt):
 
 def contains_numbers(txt, count=1):
     """Must contain a certain amount of numbers
-    
+
     >>> contains_numbers('foo', 2)
     >>> contains_numbers('this 1 has 2 numbers', 2)
     'this 1 has 2 numbers'
@@ -229,7 +229,7 @@ def contains_numbers(txt, count=1):
 
 def extract_number(txt):
     """Extract a numeric value.
-    
+
     This will fail if more than one numeric value is present.
 
     >>> extract_number('  45.3')
@@ -246,7 +246,7 @@ def extract_number(txt):
         return numbers[0]
 
 def extract_price(txt):
-    """ 
+    """
     Extracts numbers making some price format specific assumptions
 
     >>> extract_price('asdf 234,234.45sdf ')
@@ -273,12 +273,12 @@ def extract_price(txt):
         decimalpart = parts.pop(-1)
         if decimalpart[0] == "," and len(decimalpart) <= 3:
             decimalpart = decimalpart.replace(",", ".")
-        value = "".join(parts + [decimalpart]).replace(",", "") 
+        value = "".join(parts + [decimalpart]).replace(",", "")
         return value
-    
+
 def url(txt):
     """convert text to a url
-    
+
     this is quite conservative, since relative urls are supported
     """
     txt = txt.strip("\t\r\n '\"")
@@ -287,7 +287,7 @@ def url(txt):
 
 def image_url(txt):
     """convert text to a url
-    
+
     this is quite conservative, since relative urls are supported
     Example:
 
