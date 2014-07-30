@@ -1,5 +1,5 @@
 PAGE = u"""
-<style id="scrapy-style" type="text/css">@import url(http://localhost:8000/as/site_media/clean.css);
+<style id="scrapy-style" type="text/css">@import url(http://localhost:8000/as/site_media/clean.css);                           
 </style>
 <body>
 <div class="scrapy-selected" id="header">
