@@ -101,9 +101,10 @@ class Page(object):
     dictionary of tokens and an array of raw token ids
     """
 
-    __slots__ = ('token_dict', 'page_tokens')
+    __slots__ = ('token_dict', 'page_tokens', 'htmlpage')
 
-    def __init__(self, token_dict, page_tokens):
+    def __init__(self, htmlpage, token_dict, page_tokens):
+        self.htmlpage = htmlpage
         self.token_dict = token_dict
         # use a numpy array becuase we can index/slice easily and efficiently
         if not isinstance(page_tokens, ndarray):
@@ -113,9 +114,9 @@ class Page(object):
 class TemplatePage(Page):
     __slots__ = ('annotations', 'id', 'ignored_regions', 'extra_required_attrs')
 
-    def __init__(self, token_dict, page_tokens, annotations, template_id=None, \
-            ignored_regions=None, extra_required=None):
-        Page.__init__(self, token_dict, page_tokens)
+    def __init__(self, htmlpage, token_dict, page_tokens, annotations, \
+            template_id=None, ignored_regions=None, extra_required=None):
+        Page.__init__(self, htmlpage, token_dict, page_tokens)
         # ensure order is the same as start tag order in the original page
         annotations = sorted(annotations, key=lambda x: x.end_index, reverse=True)
         self.annotations = sorted(annotations, key=lambda x: x.start_index)
@@ -136,7 +137,7 @@ class ExtractionPage(Page):
     """Parsed data belonging to a web page upon which we wish to perform
     extraction.
     """
-    __slots__ = ('htmlpage', 'token_page_indexes')
+    __slots__ = ('token_page_indexes', )
 
     def __init__(self, htmlpage, token_dict, page_tokens, token_page_indexes):
         """Construct a new ExtractionPage
@@ -147,12 +148,11 @@ class ExtractionPage(Page):
             `page_tokens': array of page tokens for matching
             `token_page_indexes`: indexes of each token in the parsed htmlpage
         """
-        Page.__init__(self, token_dict, page_tokens)
-        self.htmlpage = htmlpage
+        Page.__init__(self, htmlpage, token_dict, page_tokens)
         self.token_page_indexes = token_page_indexes
 
     def htmlpage_region(self, start_token_index, end_token_index):
-        """The region in the HtmlPage corresonding to the area defined by
+        """The region in the HtmlPage corresponding to the area defined by
         the start_token_index and the end_token_index
 
         This includes the tokens at the specified indexes
@@ -162,7 +162,7 @@ class ExtractionPage(Page):
         return self.htmlpage.subregion(start, end)
 
     def htmlpage_region_inside(self, start_token_index, end_token_index):
-        """The region in the HtmlPage corresonding to the area between
+        """The region in the HtmlPage corresponding to the area between
         the start_token_index and the end_token_index.
 
         This excludes the tokens at the specified indexes
