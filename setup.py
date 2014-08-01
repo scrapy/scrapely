@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='scrapely',
-    version='0.10.0',
+    version='0.11.0',
     license='BSD',
     description='A pure-python HTML screen-scraping library',
     author='Scrapy project',
