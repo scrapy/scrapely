@@ -8,7 +8,7 @@ setup(
     author='Scrapy project',
     author_email='info@scrapy.org',
     url='http://github.com/scrapy/scrapely',
-    packages=find_packages(exclude=['scrapely.tests', 'scrapely.tests.*']),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     zip_safe=False,
     classifiers=[

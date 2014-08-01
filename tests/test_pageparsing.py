@@ -7,10 +7,10 @@ from unittest import TestCase
 import numpy
 
 from scrapely.htmlpage import HtmlPage
-from scrapely.tests import iter_samples
 from scrapely.extraction.pageparsing import (
     InstanceLearningParser, TemplatePageParser, ExtractionPageParser)
 from scrapely.extraction.pageobjects import TokenDict, TokenType
+from . import iter_samples
 
 
 SIMPLE_PAGE = u"""

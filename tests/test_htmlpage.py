@@ -4,9 +4,9 @@ htmlpage.py tests
 import os, copy
 from unittest import TestCase
 
-from scrapely.tests import iter_samples
 from scrapely.htmlpage import parse_html, HtmlTag, HtmlDataFragment, HtmlPage
-from scrapely.tests.test_htmlpage_data import *
+from .test_htmlpage_data import *
+from . import iter_samples
 
 def _encode_element(el):
     """

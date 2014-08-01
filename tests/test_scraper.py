@@ -3,7 +3,7 @@ from cStringIO import StringIO
 
 from scrapely import Scraper
 from scrapely.htmlpage import HtmlPage
-from scrapely.tests import iter_samples
+from . import iter_samples
 
 class ScraperTest(TestCase):
 
