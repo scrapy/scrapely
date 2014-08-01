@@ -149,8 +149,7 @@ A couple of notes regarding dependencies:
 
 Additional requirements for running tests:
 
-* nose
-* nose-parameterized
+* `tox`_
 
 Installation
 ============
@@ -170,8 +169,8 @@ And then install scrapely with::
 Tests
 =====
 
-`nose`_ is the preferred way to run tests. Just run: ``nosetests`` from the
-root directory.
+`tox`_ is the preferred way to run tests. Just run: ``tox`` from the root
+directory.
 
 Support
 =======
@@ -227,3 +226,4 @@ Scrapely library is licensed under the BSD license.
 .. _nose: http://readthedocs.org/docs/nose/en/latest/
 .. _scrapy@freenode: http://webchat.freenode.net/?channels=scrapy
 .. _Scrapy community: http://scrapy.org/community/
+.. _tox: http://pypi.python.org/pypi/tox

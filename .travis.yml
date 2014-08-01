@@ -1,0 +1,24 @@
+language: python
+python: 2.7
+env:
+- TOXENV=py27
+install:
+- pip install -U tox
+script: tox
+notifications:
+  irc:
+    use_notice: true
+    skip_join: true
+    channels:
+    - irc.freenode.org#scrapy
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: scrapy
+  password:
+    secure: KIXp6K9gU7TT7d0CTkDq81s1Uh2qLHBf+b8l0fAlzq1xHeBuWY82nq94yp6KPqBDr868Cf5CwyC6Gnz/HFD93NVZabooTiz0qUAq98fqKQ2n2KVWzaWxL5C0PN4x5P9KfAlXTgFAll1uCsKRa7gvRbW+q/wKAGsGfKDshTxTkAQ=
+  on:
+    tags: true
+    all_branches: true
+    repo: scrapy/scrapely
+    condition: "$TOXENV == py27"
