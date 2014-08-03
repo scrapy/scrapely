@@ -604,16 +604,18 @@ ANNOTATED_PAGE20 = u"""
 <br/>
 <span><ins data-scrapy-annotate="{&quot;variant&quot;: 1, \
     &quot;generated&quot;: true,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">Twin</ins>\
-    :</span> $<ins data-scrapy-annotate="{&quot;variant&quot;: 1, \
-    &quot;generated&quot;: true,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;price&\
-    quot;}}">270</ins> - November 2010<br/>
+    &quot;annotations&quot;: \
+     {&quot;content&quot;: &quot;name&quot;}}">Twin</ins>:</span> $<ins \
+        data-scrapy-annotate="{&quot;variant&quot;: 1, \
+        &quot;generated&quot;: true,
+        &quot;annotations&quot;: \
+         {&quot;content&quot;: \
+            &quot;price&quot;}}">270</ins> - November 2010<br/>
 <span><ins data-scrapy-annotate="{&quot;variant&quot;: 2, \
     &quot;generated&quot;: true,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;name&\
-    quot;}}">Queen</ins>:</span> $<ins data-scrapy-annotate="{&quot;variant&\
-    quot;: 2, &quot;generated&quot;: true,
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;\
+    }}">Queen</ins>:</span> $<ins data-scrapy-annotate="\
+    {&quot;variant&quot;: 2, &quot;generated&quot;: true,
 &quot;annotations&quot;: {&quot;content&quot;: \
     &quot;price&quot;}}">330</ins> - In stock<br/>
 <br/>
@@ -1246,7 +1248,8 @@ TEST_DATA = [
      SAMPLE_DESCRIPTOR1,
      None,
      ),
-    ('repeated partial annotations with variants', [ANNOTATED_PAGE20], EXTRACT_PAGE20, DEFAULT_DESCRIPTOR,
+    ('repeated partial annotations with variants', [ANNOTATED_PAGE20],
+     EXTRACT_PAGE20, DEFAULT_DESCRIPTOR,
      {u'variants': [
          {'price': ['270'], 'name': ['Twin']},
          {'price': ['330'], 'name': ['Queen']},
