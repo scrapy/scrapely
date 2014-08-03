@@ -5,9 +5,12 @@ Container objects for representing html pages and their parts in the IBL
 system. This encapsulates page related information and prevents parsing
 multiple times.
 """
-import re, hashlib, urllib2
+import re
+import hashlib
+import urllib2
 from copy import deepcopy
 from w3lib.encoding import html_to_unicode
+
 
 def url_to_page(url, encoding=None, default_encoding='utf-8'):
     """Fetch a URL, using python urllib2, and return an HtmlPage object.
@@ -15,11 +18,13 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
     The `url` may be a string, or a `urllib2.Request` object. The `encoding`
     argument can be used to force the interpretation of the page encoding.
 
-    Redirects are followed, and the `url` property of the returned HtmlPage object
-    is the url of the final page redirected to.
+    Redirects are followed, and the `url` property of the returned HtmlPage
+    object is the url of the final page redirected to.
 
-    If the encoding of the page is known, it can be passed as a keyword argument. If
-    unspecified, the encoding is guessed using `w3lib.encoding.html_to_unicode`.
+    If the encoding of the page is known, it can be passed as a keyword
+    argument. If unspecified, the encoding is guessed
+    using `w3lib.encoding.html_to_unicode`.
+
     `default_encoding` is used if the encoding cannot be determined.
     """
     fh = urllib2.urlopen(url)
@@ -29,10 +34,12 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
     if encoding is None:
         content_type_header = info.getheader("content-encoding")
         encoding, body = html_to_unicode(content_type_header, body_str,
-                default_encoding=default_encoding)
+                                         default_encoding=default_encoding)
     else:
         body = body_str.decode(encoding)
-    return HtmlPage(fh.geturl(), headers=info.dict, body=body, encoding=encoding)
+    return HtmlPage(fh.geturl(), headers=info.dict,
+                    body=body, encoding=encoding)
+
 
 def dict_to_page(jsonpage, body_key='body'):
     """Create an HtmlPage object from a dict object.
@@ -48,6 +55,7 @@ def dict_to_page(jsonpage, body_key='body'):
     encoding = jsonpage.get('encoding', 'utf-8')
     return HtmlPage(url, headers, body, page_id, encoding)
 
+
 def page_to_dict(page, body_key='body'):
     """Create a dict from the given HtmlPage
 
@@ -62,11 +70,12 @@ def page_to_dict(page, body_key='body'):
         'encoding': page.encoding,
     }
 
+
 class HtmlPage(object):
     """HtmlPage
 
-    This is a parsed HTML page. It contains the page headers, url, raw body and parsed
-    body.
+    This is a parsed HTML page. It contains the page headers, url, raw body
+    and parsed body.
 
     The parsed body is a list of HtmlDataFragment objects.
 
@@ -74,8 +83,10 @@ class HtmlPage(object):
     core extraction code, but it may be used by some extractors to translate
     entities or encoding urls.
     """
-    def __init__(self, url=None, headers=None, body=None, page_id=None, encoding='utf-8'):
-        assert isinstance(body, unicode), "unicode expected, got: %s" % type(body).__name__
+    def __init__(self, url=None, headers=None, body=None,
+                 page_id=None, encoding='utf-8'):
+        assert isinstance(body, unicode), \
+            "unicode expected, got: %s" % type(body).__name__
         self.headers = headers or {}
         self.body = body
         self.url = url or u''
@@ -101,6 +112,7 @@ class HtmlPage(object):
         """portion of the body corresponding to the HtmlDataFragment"""
         return self.body[data_fragment.start:data_fragment.end]
 
+
 class TextPage(HtmlPage):
     """An HtmlPage with one unique HtmlDataFragment, needed to have a
     convenient text with same interface as html page but avoiding unnecesary
@@ -109,6 +121,7 @@ class TextPage(HtmlPage):
         self._body = text
         self.parsed_body = [HtmlDataFragment(0, len(self._body), True)]
     body = property(lambda x: x._body, _set_body, doc="raw text for the page")
+
 
 class HtmlPageRegion(unicode):
     """A Region of an HtmlPage that has been extracted
@@ -126,6 +139,7 @@ class HtmlPageRegion(unicode):
     @property
     def text_content(self):
         return self
+
 
 class HtmlPageParsedRegion(HtmlPageRegion):
     """A region of an HtmlPage that has been extracted
@@ -148,8 +162,10 @@ class HtmlPageParsedRegion(HtmlPageRegion):
 
     def __copy__(self, page=None):
         page = page or self.htmlpage
-        obj = HtmlPageParsedRegion.__new__(HtmlPageParsedRegion, page, self.start_index, self.end_index)
-        HtmlPageParsedRegion.__init__(obj, page, self.start_index, self.end_index)
+        obj = HtmlPageParsedRegion.__new__(HtmlPageParsedRegion, page,
+                                           self.start_index, self.end_index)
+        HtmlPageParsedRegion.__init__(obj, page,
+                                      self.start_index, self.end_index)
         return obj
 
     def __deepcopy__(self, memo):
@@ -165,17 +181,19 @@ class HtmlPageParsedRegion(HtmlPageRegion):
     @property
     def text_content(self):
         """Text content of this parsed region"""
-        text_all = u" ".join(self.htmlpage.body[_element.start:_element.end] \
-                for _element in self.parsed_fragments if \
-                not isinstance(_element, HtmlTag) and _element.is_text_content)
-        return TextPage(self.htmlpage.url, self.htmlpage.headers, \
-                text_all, encoding=self.htmlpage.encoding).subregion()
+        text_all = u" ".join(self.htmlpage.body[_element.start:_element.end]
+                             for _element in self.parsed_fragments
+                             if (not isinstance(_element, HtmlTag) and
+                                 _element.is_text_content))
+        return TextPage(self.htmlpage.url, self.htmlpage.headers,
+                        text_all, encoding=self.htmlpage.encoding).subregion()
 
 
 class HtmlTagType(object):
     OPEN_TAG = 1
     CLOSE_TAG = 2
     UNPAIRED_TAG = 3
+
 
 class HtmlDataFragment(object):
     __slots__ = ('start', 'end', 'is_text_content')
@@ -186,10 +204,12 @@ class HtmlDataFragment(object):
         self.is_text_content = is_text_content
 
     def __str__(self):
-        return "<HtmlDataFragment [%s:%s] is_text_content: %s>" % (self.start, self.end, self.is_text_content)
+        return "<HtmlDataFragment [%s:%s] is_text_content: %s>" % \
+            (self.start, self.end, self.is_text_content)
 
     def __repr__(self):
         return str(self)
+
 
 class HtmlTag(HtmlDataFragment):
     __slots__ = ('tag_type', 'tag', 'attributes')
@@ -201,22 +221,28 @@ class HtmlTag(HtmlDataFragment):
         self.attributes = attributes
 
     def __str__(self):
-        return "<HtmlTag tag='%s' attributes={%s} type='%d' [%s:%s]>" % (self.tag, ', '.join(sorted\
-                (["%s: %s" % (k, repr(v)) for k, v in self.attributes.items()])), self.tag_type, self.start, self.end)
+        return "<HtmlTag tag='%s' attributes={%s} type='%d' [%s:%s]>" % \
+            (self.tag,
+             ', '.join(sorted(["%s: %s" % (k, repr(v))
+                               for k, v in self.attributes.items()])),
+             self.tag_type, self.start, self.end)
 
     def __repr__(self):
         return str(self)
 
-_ATTR = "((?:[^=/<>\s]|/(?!>))+)(?:\s*=(?:\s*\"(.*?)\"|\s*'(.*?)'|([^>\s]+))?)?"
+_ATTR = "((?:[^=/<>\s]|/(?!>))+)" \
+        "(?:\s*=(?:\s*\"(.*?)\"|\s*'(.*?)'|([^>\s]+))?)?"
 _TAG = "<(\/?)(\w+(?::\w+)?)((?:\s*" + _ATTR + ")+\s*|\s*)(\/?)>?"
 _DOCTYPE = r"<!DOCTYPE.*?>"
 _SCRIPT = "(<script.*?>)(.*?)(</script.*?>)"
 _COMMENT = "(<!--.*?-->|<\?.+?>)"
 
 _ATTR_REGEXP = re.compile(_ATTR, re.I | re.DOTALL)
-_HTML_REGEXP = re.compile("%s|%s|%s" % (_COMMENT, _SCRIPT, _TAG), re.I | re.DOTALL)
+_HTML_REGEXP = re.compile("%s|%s|%s" %
+                          (_COMMENT, _SCRIPT, _TAG), re.I | re.DOTALL)
 _DOCTYPE_REGEXP = re.compile("(?:%s)" % _DOCTYPE)
 _COMMENT_REGEXP = re.compile(_COMMENT, re.DOTALL)
+
 
 def parse_html(text):
     """Higher level html parser. Calls lower level parsers and joins sucesive
@@ -235,17 +261,18 @@ def parse_html(text):
         if start > prev_end:
             yield HtmlDataFragment(prev_end, start, True)
 
-        if match.groups()[0] is not None: # comment
+        if match.groups()[0] is not None:  # comment
             yield HtmlDataFragment(start, end)
-        elif match.groups()[1] is not None: # <script>...</script>
+        elif match.groups()[1] is not None:  # <script>...</script>
             for e in _parse_script(match):
                 yield e
-        else: # tag
+        else:  # tag
             yield _parse_tag(match)
         prev_end = end
     textlen = len(text)
     if prev_end < textlen:
         yield HtmlDataFragment(prev_end, textlen, True)
+
 
 def _parse_script(match):
     """parse a <script>...</script> region matched by _HTML_REGEXP"""
@@ -264,12 +291,15 @@ def _parse_script(match):
         start_pos = 0
         for m in _COMMENT_REGEXP.finditer(content):
             if m.start() > start_pos:
-                yield HtmlDataFragment(open_tag.end + start_pos, open_tag.end + m.start())
-            yield HtmlDataFragment(open_tag.end + m.start(), open_tag.end + m.end())
+                yield HtmlDataFragment(open_tag.end + start_pos,
+                                       open_tag.end + m.start())
+            yield HtmlDataFragment(open_tag.end + m.start(),
+                                   open_tag.end + m.end())
             start_pos = m.end()
         if open_tag.end + start_pos < close_tag.start:
             yield HtmlDataFragment(open_tag.end + start_pos, close_tag.start)
     yield close_tag
+
 
 def _parse_tag(match):
     """
@@ -291,4 +321,5 @@ def _parse_tag(match):
             name = attr_match[0].lower()
             values = [v for v in attr_match[1:] if v]
             attributes.append((name, values[0] if values else None))
-        return HtmlTag(tag_type, tag.lower(), dict(attributes), match.start(), match.end())
+        return HtmlTag(tag_type, tag.lower(), dict(attributes),
+                       match.start(), match.end())

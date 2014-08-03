@@ -10,9 +10,11 @@ from w3lib.url import safe_url_string
 
 from scrapely.htmlpage import HtmlPage, HtmlTag, HtmlTagType
 
-#FIXME: the use of "." needs to be localized
+# FIXME: the use of "." needs to be localized
 _NUMERIC_ENTITIES = re.compile("&#([0-9]+)(?:;|\s)", re.U)
-_PRICE_NUMBER_RE = re.compile('(?:^|[^a-zA-Z0-9])(\d+(?:\.\d+)?)(?:$|[^a-zA-Z0-9])')
+_PRICE_NUMBER_RE = re.compile('(?:^|[^a-zA-Z0-9])'
+                              '(\d+(?:\.\d+)?)'
+                              '(?:$|[^a-zA-Z0-9])')
 _NUMBER_RE = re.compile('(\d+(?:\.\d+)?)')
 _DECIMAL_RE = re.compile(r'(\d[\d\,]*(?:(?:\.\d+)|(?:)))', re.U | re.M)
 _VALPARTS_RE = re.compile("([\.,]?\d+)")
@@ -31,10 +33,11 @@ _WS = re.compile("\s+", re.U)
 
 # tags to keep (only for attributes with markup)
 _TAGS_TO_KEEP = frozenset(['br', 'p', 'big', 'em', 'small', 'strong', 'sub',
-    'sup', 'ins', 'del', 'code', 'kbd', 'samp', 'tt', 'var', 'pre', 'listing',
-    'plaintext', 'abbr', 'acronym', 'address', 'bdo', 'blockquote', 'q',
-    'cite', 'dfn', 'table', 'tr', 'th', 'td', 'tbody', 'ul', 'ol', 'li', 'dl',
-    'dd', 'dt'])
+                           'sup', 'ins', 'del', 'code', 'kbd', 'samp', 'tt',
+                           'var', 'pre', 'listing', 'plaintext', 'abbr',
+                           'acronym', 'address', 'bdo', 'blockquote', 'q',
+                           'cite', 'dfn', 'table', 'tr', 'th', 'td', 'tbody',
+                           'ul', 'ol', 'li', 'dl', 'dd', 'dt'])
 
 # tag names to be replaced by other tag names (overrides tags_to_keep)
 _TAGS_TO_REPLACE = {
@@ -44,12 +47,13 @@ _TAGS_TO_REPLACE = {
     'h4': 'strong',
     'h5': 'strong',
     'h6': 'strong',
-    'b' : 'strong',
-    'i' : 'em',
+    'b':  'strong',
+    'i':  'em',
 }
 # tags whoose content will be completely removed (recursively)
 # (overrides tags_to_keep and tags_to_replace)
 _TAGS_TO_PURGE = ('script', 'img', 'input')
+
 
 def htmlregion(text):
     """convenience function to make an html region from text.
@@ -57,14 +61,17 @@ def htmlregion(text):
     """
     return HtmlPage(body=text).subregion()
 
+
 def notags(region, tag_replace=u' '):
     """Removes all html tags"""
     fragments = getattr(region, 'parsed_fragments', None)
     if fragments is None:
         return region
     page = region.htmlpage
-    data = [page.fragment_data(f) for f in fragments if not isinstance(f, HtmlTag)]
+    data = [page.fragment_data(f)
+            for f in fragments if not isinstance(f, HtmlTag)]
     return tag_replace.join(data)
+
 
 def text(region):
     """Converts HTML to text. There is no attempt at formatting other than
@@ -94,11 +101,13 @@ def text(region):
     >>> t(u"<p>The text</p><?xml:namespace blabla/><p>is here</p>")
     u'The text is here'
     """
-    text = remove_entities(region.text_content, encoding=region.htmlpage.encoding)
+    text = remove_entities(region.text_content,
+                           encoding=region.htmlpage.encoding)
     return _WS.sub(u' ', text).strip()
 
+
 def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
-    tags_to_purge=_TAGS_TO_PURGE):
+             tags_to_purge=_TAGS_TO_PURGE):
     """Creates an HTML subset, using a whitelist of HTML tags.
 
     The HTML generated is safe for display on a website,without escaping and
@@ -119,8 +128,8 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     >>> t(u'<script>test </script>test')
     u'test'
 
-    replace_tags define tags that are converted. By default all headers, bold and indenting
-    are converted to strong and em.
+    replace_tags define tags that are converted. By default all headers, bold
+    and indenting are converted to strong and em.
     >>> t(u'<h2>header</h2> test <b>bold</b> <i>indent</i>')
     u'<strong>header</strong> test <strong>bold</strong> <em>indent</em>'
 
@@ -141,6 +150,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
 
     """
     tagstack = []
+
     def _process_tag(tag):
         tagstr = replace_tags.get(tag.tag, tag.tag)
         if tagstr not in allowed_tags:
@@ -163,11 +173,15 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
                 # popped from empty stack or failed to find the tag
                 pass
         else:
-            assert tag.tag_type == HtmlTagType.UNPAIRED_TAG, "unrecognised tag type"
+            assert tag.tag_type == \
+                HtmlTagType.UNPAIRED_TAG, "unrecognised tag type"
             return u"<%s/>" % tag.tag
-    chunks = list(_process_markup(region, lambda text: text,
-        _process_tag, tags_to_purge)) + ["</%s>" % t for t in reversed(tagstack)]
+    chunks = list(_process_markup(region,
+                                  lambda text: text,
+                                  _process_tag, tags_to_purge)
+                  ) + ["</%s>" % t for t in reversed(tagstack)]
     return u''.join(chunks).strip()
+
 
 def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
     fragments = getattr(region, 'parsed_fragments', None)
@@ -183,9 +197,9 @@ def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
                 # if opening, keep going until closed
                 if fragment.tag_type == HtmlTagType.OPEN_TAG:
                     for probe in fiter:
-                        if isinstance(probe, HtmlTag) and \
-                            probe.tag == tag and \
-                            probe.tag_type == HtmlTagType.CLOSE_TAG:
+                        if (isinstance(probe, HtmlTag) and
+                                probe.tag == tag and
+                                probe.tag_type == HtmlTagType.CLOSE_TAG):
                             break
             else:
                 output = tagf(fragment)
@@ -198,9 +212,11 @@ def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
             if text:
                 yield text
 
+
 def html(pageregion):
     """A page region is already html, so this is the identity function"""
     return pageregion
+
 
 def contains_any_numbers(txt):
     """text that must contain at least one number
@@ -211,10 +227,12 @@ def contains_any_numbers(txt):
     if _NUMBER_RE.search(txt) is not None:
         return txt
 
+
 def contains_prices(txt):
     """text must contain a number that is not joined to text"""
     if _PRICE_NUMBER_RE.findall(txt) is not None:
         return txt
+
 
 def contains_numbers(txt, count=1):
     """Must contain a certain amount of numbers
@@ -226,6 +244,7 @@ def contains_numbers(txt, count=1):
     numbers = _NUMBER_RE.findall(txt)
     if len(numbers) == count:
         return txt
+
 
 def extract_number(txt):
     """Extract a numeric value.
@@ -244,6 +263,7 @@ def extract_number(txt):
     numbers = _NUMBER_RE.findall(txt)
     if len(numbers) == 1:
         return numbers[0]
+
 
 def extract_price(txt):
     """
@@ -276,6 +296,7 @@ def extract_price(txt):
         value = "".join(parts + [decimalpart]).replace(",", "")
         return value
 
+
 def url(txt):
     """convert text to a url
 
@@ -284,6 +305,7 @@ def url(txt):
     txt = txt.strip("\t\r\n '\"")
     if txt:
         return txt
+
 
 def image_url(txt):
     """convert text to a url
@@ -309,36 +331,54 @@ def image_url(txt):
         ['/path1/path2/path3/image.jpg']
         >>> image_url("path1/path2/image.jpg")
         ['path1/path2/image.jpg']
-        >>> image_url("background-image : url(http://www.site.com/path1/path2/image.jpg)")
+        >>> image_url("background-image : \
+                      url(http://www.site.com/path1/path2/image.jpg)")
         ['http://www.site.com/path1/path2/image.jpg']
-        >>> image_url("background-image : url('http://www.site.com/path1/path2/image.jpg')")
+        >>> image_url("background-image : \
+                      url('http://www.site.com/path1/path2/image.jpg')")
         ['http://www.site.com/path1/path2/image.jpg']
-        >>> image_url('background-image : url("http://www.site.com/path1/path2/image.jpg")')
+        >>> image_url('background-image : \
+                      url("http://www.site.com/path1/path2/image.jpg")')
         ['http://www.site.com/path1/path2/image.jpg']
-        >>> image_url("background : url(http://www.site.com/path1/path2/image.jpg)")
+        >>> image_url("background : \
+                      url(http://www.site.com/path1/path2/image.jpg)")
         ['http://www.site.com/path1/path2/image.jpg']
-        >>> image_url("background : url('http://www.site.com/path1/path2/image.jpg')")
+        >>> image_url("background : \
+                      url('http://www.site.com/path1/path2/image.jpg')")
         ['http://www.site.com/path1/path2/image.jpg']
-        >>> image_url('background : url("http://www.site.com/path1/path2/image.jpg")')
+        >>> image_url('background : \
+                      url("http://www.site.com/path1/path2/image.jpg")')
         ['http://www.site.com/path1/path2/image.jpg']
-        >>> image_url('/getimage.php?image=totalgardens/outbbq2_400.jpg&type=prod&resizeto=350')
+        >>> image_url('/getimage.php?image=totalgardens/outbbq2_400.jpg&\
+                      type=prod&resizeto=350')
         ['/getimage.php?image=totalgardens/outbbq2_400.jpg&type=prod&resizeto=350']
-        >>> image_url('http://www.site.com/getimage.php?image=totalgardens/outbbq2_400.jpg&type=prod&resizeto=350')
+        >>> image_url('http://www.site.com/getimage.php?\
+                      image=totalgardens/outbbq2_400.jpg&type=prod&resizeto=350')
         ['http://www.site.com/getimage.php?image=totalgardens/outbbq2_400.jpg&type=prod&resizeto=350']
-        >>> image_url('http://s7d4.scene7.com/is/image/Kohler/jaa03267?hei=425&wid=457&op_usm=2,1,2,1&qlt=80')
-        ['http://s7d4.scene7.com/is/image/Kohler/jaa03267?hei=425&wid=457&op_usm=2,1,2,1&qlt=80']
-        >>> image_url('../image.aspx?thumb=true&amp;boxSize=175&amp;img=Unknoportrait[1].jpg')
+        >>> image_url('http://s7d4.scene7.com/is/image/Kohler/jaa03267?\
+                      hei=425&wid=457&op_usm=2,1,2,1&qlt=80')
+        ['http://s7d4.scene7.com/is/image/Kohler/jaa03267?hei=425&wid=457&\
+         op_usm=2,1,2,1&qlt=80']
+        >>> image_url('../image.aspx?thumb=true&amp;boxSize=175&amp;\
+                      img=Unknoportrait[1].jpg')
         ['../image.aspx?thumb=true&boxSize=175&img=Unknoportrait%5B1%5D.jpg']
-        >>> image_url('http://www.sundancecatalog.com/mgen/catalog/test.ms?args=%2245932|MERIDIAN+PENDANT|.jpg%22&is=336,336,0xffffff')
-        ['http://www.sundancecatalog.com/mgen/catalog/test.ms?args=%2245932|MERIDIAN+PENDANT|.jpg%22&is=336,336,0xffffff']
+        >>> image_url('http://www.sundancecatalog.com/mgen/catalog/test.ms?\
+                      args=%2245932|MERIDIAN+PENDANT|.jpg%22&is=336,336,0xffffff')
+        ['http://www.sundancecatalog.com/mgen/catalog/test.ms?\
+         args=%2245932|MERIDIAN+PENDANT|.jpg%22&is=336,336,0xffffff']
         >>> image_url('http://www.site.com/image.php')
         ['http://www.site.com/image.php']
-        >>> image_url('background-image:URL(http://s7d5.scene7.com/is/image/wasserstrom/165133?wid=227&hei=227&amp;defaultImage=noimage_wasserstrom)')
-        ['http://s7d5.scene7.com/is/image/wasserstrom/165133?wid=227&hei=227&defaultImage=noimage_wasserstrom']
+        >>> image_url('background-image:URL(http://s7d5.scene7.com/is/image/\
+                                            wasserstrom/165133?wid=227&\
+                                            hei=227&amp;\
+                                            defaultImage=noimage_wasserstrom)')
+        ['http://s7d5.scene7.com/is/image/wasserstrom/165133?wid=227&hei=227&\
+         defaultImage=noimage_wasserstrom']
 
     """
     imgurl = extract_image_url(txt)
     return [safe_url_string(remove_entities(url(imgurl)))] if imgurl else None
+
 
 def extract_image_url(txt):
     txt = url(txt)

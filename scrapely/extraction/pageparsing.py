@@ -8,8 +8,13 @@ from collections import defaultdict
 from numpy import array
 
 from scrapely.htmlpage import HtmlTagType, HtmlTag, HtmlPage
-from scrapely.extraction.pageobjects import (AnnotationTag,
-    TemplatePage, ExtractionPage, AnnotationText, TokenDict, FragmentedHtmlPageRegion)
+from scrapely.extraction.pageobjects import (
+    AnnotationTag,
+    TemplatePage,
+    ExtractionPage,
+    AnnotationText,
+    TokenDict)
+
 
 def parse_strings(template_html, extraction_html):
     """Create a template and extraction page from raw strings
@@ -22,11 +27,13 @@ def parse_strings(template_html, extraction_html):
     return (parse_template(t, template_page),
             parse_extraction_page(t, extraction_page))
 
+
 def parse_template(token_dict, template_html):
     """Create an TemplatePage object by parsing the annotated html"""
     parser = TemplatePageParser(token_dict)
     parser.feed(template_html)
     return parser.to_template()
+
 
 def parse_extraction_page(token_dict, page_html):
     """Create an ExtractionPage object by parsing the html"""
@@ -34,12 +41,15 @@ def parse_extraction_page(token_dict, page_html):
     parser.feed(page_html)
     return parser.to_extraction_page()
 
+
 class InstanceLearningParser(object):
+
     """Base parser for instance based learning algorithm
 
     This does not require correct HTML and the parsing method should not alter
     the original tag order. It is important that parsing results do not vary.
     """
+
     def __init__(self, token_dict):
         self.token_dict = token_dict
         self.token_list = []
@@ -74,7 +84,10 @@ _AUTO_CLOSE_TAGS_ON_OPEN = {
 _AUTO_CLOSE_TAGS_ON_CLOSE = {
     "select": ["option"],
 }
+
+
 class TemplatePageParser(InstanceLearningParser):
+
     """Template parsing for instance based learning algorithm"""
 
     def __init__(self, token_dict):
@@ -121,8 +134,10 @@ class TemplatePageParser(InstanceLearningParser):
         self.unpairedtag_stack = []
 
     def _handle_unpaired_tag(self, html_tag):
-        if self._read_bool_template_attribute(html_tag, "ignore") and html_tag.tag == "img":
-            self.ignored_regions.append((self.next_tag_index, self.next_tag_index + 1))
+        if self._read_bool_template_attribute(html_tag, "ignore") and \
+                html_tag.tag == "img":
+            self.ignored_regions.append(
+                (self.next_tag_index, self.next_tag_index + 1))
         elif self._read_bool_template_attribute(html_tag, "ignore-beneath"):
             self.ignored_regions.append((self.next_tag_index, None))
         jannotation = self._read_template_annotation(html_tag)
@@ -130,7 +145,9 @@ class TemplatePageParser(InstanceLearningParser):
             if self.unpairedtag_stack:
                 self._close_unpaired_tag()
 
-            annotation = AnnotationTag(self.next_tag_index, self.next_tag_index + 1)
+            annotation = AnnotationTag(
+                self.next_tag_index,
+                self.next_tag_index + 1)
             attribute_annotations = jannotation.pop('annotations', {}).items()
             content_key = jannotation.pop('text-content', 'content')
             for extract_attribute, tag_value in attribute_annotations:
@@ -138,14 +155,15 @@ class TemplatePageParser(InstanceLearningParser):
                     annotation.surrounds_attribute = tag_value
                     self.unpairedtag_stack.append(annotation)
                 else:
-                    annotation.tag_attributes.append((extract_attribute, tag_value))
+                    annotation.tag_attributes.append(
+                        (extract_attribute, tag_value))
             self.annotations.append(annotation)
 
             self.extra_required_attrs.extend(jannotation.pop('required', []))
             variant_id = jannotation.pop('variant', 0)
             if variant_id > 0:
                 annotation.variant_id = variant_id
-            assert jannotation.pop("generated", False) == False
+            assert jannotation.pop("generated", False) is False
             annotation.metadata = jannotation
 
         self.next_tag_index += 1
@@ -153,7 +171,8 @@ class TemplatePageParser(InstanceLearningParser):
     def _handle_open_tag(self, html_tag):
         if self._read_bool_template_attribute(html_tag, "ignore"):
             if html_tag.tag == "img":
-                self.ignored_regions.append((self.next_tag_index, self.next_tag_index + 1))
+                self.ignored_regions.append(
+                    (self.next_tag_index, self.next_tag_index + 1))
             else:
                 self.ignored_regions.append((self.next_tag_index, None))
                 self.ignored_tag_stacks[html_tag.tag].append(html_tag)
@@ -166,7 +185,11 @@ class TemplatePageParser(InstanceLearningParser):
         replacement = html_tag.attributes.pop("data-scrapy-replacement", None)
         if replacement:
             self.token_list.pop()
-            self._add_token(replacement, html_tag.tag_type, html_tag.start, html_tag.end)
+            self._add_token(
+                replacement,
+                html_tag.tag_type,
+                html_tag.start,
+                html_tag.end)
             self.replacement_stacks[html_tag.tag].append(replacement)
         elif html_tag.tag in self.replacement_stacks:
             self.replacement_stacks[html_tag.tag].append(None)
@@ -197,7 +220,8 @@ class TemplatePageParser(InstanceLearningParser):
             else:
                 annotation.annotation_text = AnnotationText(self.prev_data)
             if self._read_bool_template_attribute(html_tag, "ignore") \
-                    or self._read_bool_template_attribute(html_tag, "ignore-beneath"):
+                    or self._read_bool_template_attribute(html_tag,
+                                                          "ignore-beneath"):
                 ignored = self.ignored_regions.pop()
                 self.ignored_regions.append((ignored[0]-1, ignored[1]))
 
@@ -209,7 +233,8 @@ class TemplatePageParser(InstanceLearningParser):
             if extract_attribute == content_key:
                 annotation.surrounds_attribute = tag_value
             else:
-                annotation.tag_attributes.append((extract_attribute, tag_value))
+                annotation.tag_attributes.append(
+                    (extract_attribute, tag_value))
 
         variant_id = jannotation.pop('variant', 0)
         if variant_id > 0:
@@ -249,7 +274,9 @@ class TemplatePageParser(InstanceLearningParser):
             if isinstance(tag, HtmlTag):
                 for i in range(-1, -len(self.ignored_regions) - 1, -1):
                     if self.ignored_regions[i][1] is None:
-                        self.ignored_regions[i] = (self.ignored_regions[i][0], self.next_tag_index)
+                        self.ignored_regions[i] = (
+                            self.ignored_regions[i][0],
+                            self.next_tag_index)
                         break
             if len(ignored_tags) == 0:
                 del self.ignored_tag_stacks[html_tag.tag]
@@ -285,7 +312,11 @@ class TemplatePageParser(InstanceLearningParser):
             replacement = self.replacement_stacks[html_tag.tag].pop()
             if replacement:
                 self.token_list.pop()
-                self._add_token(replacement, html_tag.tag_type, html_tag.start, html_tag.end)
+                self._add_token(
+                    replacement,
+                    html_tag.tag_type,
+                    html_tag.start,
+                    html_tag.end)
             if len(self.replacement_stacks[html_tag.tag]) == 0:
                 del self.replacement_stacks[html_tag.tag]
         return replacement
@@ -314,17 +345,26 @@ class TemplatePageParser(InstanceLearningParser):
 
     def to_template(self):
         """create a TemplatePage from the data fed to this parser"""
-        return TemplatePage(self.token_dict, self.token_list, self.annotations,
-                self.html_page.page_id, self.ignored_regions, self.extra_required_attrs)
+        return TemplatePage(
+            self.token_dict,
+            self.token_list,
+            self.annotations,
+            self.html_page.page_id,
+            self.ignored_regions,
+            self.extra_required_attrs)
+
 
 class ExtractionPageParser(InstanceLearningParser):
+
     """Parse an HTML page for extraction using the instance based learning
     algorithm
 
     This needs to extract the tokens in a similar way to LabelledPageParser,
-    it needs to also maintain a mapping from token index to the original content
-    so that once regions are identified, the original content can be extracted.
+    it needs to also maintain a mapping from token index to the original
+    content so that once regions are identified, the original content
+    can be extracted.
     """
+
     def __init__(self, token_dict):
         InstanceLearningParser.__init__(self, token_dict)
         self._page_token_indexes = []
@@ -333,5 +373,9 @@ class ExtractionPageParser(InstanceLearningParser):
         self._page_token_indexes.append(index)
 
     def to_extraction_page(self):
-        return ExtractionPage(self.html_page, self.token_dict, array(self.token_list),
-                self._page_token_indexes)
+        return ExtractionPage(
+            self.html_page,
+            self.token_dict,
+            array(
+                self.token_list),
+            self._page_token_indexes)

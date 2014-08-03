@@ -9,11 +9,15 @@ from numpy import array, ndarray
 
 from scrapely.htmlpage import HtmlTagType, HtmlPageRegion, HtmlPageParsedRegion
 
+
 class TokenType(HtmlTagType):
+
     """constants for token types"""
     WORD = 0
 
+
 class TokenDict(object):
+
     """Mapping from parse tokens to integers
 
     >>> d = TokenDict()
@@ -66,7 +70,9 @@ class TokenDict(object):
         templates = ["%s", "<%s>", "</%s>", "<%s/>"]
         return templates[tid >> 24] % self.find_token(tid)
 
+
 class PageRegion(object):
+
     """A region in a page, defined by a start and end index"""
 
     __slots__ = ('start_index', 'end_index')
@@ -77,12 +83,14 @@ class PageRegion(object):
 
     def __str__(self):
         return "%s(%s, %s)" % (self.__class__.__name__, self.start_index,
-                self.end_index)
+                               self.end_index)
 
     def __repr__(self):
         return str(self)
 
+
 class FragmentedHtmlPageRegion(HtmlPageParsedRegion, HtmlPageRegion):
+
     """An HtmlPageRegion consisting of possibly non-contiguous sub-regions"""
     def __new__(cls, htmlpage, regions):
         text = u''.join(regions)
@@ -96,7 +104,9 @@ class FragmentedHtmlPageRegion(HtmlPageParsedRegion, HtmlPageRegion):
     def parsed_fragments(self):
         return chain(*(r.parsed_fragments for r in self.regions))
 
+
 class Page(object):
+
     """Basic representation of a page. This consists of a reference to a
     dictionary of tokens and an array of raw token ids
     """
@@ -110,18 +120,31 @@ class Page(object):
             page_tokens = array(page_tokens)
         self.page_tokens = page_tokens
 
-class TemplatePage(Page):
-    __slots__ = ('annotations', 'id', 'ignored_regions', 'extra_required_attrs')
 
-    def __init__(self, token_dict, page_tokens, annotations, template_id=None, \
-            ignored_regions=None, extra_required=None):
+class TemplatePage(Page):
+    __slots__ = (
+        'annotations',
+        'id',
+        'ignored_regions',
+        'extra_required_attrs')
+
+    def __init__(self, token_dict, page_tokens, annotations, template_id=None,
+                 ignored_regions=None, extra_required=None):
         Page.__init__(self, token_dict, page_tokens)
         # ensure order is the same as start tag order in the original page
-        annotations = sorted(annotations, key=lambda x: x.end_index, reverse=True)
+        annotations = sorted(
+            annotations,
+            key=lambda x: x.end_index,
+            reverse=True)
         self.annotations = sorted(annotations, key=lambda x: x.start_index)
         self.id = template_id
-        self.ignored_regions = [i if isinstance(i, PageRegion) else PageRegion(*i) \
-            for i in (ignored_regions or [])]
+        self.ignored_regions = [
+            i if isinstance(
+                i,
+                PageRegion) else PageRegion(
+                *
+                i) for i in (
+                ignored_regions or [])]
         self.extra_required_attrs = set(extra_required or [])
 
     def __str__(self):
@@ -129,10 +152,13 @@ class TemplatePage(Page):
         for index, token in enumerate(self.page_tokens):
             text = "%s: %s" % (index, self.token_dict.find_token(token))
             summary.append(text)
-        return "TemplatePage\n============\nTokens: (index, token)\n%s\nAnnotations: %s\n" % \
-                ('\n'.join(summary), '\n'.join(map(str, self.annotations)))
+        return "TemplatePage\n============\n" \
+               "Tokens: (index, token)\n%s\nAnnotations: %s\n" % \
+               ('\n'.join(summary), '\n'.join(map(str, self.annotations)))
+
 
 class ExtractionPage(Page):
+
     """Parsed data belonging to a web page upon which we wish to perform
     extraction.
     """
@@ -178,11 +204,13 @@ class ExtractionPage(Page):
     def __str__(self):
         summary = []
         for token, tindex in zip(self.page_tokens, self.token_page_indexes):
-            text = "%s page[%s]: %s" % (self.token_dict.find_token(token),
-                tindex, self.htmlpage.parsed_body[tindex])
+            text = "%s page[%s]: %s" % (
+                self.token_dict.find_token(token), tindex,
+                self.htmlpage.parsed_body[tindex])
             summary.append(text)
         return "ExtractionPage\n==============\nTokens: %s\n\nRaw text: %s\n\n" \
-                % ('\n'.join(summary), self.htmlpage.body)
+            % ('\n'.join(summary), self.htmlpage.body)
+
 
 class AnnotationText(object):
     __slots__ = ('start_text', 'follow_text')
@@ -193,10 +221,11 @@ class AnnotationText(object):
 
     def __str__(self):
         return "AnnotationText(%s..%s)" % \
-                (repr(self.start_text), repr(self.follow_text))
+            (repr(self.start_text), repr(self.follow_text))
 
 
 class AnnotationTag(PageRegion):
+
     """A tag that annotates part of the document
 
     It has the following properties:
@@ -205,15 +234,16 @@ class AnnotationTag(PageRegion):
         surrounds_attribute - the attribute name surrounded by this tag
         tag_attributes - list of (tag attribute, extracted attribute) tuples
                          for each item to be extracted from a tag attribute
-        annotation_text - text prefix and suffix for the attribute to be extracted
+        annotation_text - text prefix and suffix for the attribute
+                          to be extracted
         metadata - dict with annotation data not used by IBL extractor
     """
     __slots__ = ('surrounds_attribute', 'start_index', 'end_index',
-            'tag_attributes', 'annotation_text', 'variant_id',
-            'metadata')
+                 'tag_attributes', 'annotation_text', 'variant_id',
+                 'metadata')
 
     def __init__(self, start_index, end_index, surrounds_attribute=None,
-            annotation_text=None, tag_attributes=None, variant_id=None):
+                 annotation_text=None, tag_attributes=None, variant_id=None):
         PageRegion.__init__(self, start_index, end_index)
         self.surrounds_attribute = surrounds_attribute
         self.annotation_text = annotation_text
@@ -223,9 +253,8 @@ class AnnotationTag(PageRegion):
 
     def __str__(self):
         return "AnnotationTag(%s)" % ", ".join(
-                ["%s=%s" % (s, getattr(self, s)) \
-                for s in self.__slots__ if getattr(self, s)])
+            ["%s=%s" % (s, getattr(self, s))
+             for s in self.__slots__ if getattr(self, s)])
 
     def __repr__(self):
         return str(self)
-

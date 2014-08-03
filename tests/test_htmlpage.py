@@ -1,12 +1,13 @@
 """
 htmlpage.py tests
 """
-import os, copy
+import copy
 from unittest import TestCase
 
 from scrapely.htmlpage import parse_html, HtmlTag, HtmlDataFragment, HtmlPage
 from .test_htmlpage_data import *
 from . import iter_samples
+
 
 def _encode_element(el):
     """
@@ -14,58 +15,76 @@ def _encode_element(el):
     """
     if isinstance(el, HtmlTag):
         return {"tag": el.tag, "attributes": el.attributes,
-            "start": el.start, "end": el.end, "tag_type": el.tag_type}
+                "start": el.start, "end": el.end, "tag_type": el.tag_type}
     if isinstance(el, HtmlDataFragment):
-        return {"start": el.start, "end": el.end, "is_text_content": el.is_text_content}
+        return {
+            "start": el.start,
+            "end": el.end,
+            "is_text_content": el.is_text_content}
     raise TypeError
+
 
 def _decode_element(dct):
     """
     dejsonize parse element
     """
     if "tag" in dct:
-        return HtmlTag(dct["tag_type"], dct["tag"], \
-            dct["attributes"], dct["start"], dct["end"])
+        return HtmlTag(dct["tag_type"], dct["tag"],
+                       dct["attributes"], dct["start"], dct["end"])
     if "start" in dct:
-        return HtmlDataFragment(dct["start"], dct["end"], dct.get("is_text_content", True))
+        return HtmlDataFragment(
+            dct["start"],
+            dct["end"],
+            dct.get(
+                "is_text_content",
+                True))
     return dct
 
+
 class TestParseHtml(TestCase):
+
     """Test for parse_html"""
+
     def _test_sample(self, source, expected_parsed, samplecount=None):
         parsed = parse_html(source)
         count_element = 0
         count_expected = 0
         for element in parsed:
-            if type(element) == HtmlTag:
+            if isinstance(element, HtmlTag):
                 count_element += 1
             expected = expected_parsed.pop(0)
-            if type(expected) == HtmlTag:
+            if isinstance(expected, HtmlTag):
                 count_expected += 1
             element_text = source[element.start:element.end]
             expected_text = source[expected.start:expected.end]
             if element.start != expected.start or element.end != expected.end:
-                errstring = "[%s,%s] %s != [%s,%s] %s" % (element.start, \
-                    element.end, element_text, expected.start, \
+                errstring = "[%s,%s] %s != [%s,%s] %s" % (
+                    element.start, element.end, element_text, expected.start,
                     expected.end, expected_text)
                 if samplecount is not None:
                     errstring += " (sample %d)" % samplecount
                 assert False, errstring
-            if type(element) != type(expected):
-                errstring = "(%s) %s != (%s) %s for text\n%s" % (count_element, \
-                    repr(type(element)), count_expected, repr(type(expected)), element_text)
+            if not isinstance(element, type(expected)):
+                errstring = "(%s) %s != (%s) %s for text\n%s" % (
+                    count_element, repr(type(element)), count_expected,
+                    repr(type(expected)), element_text)
                 if samplecount is not None:
                     errstring += " (sample %d)" % samplecount
                 assert False, errstring
-            if type(element) == HtmlTag:
+            if isinstance(element, HtmlTag):
                 self.assertEqual(element.tag, expected.tag)
                 self.assertEqual(element.attributes, expected.attributes)
                 self.assertEqual(element.tag_type, expected.tag_type)
-            if type(element) == HtmlDataFragment:
+            if isinstance(element, HtmlDataFragment):
                 msg = "Got: %s Expected: %s in sample: %d [%d:%d] (%s)" % \
-                        (element.is_text_content, expected.is_text_content, samplecount, element.start, element.end, repr(element_text)) \
-                        if samplecount is not None else None
-                self.assertEqual(element.is_text_content, expected.is_text_content, msg)
+                    (element.is_text_content, expected.is_text_content,
+                     samplecount, element.start,
+                     element.end, repr(element_text)) \
+                    if samplecount is not None else None
+                self.assertEqual(
+                    element.is_text_content,
+                    expected.is_text_content,
+                    msg)
 
         if expected_parsed:
             errstring = "Expected %s" % repr(expected_parsed)
@@ -76,7 +95,6 @@ class TestParseHtml(TestCase):
     def test_parse(self):
         """simple parse_html test"""
         parsed = [_decode_element(d) for d in PARSED]
-        sample = {"source": PAGE, "parsed": parsed}
         self._test_sample(PAGE, parsed)
 
     def test_site_samples(self):
@@ -112,13 +130,29 @@ class TestParseHtml(TestCase):
 
     def test_special_cases(self):
         """some special cases tests"""
-        parsed = list(parse_html("<meta http-equiv='Pragma' content='no-cache' />"))
-        self.assertEqual(parsed[0].attributes, {'content': 'no-cache', 'http-equiv': 'Pragma'})
-        parsed = list(parse_html("<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>"))
-        self.assertEqual(parsed[0].attributes, {'xmlns': 'http://www.w3.org/1999/xhtml', 'xml:lang': 'en', 'lang': 'en'})
-        parsed = list(parse_html("<IMG SRC='http://images.play.com/banners/SAM550a.jpg' align='left' / hspace=5>"))
-        self.assertEqual(parsed[0].attributes, {'src': 'http://images.play.com/banners/SAM550a.jpg', \
-                                                'align': 'left', 'hspace': '5', '/': None})
+        parsed = list(
+            parse_html(
+                "<meta http-equiv='Pragma' content='no-cache' />"))
+        self.assertEqual(
+            parsed[0].attributes, {
+                'content': 'no-cache', 'http-equiv': 'Pragma'})
+        parsed = list(
+            parse_html(
+                "<html xmlns='http://www.w3.org/1999/xhtml' "
+                "xml:lang='en' lang='en'>"))
+        self.assertEqual(
+            parsed[0].attributes, {
+                'xmlns': 'http://www.w3.org/1999/xhtml',
+                'xml:lang': 'en',
+                'lang': 'en'})
+        parsed = list(
+            parse_html(
+                "<IMG SRC='http://images.play.com/banners/SAM550a.jpg' "
+                "align='left' / hspace=5>"))
+        self.assertEqual(
+            parsed[0].attributes,
+            {'src': 'http://images.play.com/banners/SAM550a.jpg', 'align':
+             'left', 'hspace': '5', '/': None})
 
     def test_no_ending_body(self):
         """Test case when no ending body nor html elements are present"""
@@ -131,7 +165,9 @@ class TestParseHtml(TestCase):
         self._test_sample(PAGE8, parsed)
 
     def test_malformed2(self):
-        """Test case when attributes are not separated by space (still recognizable because of quotes)"""
+        """Test case when attributes are not separated by
+           space (still recognizable because of quotes)
+        """
         parsed = [_decode_element(d) for d in PARSED9]
         self._test_sample(PAGE9, parsed)
 
@@ -141,7 +177,9 @@ class TestParseHtml(TestCase):
 
     def test_ignore_xml_declaration(self):
         """Ignore xml declarations inside html"""
-        parsed = list(parse_html(u"<p>The text</p><?xml:namespace blabla/><p>is here</p>"))
+        parsed = list(
+            parse_html(
+                u"<p>The text</p><?xml:namespace blabla/><p>is here</p>"))
         self.assertFalse(parsed[3].is_text_content)
 
     def test_copy(self):
