@@ -306,8 +306,8 @@ class RecordExtractor(object):
             u'<h1>name</h1> <p>description</p>')
     >>> basic_extractors = map(BasicTypeExtractor, template.annotations)
     >>> ex = RecordExtractor.apply(template, basic_extractors)[0]
-    >>> ex.extract(page)
-    [{u'description': [u'description'], u'name': [u'name']}]
+    >>> ex.extract(page) == [{u'description': [u'description'], u'name': [u'name']}]
+    True
     """
     
     def __init__(self, extractors, template_tokens):
