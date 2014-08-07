@@ -314,7 +314,7 @@ class TemplatePageParser(InstanceLearningParser):
 
     def to_template(self):
         """create a TemplatePage from the data fed to this parser"""
-        return TemplatePage(self.token_dict, self.token_list, self.annotations,
+        return TemplatePage(self.html_page, self.token_dict, self.token_list, self.annotations,
                 self.html_page.page_id, self.ignored_regions, self.extra_required_attrs)
 
 class ExtractionPageParser(InstanceLearningParser):
