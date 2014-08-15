@@ -1,10 +1,18 @@
 from __future__ import with_statement
-import sys, os, re, cmd, shlex, json, optparse, json, urllib, pprint
+import sys
+import os
+import re
+import cmd
+import shlex
+import json
+import optparse
+import pprint
 from cStringIO import StringIO
 
 from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
+
 
 class IblTool(cmd.Cmd):
 
@@ -65,8 +73,9 @@ class IblTool(cmd.Cmd):
                 index = selection[0]
                 tm.annotate_fragment(index, criteria.field)
                 self._save_template(template_id, tm.get_template())
-                print "[new] (%s) %r" % (criteria.field,
-                    remove_annotation(tm.selected_data(index)))
+                print "[new] (%s) %r" % \
+                    (criteria.field,
+                     remove_annotation(tm.selected_data(index)))
         else:
             for n, i in enumerate(selection):
                 print "[%d] %r" % (n, remove_annotation(tm.selected_data(i)))
@@ -78,8 +87,10 @@ class IblTool(cmd.Cmd):
         t = self._load_template(template_id)
         tm = TemplateMaker(t)
         for n, (a, i) in enumerate(tm.annotations()):
-            print "[%s-%d] (%s) %r" % (template_id, n, a['annotations']['content'],
-                remove_annotation(tm.selected_data(i)))
+            print "[%s-%d] (%s) %r" % \
+                (template_id, n,
+                 a['annotations']['content'],
+                 remove_annotation(tm.selected_data(i)))
 
     def do_s(self, url):
         """s <url> - scrape url"""
@@ -113,8 +124,10 @@ class IblTool(cmd.Cmd):
             return []
         with open(self.filename) as f:
             templates = json.load(f)['templates']
-            templates = [HtmlPage(t['url'], body=t['body'], encoding=t['encoding']) \
-                for t in templates]
+            templates = [HtmlPage(t['url'],
+                                  body=t['body'],
+                                  encoding=t['encoding'])
+                         for t in templates]
             return templates
 
     def _save_template(self, template_id, template):
@@ -131,7 +144,8 @@ class IblTool(cmd.Cmd):
         """Parse the given criteria string and returns a criteria object"""
         p = optparse.OptionParser()
         p.add_option('-f', '--field', help='field to annotate')
-        p.add_option('-n', '--number', type="int", help='number of result to select')
+        p.add_option('-n', '--number', type="int",
+                     help='number of result to select')
         o, a = p.parse_args(shlex.split(criteria_str))
 
         encoding = getattr(self.stdin, 'encoding', None) or sys.stdin.encoding
@@ -144,6 +158,7 @@ def parse_at(ta_line):
     p.add_option('-e', '--encoding', help='page encoding')
     return p.parse_args(shlex.split(ta_line))
 
+
 def apply_criteria(criteria, tm):
     """Apply the given criteria object to the given template"""
     func = best_match(criteria.text) if criteria.text else lambda x, y: False
@@ -155,13 +170,16 @@ def apply_criteria(criteria, tm):
             sel = []
     return sel
 
+
 def remove_annotation(text):
     return re.sub(u' ?data-scrapy-annotate=".*?"', '', text)
+
 
 def assert_or_print(condition, text):
     if not condition:
         sys.stderr.write(text + os.linesep)
         return True
+
 
 def args_to_file(args):
     s = []
@@ -173,6 +191,7 @@ def args_to_file(args):
                 a = '"%s"' % a
         s.append(a)
     return StringIO(' '.join(s))
+
 
 def main():
     if len(sys.argv) == 1:

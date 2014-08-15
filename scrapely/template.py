@@ -3,14 +3,18 @@ import json
 
 from scrapely.htmlpage import HtmlTag, HtmlTagType
 
+
 class AnnotationError(Exception):
     pass
+
 
 class FragmentNotFound(AnnotationError):
     pass
 
+
 class FragmentAlreadyAnnotated(AnnotationError):
     pass
+
 
 class TemplateMaker(object):
 
@@ -32,8 +36,9 @@ class TemplateMaker(object):
         """
         indexes = self.select(score_func)
         if not indexes:
-            raise FragmentNotFound("Fragment not found annotating %r using: %s" %
-                (field, score_func))
+            raise FragmentNotFound("Fragment not found "
+                                   "annotating %r using: %s" %
+                                   (field, score_func))
         if best_match:
             del indexes[1:]
         for i in indexes:
@@ -76,9 +81,12 @@ class TemplateMaker(object):
             if isinstance(f, HtmlTag) and f.tag_type == HtmlTagType.OPEN_TAG:
                 if 'data-scrapy-annotate' in f.attributes:
                     fstr = self.htmlpage.fragment_data(f)
-                    raise FragmentAlreadyAnnotated("Fragment already annotated: %s" % fstr)
+                    raise FragmentAlreadyAnnotated(
+                        "Fragment already annotated: %s" % fstr
+                    )
                 d = {'annotations': {'content': field}}
-                a = ' data-scrapy-annotate="%s"' % json.dumps(d).replace('"', '&quot;')
+                a = ' data-scrapy-annotate="%s"' % \
+                    json.dumps(d).replace('"', '&quot;')
                 p = self.htmlpage
                 p.body = p.body[:f.end-1] + a + p.body[f.end-1:]
                 return True
@@ -99,6 +107,7 @@ def best_match(text):
             return 0.0
     return func
 
+
 def _enclosing_tags(htmlpage, index):
     f = htmlpage.parsed_body[index]
     if isinstance(f, HtmlTag) and f.tag_type == HtmlTagType.UNPAIRED_TAG:
@@ -109,7 +118,8 @@ def _enclosing_tags(htmlpage, index):
             start_tag = f
             break
     if not start_tag:
-        raise FragmentNotFound("Unable to find start tag from index %d" % index)
+        raise FragmentNotFound("Unable to find start "
+                               "tag from index %d" % index)
     tcount = 1
     start_index = htmlpage.parsed_body.index(start_tag)
     for f in htmlpage.parsed_body[start_index+1:]:

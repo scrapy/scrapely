@@ -19,11 +19,13 @@ Main departures from the original algorithm:
 from operator import itemgetter
 from .pageparsing import parse_template, parse_extraction_page
 from .pageobjects import TokenDict
-from .regionextract import (BasicTypeExtractor, TraceExtractor, RepeatedDataExtractor, \
-                            AdjacentVariantExtractor, RecordExtractor, TemplatePageExtractor)
+from .regionextract import (BasicTypeExtractor, TraceExtractor,
+                            RepeatedDataExtractor, AdjacentVariantExtractor,
+                            RecordExtractor, TemplatePageExtractor)
 
 
 class InstanceBasedLearningExtractor(object):
+
     """Implementation of the instance based learning algorithm to
     extract data from web pages.
     """
@@ -48,9 +50,12 @@ class InstanceBasedLearningExtractor(object):
         property that contains a trace of the extraction execution.
         """
         self.token_dict = TokenDict()
-        parsed_plus_tdpairs = [(parse_template(self.token_dict, td[0]), td) for td in td_pairs]
-        parsed_plus_epages = [(p, parse_extraction_page(self.token_dict, td[0]), td) for p, td \
-               in parsed_plus_tdpairs if _annotation_count(p)]
+        parsed_plus_tdpairs = [
+            (parse_template(self.token_dict, td[0]), td)
+            for td in td_pairs]
+        parsed_plus_epages = [
+            (p, parse_extraction_page(self.token_dict, td[0]), td) for p,
+            td in parsed_plus_tdpairs if _annotation_count(p)]
         parsed_tdpairs = map(itemgetter(0, 2), parsed_plus_epages)
 
         modified_parsed_tdpairs = []
@@ -62,27 +67,41 @@ class InstanceBasedLearningExtractor(object):
                     descriptor._required_attributes.append(attr)
                     # not always is present a descriptor for a given attribute
                     if attr in descriptor.attribute_map:
-                        # not strictly necesary, but avoid possible inconsistences for user
+                        # not strictly necesary, but avoid possible
+                        # inconsistences for user
                         descriptor.attribute_map[attr].required = True
             modified_parsed_tdpairs.append((parsed, (t, descriptor)))
         # templates with more attributes are considered first
-        sorted_tdpairs = sorted(modified_parsed_tdpairs, \
-                key=lambda x: _annotation_count(itemgetter(0)(x)), reverse=True)
-        self.extraction_trees = [self.build_extraction_tree(p, td[1],
-            trace) for p, td in sorted_tdpairs]
-        self.validated = dict((td[0].page_id, td[1].validated if td[1] else \
-                self._filter_not_none) for _, td in sorted_tdpairs)
+        sorted_tdpairs = sorted(
+            modified_parsed_tdpairs,
+            key=lambda x: _annotation_count(
+                itemgetter(0)(x)),
+            reverse=True)
+        self.extraction_trees = [
+            self.build_extraction_tree(
+                p,
+                td[1],
+                trace) for p,
+            td in sorted_tdpairs]
+        self.validated = dict(
+            (td[0].page_id,
+             td[1].validated if td[1] else self._filter_not_none) for _,
+            td in sorted_tdpairs)
 
     def build_extraction_tree(self, template, type_descriptor, trace=True):
         """Build a tree of region extractors corresponding to the
         template
         """
-        attribute_map = type_descriptor.attribute_map if type_descriptor else None
-        extractors = BasicTypeExtractor.create(template.annotations, attribute_map)
+        attribute_map = type_descriptor.attribute_map \
+            if type_descriptor else None
+        extractors = BasicTypeExtractor.create(
+            template.annotations,
+            attribute_map)
         if trace:
             extractors = TraceExtractor.apply(template, extractors)
-        for cls in (RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor, AdjacentVariantExtractor, RepeatedDataExtractor,
-                    RecordExtractor):
+        for cls in (RepeatedDataExtractor, AdjacentVariantExtractor,
+                    RepeatedDataExtractor, AdjacentVariantExtractor,
+                    RepeatedDataExtractor, RecordExtractor):
             extractors = cls.apply(template, extractors)
             if trace:
                 extractors = TraceExtractor.apply(template, extractors)
@@ -97,25 +116,28 @@ class InstanceBasedLearningExtractor(object):
         """
         extraction_page = parse_extraction_page(self.token_dict, html)
         if pref_template_id is not None:
-            extraction_trees = sorted(self.extraction_trees,
-                    key=lambda x: x.template.id != pref_template_id)
+            extraction_trees = sorted(
+                self.extraction_trees,
+                key=lambda x: x.template.id != pref_template_id)
         else:
             extraction_trees = self.extraction_trees
 
         for extraction_tree in extraction_trees:
             extracted = extraction_tree.extract(extraction_page)
-            correctly_extracted = self.validated[extraction_tree.template.id](extracted)
+            correctly_extracted = self.validated[
+                extraction_tree.template.id](extracted)
             if len(correctly_extracted) > 0:
                 return correctly_extracted, extraction_tree.template
         return None, None
 
     def __str__(self):
         return "InstanceBasedLearningExtractor[\n%s\n]" % \
-                (',\n'.join(map(str, self.extraction_trees)))
+            (',\n'.join(map(str, self.extraction_trees)))
 
     @staticmethod
     def _filter_not_none(items):
         return [d for d in items if d is not None]
+
 
 def _annotation_count(template):
     return len(template.annotations)

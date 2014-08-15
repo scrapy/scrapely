@@ -1,9 +1,9 @@
-import urllib
 import json
 
 from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
+
 
 class Scraper(object):
 
@@ -52,5 +52,5 @@ class Scraper(object):
     def scrape_page(self, page):
         if self._ex is None:
             self._ex = InstanceBasedLearningExtractor((t, None) for t in
-                    self._templates)
+                                                      self._templates)
         return self._ex.extract(page)[0]

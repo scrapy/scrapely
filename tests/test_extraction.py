@@ -9,9 +9,9 @@ from nose_parameterized import parameterized
 
 from scrapely.htmlpage import HtmlPage
 from scrapely.descriptor import (FieldDescriptor as A,
-        ItemDescriptor)
+                                 ItemDescriptor)
 from scrapely.extractors import (contains_any_numbers,
-        image_url, html, notags)
+                                 image_url, html, notags)
 from scrapely.extraction import InstanceBasedLearningExtractor
 
 # simple page with all features
@@ -54,7 +54,8 @@ ANNOTATED_PAGE2 = u"""
 <a href="http://example.com/xxx" title="xxx"
     data-scrapy-annotate="{&quot;variant&quot;: 0,
     &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;,
-        &quot;href&quot;: &quot;image_url&quot;, &quot;title&quot;: &quot;name&quot;}}"
+        &quot;href&quot;: &quot;image_url&quot;, \
+            &quot;title&quot;: &quot;name&quot;}}"
 >xx</a>
 xxx
 </a>
@@ -65,9 +66,11 @@ EXTRACT_PAGE2 = u"""<a href='http://example.com/product1.jpg'
 # matching must match the second attribute in order to find the first
 ANNOTATED_PAGE3 = u"""
 <p data-scrapy-annotate="{&quot;variant&quot;: 0,
-    &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">xx</p>
+    &quot;annotations&quot;: {&quot;content&quot;: \
+        &quot;description&quot;}}">xx</p>
 <div data-scrapy-annotate="{&quot;variant&quot;: 0,
-    &quot;annotations&quot;: {&quot;content&quot;: &quot;delivery&quot;}}">xx</div>
+    &quot;annotations&quot;: {&quot;content&quot;: \
+        &quot;delivery&quot;}}">xx</div>
 """
 EXTRACT_PAGE3 = u"""
 <p>description</p>
@@ -79,9 +82,11 @@ EXTRACT_PAGE3 = u"""
 ANNOTATED_PAGE4 = u"""
 <ul>
 <li data-scrapy-annotate="{&quot;variant&quot;: 0,
-    &quot;annotations&quot;: {&quot;content&quot;: &quot;features&quot;}}">feature1</li>
+    &quot;annotations&quot;: \
+        {&quot;content&quot;: &quot;features&quot;}}">feature1</li>
 <li data-scrapy-annotate="{&quot;variant&quot;: 0,
-    &quot;annotations&quot;: {&quot;content&quot;: &quot;features&quot;}}">feature2</li>
+    &quot;annotations&quot;: \
+        {&quot;content&quot;: &quot;features&quot;}}">feature2</li>
 </ul>
 """
 
@@ -94,7 +99,7 @@ EXTRACT_PAGE4 = u"""
 """
 
 # test variant handling with identical repeated variant
-ANNOTATED_PAGE5 =  u"""
+ANNOTATED_PAGE5 = u"""
 <p data-scrapy-annotate="{&quot;annotations&quot;:
     {&quot;content&quot;: &quot;description&quot;}}">description</p>
 <table>
@@ -113,7 +118,7 @@ ANNOTATED_PAGE5 =  u"""
 </table>
 """
 
-ANNOTATED_PAGE5a =  u"""
+ANNOTATED_PAGE5a = u"""
 <p data-scrapy-annotate="{&quot;annotations&quot;:
     {&quot;content&quot;: &quot;description&quot;}}">description</p>
 <table>
@@ -121,13 +126,15 @@ ANNOTATED_PAGE5a =  u"""
 <td data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;annotations&quot;:
     {&quot;content&quot;: &quot;colour&quot;}}" >colour 1</td>
 <td data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;annotations&quot;:
-    {&quot;content&quot;: &quot;price&quot;}, &quot;required&quot;: [&quot;price&quot;]}" >price 1</td>
+    {&quot;content&quot;: &quot;price&quot;}, \
+        &quot;required&quot;: [&quot;price&quot;]}" >price 1</td>
 </tr>
 <tr>
 <td data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;annotations&quot;:
     {&quot;content&quot;: &quot;colour&quot;}}" >colour 2</td>
 <td data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;annotations&quot;:
-    {&quot;content&quot;: &quot;price&quot;}, &quot;required&quot;: [&quot;price&quot;]}" >price 2</td>
+    {&quot;content&quot;: &quot;price&quot;}, \
+        &quot;required&quot;: [&quot;price&quot;]}" >price 2</td>
 </tr>
 </table>
 """
@@ -152,7 +159,7 @@ EXTRACT_PAGE5 = u"""
 
 # test variant handling with irregular structure and some non-variant
 # attributes
-ANNOTATED_PAGE6 =  u"""
+ANNOTATED_PAGE6 = u"""
 <p data-scrapy-annotate="{&quot;annotations&quot;:
     {&quot;content&quot;: &quot;description&quot;}}">description</p>
 <p data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;annotations&quot;:
@@ -162,7 +169,7 @@ ANNOTATED_PAGE6 =  u"""
 <p data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;annotations&quot;:
     {&quot;content&quot;: &quot;name&quot;}}" >name 2</p>
 """
-EXTRACT_PAGE6 =  u"""
+EXTRACT_PAGE6 = u"""
 <p>description</p>
 <p>name 1</p>
 <div>name 3</div>
@@ -170,7 +177,7 @@ EXTRACT_PAGE6 =  u"""
 """
 
 # test repeating variants at the table column level
-ANNOTATED_PAGE7 =  u"""
+ANNOTATED_PAGE7 = u"""
 <table>
 <tr>
 <td data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;annotations&quot;:
@@ -205,13 +212,15 @@ EXTRACT_PAGE7 = u"""
 ANNOTATED_PAGE8 = u"""
 <html><body>
 <h1>A product</h1>
-<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">
 <p>XXXX XXXX xxxxx</p>
 <div data-scrapy-ignore="true">
 <img scr="image.jpg" /><br/><a link="back.html">Click here to go back</a>
 </div>
 </div>
-<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;price&quot;}}">
 10.00<p data-scrapy-ignore="true"> 13</p>
 </div>
 </body></html>
@@ -252,20 +261,25 @@ EXTRACT_PAGE9 = u"""
 
 ANNOTATED_PAGE11 = u"""
 <html><body>
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
-<ins data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: true,
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">
+<ins data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;generated&quot;: true,
     &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">
 SL342
 </ins>
 <br/>
 Nice product for ladies
-<br/><ins data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: true,
+<br/><ins data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;generated&quot;: true,
      &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">
 &pound;85.00
 </ins>
 </p>
-<ins data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: true,
-     &quot;annotations&quot;: {&quot;content&quot;: &quot;price_before_discount&quot;}}">
+<ins data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;generated&quot;: true,
+     &quot;annotations&quot;: {&quot;content&quot;: \
+         &quot;price_before_discount&quot;}}">
 &pound;100.00
 </ins>
 </body></html>
@@ -287,7 +301,8 @@ Nice product for ladies
 ANNOTATED_PAGE12 = u"""
 <html><body>
 <h1 data-scrapy-ignore-beneath="true">A product</h1>
-<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">
 <p>XXXX XXXX xxxxx</p>
 <div data-scrapy-ignore-beneath="true">
 <img scr="image.jpg" /><br/><a link="back.html">Click here to go back</a>
@@ -335,16 +350,19 @@ Features
 </body></html>
 """
 
-# Ex1: nested annotation with token sequence replica outside exterior annotation
-# and a possible sequence pattern can be extracted only with
+# Ex1: nested annotation with token sequence replica outside exterior
+# annotation and a possible sequence pattern can be extracted only with
 # correct handling of nested annotations
 ANNOTATED_PAGE13a = u"""
 <html><body>
 <span>
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;:
+    {&quot;content&quot;: &quot;description&quot;}}">
 <hr/>
-<h3 data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">A product</h3>
-<b data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">$50.00</b>
+<h3 data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;name&quot;}}">A product</h3>
+<b data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;price&quot;}}">$50.00</b>
 This product is excelent. Buy it!
 </p>
 </span>
@@ -377,14 +395,16 @@ This product is excelent. Buy it!
 </body></html>
 """
 
-# Ex2: annotation with token sequence replica inside a previous nested annotation
-# and a possible sequence pattern can be extracted only with
+# Ex2: annotation with token sequence replica inside a previous nested
+# annotation and a possible sequence pattern can be extracted only with
 # correct handling of nested annotations
 ANNOTATED_PAGE13b = u"""
 <html><body>
 <span>
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
-<h3 data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">A product</h3>
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">
+<h3 data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;name&quot;}}">A product</h3>
 <b>Previous price: $50.00</b>
 This product is excelent. Buy it!
 </p>
@@ -392,7 +412,8 @@ This product is excelent. Buy it!
 <span>
 <p>
 <h3>Save 10%!!</h3>
-<b data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">$45.00</b>
+<b data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;price&quot;}}">$45.00</b>
 </p>
 </span>
 </body></html>
@@ -420,7 +441,8 @@ This product is excelent. Buy it!
 
 ANNOTATED_PAGE14 = u"""
 <html><body>
-<b data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}"></b>
+<b data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}"></b>
 <p data-scrapy-ignore="true"></p>
 </body></html>
 """
@@ -432,12 +454,18 @@ EXTRACT_PAGE14 = u"""
 
 ANNOTATED_PAGE15 = u"""
 <html><body>
-<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;short_description&quot;}}">Short
-<div data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;site_id&quot;}}">892342</div>
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;short_description&quot;}}">Short
+<div data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;annotations&quot;: {&quot;content&quot;: \
+    &quot;site_id&quot;}}">892342</div>
 </div>
 <hr/>
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">Description
-<b data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">90.00</b>
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">Description
+<b data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;annotations&quot;: {&quot;content&quot;: \
+    &quot;price&quot;}}">90.00</b>
 </p>
 </body></html>
 """
@@ -453,11 +481,14 @@ EXTRACT_PAGE15 = u"""
 
 ANNOTATED_PAGE16 = u"""
 <html><body>
-<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">
 Description
-<p data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">
+<p data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">
 name</p>
-<p data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">
+<p data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">
 80.00</p>
 </div>
 </body></html>
@@ -473,7 +504,8 @@ EXTRACT_PAGE16 = u"""
 ANNOTATED_PAGE17 = u"""
 <html><body>
 <span>
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">
 This product is excelent. Buy it!
 </p>
 </span>
@@ -505,8 +537,11 @@ This product is excelent. Buy it!
 
 ANNOTATED_PAGE18 = u"""
 <html><body>
-<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">
-<ins data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;generated&quot;: true, &quot;annotations&quot;: {&quot;content&quot;: &quot;site_id&quot;}}">Item Id</ins>
+<div data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">
+<ins data-scrapy-ignore="true" data-scrapy-annotate="{&quot;variant&quot;: 0, \
+    &quot;generated&quot;: true, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;site_id&quot;}}">Item Id</ins>
 <br>
 Description
 </div>
@@ -526,10 +561,15 @@ Description
 ANNOTATED_PAGE19 = u"""
 <html><body>
 <div>
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">Product name</p>
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">60.00</p>
-<img data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;src&quot;: &quot;image_urls&quot;}}" src="image.jpg" />
-<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;required&quot;: [&quot;description&quot;], &quot;annotations&quot;: {&quot;content&quot;: &quot;description&quot;}}">description</p>
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;name&quot;}}">Product name</p>
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;price&quot;}}">60.00</p>
+<img data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;annotations&quot;: \
+    {&quot;src&quot;: &quot;image_urls&quot;}}" src="image.jpg" />
+<p data-scrapy-annotate="{&quot;variant&quot;: 0, &quot;required&quot;: \
+    [&quot;description&quot;], &quot;annotations&quot;: \
+    {&quot;content&quot;: &quot;description&quot;}}">description</p>
 </div>
 </body></html>
 """
@@ -562,12 +602,22 @@ ANNOTATED_PAGE20 = u"""
 <h1>Product Name</h1>
 <img src="product.jpg">
 <br/>
-<span><ins data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: true,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">Twin</ins>:</span> $<ins data-scrapy-annotate="{&quot;variant&quot;: 1, &quot;generated&quot;: true,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">270</ins> - November 2010<br/>
-<span><ins data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: true,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">Queen</ins>:</span> $<ins data-scrapy-annotate="{&quot;variant&quot;: 2, &quot;generated&quot;: true,
-&quot;annotations&quot;: {&quot;content&quot;: &quot;price&quot;}}">330</ins> - In stock<br/>
+<span><ins data-scrapy-annotate="{&quot;variant&quot;: 1, \
+    &quot;generated&quot;: true,
+    &quot;annotations&quot;: \
+     {&quot;content&quot;: &quot;name&quot;}}">Twin</ins>:</span> $<ins \
+        data-scrapy-annotate="{&quot;variant&quot;: 1, \
+        &quot;generated&quot;: true,
+        &quot;annotations&quot;: \
+         {&quot;content&quot;: \
+            &quot;price&quot;}}">270</ins> - November 2010<br/>
+<span><ins data-scrapy-annotate="{&quot;variant&quot;: 2, \
+    &quot;generated&quot;: true,
+&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;\
+    }}">Queen</ins>:</span> $<ins data-scrapy-annotate="\
+    {&quot;variant&quot;: 2, &quot;generated&quot;: true,
+&quot;annotations&quot;: {&quot;content&quot;: \
+    &quot;price&quot;}}">330</ins> - In stock<br/>
 <br/>
 </body></html>
 """
@@ -585,21 +635,35 @@ EXTRACT_PAGE20 = u"""
 
 ANNOTATED_PAGE21 = u"""
 <html><body>
-<img src="image.jpg" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;src&quot;: &quot;image_urls&quot;}}">
+<img src="image.jpg" data-scrapy-annotate="{&quot;required&quot;: [], \
+    &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;src&quot;: \
+    &quot;image_urls&quot;}}">
 <p>
 <table>
 
-<tr><td><img src="swatch1.jpg" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 1, &quot;annotations&quot;: {&quot;src&quot;: &quot;swatches&quot;}}"></td></tr>
+<tr><td><img src="swatch1.jpg" \
+    data-scrapy-annotate="{&quot;required&quot;: [], \
+                        &quot;variant&quot;: 1, \
+                        &quot;annotations&quot;: {&quot;src&quot;: \
+                                                  &quot;swatches&quot;}}\
+    "></td></tr>
 
 <tr><td><img src="swatch2.jpg"></td></tr>
 
 <tr><td><img src="swatch3.jpg"></td></tr>
 
-<tr><td><img src="swatch4.jpg" data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 2, &quot;annotations&quot;: {&quot;src&quot;: &quot;swatches&quot;}}"></td></tr>
+<tr><td><img src="swatch4.jpg" \
+    data-scrapy-annotate="{&quot;required&quot;: [], \
+    &quot;variant&quot;: 2, \
+    &quot;annotations&quot;: \
+    {&quot;src&quot;: &quot;swatches&quot;}}"></td></tr>
 
 </table>
 
-<div data-scrapy-annotate="{&quot;required&quot;: [], &quot;variant&quot;: 0, &quot;annotations&quot;: {&quot;content&quot;: &quot;category&quot;}}">tables</div>
+<div data-scrapy-annotate="{&quot;required&quot;: [], \
+    &quot;variant&quot;: 0, \
+    &quot;annotations&quot;: {&quot;content&quot;: \
+    &quot;category&quot;}}">tables</div>
 
 </body></html>
 """
@@ -978,41 +1042,42 @@ EXTRACT_PAGE32 = u"""
 </ul>
 """
 
-DEFAULT_DESCRIPTOR = ItemDescriptor('test',
-        'item test, removes tags from description attribute',
-        [A('description', 'description field without tags', notags)])
+DEFAULT_DESCRIPTOR = ItemDescriptor(
+    'test', 'item test, removes tags from description attribute',
+    [A('description', 'description field without tags', notags)])
 
 SAMPLE_DESCRIPTOR1 = ItemDescriptor('test', 'product test', [
-            A('name', "Product name", required=True),
-            A('price', "Product price, including any discounts and tax or vat",
-                contains_any_numbers, True),
-            A('image_urls', "URLs for one or more images", image_url, True),
-            A('description', "The full description of the product", html),
-            ]
-        )
+    A('name', "Product name", required=True),
+    A('price', "Product price, including any discounts and tax or vat",
+      contains_any_numbers, True),
+    A('image_urls', "URLs for one or more images", image_url, True),
+    A('description', "The full description of the product", html),
+    ]
+    )
 
 SAMPLE_DESCRIPTOR1a = ItemDescriptor('test', 'product test', [
-            A('name', "Product name"),
-            A('price', "Product price, including any discounts and tax or vat",
-                contains_any_numbers),
-            A('image_urls', "URLs for one or more images", image_url),
-            A('description', "The full description of the product", html),
-            ]
-        )
+    A('name', "Product name"),
+    A('price', "Product price, including any discounts and tax or vat",
+      contains_any_numbers),
+    A('image_urls', "URLs for one or more images", image_url),
+    A('description', "The full description of the product", html),
+    ]
+    )
 
 SAMPLE_DESCRIPTOR2 = ItemDescriptor('test', 'item test', [
-        A('description', 'description field without tags', notags),
-        A('price', "Product price, including any discounts and tax or vat",
-                contains_any_numbers),
+    A('description', 'description field without tags', notags),
+    A('price', "Product price, including any discounts and tax or vat",
+      contains_any_numbers),
     ])
 
-SAMPLE_DESCRIPTOR3 = ItemDescriptor('test',
-        'item test',
-        [A('phone', 'phone number', lambda x: contains_any_numbers(x.text_content))])
+SAMPLE_DESCRIPTOR3 = ItemDescriptor('test', 'item test', [A(
+    'phone', 'phone number', lambda x: contains_any_numbers(x.text_content))])
 
-SAMPLE_DESCRIPTOR4 =  ItemDescriptor('test',
-        'item test, removes tags from description attribute',
-        [A('description', 'description field without tags', lambda x: x.text_content)])
+SAMPLE_DESCRIPTOR4 = ItemDescriptor('test',
+                                    'item test, removes tags from description attribute',
+                                    [A('description',
+                                       'description field without tags',
+                                       lambda x: x.text_content)])
 
 # A list of (test name, [templates], page, extractors, expected_result)
 TEST_DATA = [
@@ -1020,283 +1085,292 @@ TEST_DATA = [
     ('similar page extraction', [ANNOTATED_PAGE1], EXTRACT_PAGE1, DEFAULT_DESCRIPTOR,
         {u'title': [u'Nice Product'], u'description': [u'wonderful product'],
             u'image_url': [u'nice_product.jpg']}
-    ),
+     ),
     # strip the first 5 characters from the title
     ('extractor test', [ANNOTATED_PAGE1], EXTRACT_PAGE1,
         ItemDescriptor('test', 'product test',
-            [A('title', "something about a title", lambda x: x[5:])]),
+                       [A('title', "something about a title", lambda x: x[5:])]),
         {u'title': [u'Product'], u'description': [u'wonderful product'],
             u'image_url': [u'nice_product.jpg']}
-    ),
+     ),
     # compilicated tag (multiple attributes and annotation)
     ('multiple attributes and annotation', [ANNOTATED_PAGE2], EXTRACT_PAGE2, DEFAULT_DESCRIPTOR,
         {'name': [u'product 1'], 'image_url': [u'http://example.com/product1.jpg'],
             'description': [u'product 1 is great']}
-    ),
-    # can only work out correct placement by matching the second attribute first
+     ),
+    # can only work out correct placement by matching the second attribute
+    # first
     ('ambiguous description', [ANNOTATED_PAGE3], EXTRACT_PAGE3, DEFAULT_DESCRIPTOR,
         {'description': [u'description'], 'delivery': [u'delivery']}
-    ),
+     ),
     # infer a repeated structure
     ('repeated elements', [ANNOTATED_PAGE4], EXTRACT_PAGE4, DEFAULT_DESCRIPTOR,
         {'features': [u'feature1', u'feature2', u'feature3']}
-    ),
+     ),
     # identical variants with a repeated structure
     ('repeated identical variants', [ANNOTATED_PAGE5], EXTRACT_PAGE5, DEFAULT_DESCRIPTOR,
-         {
-             'description': [u'description'],
-             'variants': [
-                 {u'colour': [u'colour 1'], u'price': [u'price 1']},
-                 {u'colour': [u'colour 2'], u'price': [u'price 2']},
-                 {u'colour': [u'colour 3'], u'price': [u'price 3']}
+     {
+         'description': [u'description'],
+         'variants': [
+             {u'colour': [u'colour 1'], u'price': [u'price 1']},
+             {u'colour': [u'colour 2'], u'price': [u'price 2']},
+             {u'colour': [u'colour 3'], u'price': [u'price 3']}
              ]
          }
-    ),
+     ),
     ('variants with extra required attributes', [ANNOTATED_PAGE5a], EXTRACT_PAGE5, SAMPLE_DESCRIPTOR2,
-         {
-             'description': [u'description'],
-             'variants': [
-                 {u'colour': [u'colour 1'], u'price': [u'price 1']},
-                 {u'colour': [u'colour 2'], u'price': [u'price 2']},
-                 {u'colour': [u'colour 3'], u'price': [u'price 3']}
+     {
+         'description': [u'description'],
+         'variants': [
+             {u'colour': [u'colour 1'], u'price': [u'price 1']},
+             {u'colour': [u'colour 2'], u'price': [u'price 2']},
+             {u'colour': [u'colour 3'], u'price': [u'price 3']}
              ]
          }
-    ),
+     ),
     ('test that new descriptor is created from the original', [ANNOTATED_PAGE4], EXTRACT_PAGE4, SAMPLE_DESCRIPTOR2,
         {'features': [u'feature1', u'feature2', u'feature3']}
-    ),
+     ),
     # variants with an irregular structure
     ('irregular variants', [ANNOTATED_PAGE6], EXTRACT_PAGE6, DEFAULT_DESCRIPTOR,
-         {
-             'description': [u'description'],
-             'variants': [
-                 {u'name': [u'name 1']},
-                 {u'name': [u'name 3']},
-                 {u'name': [u'name 2']}
+     {
+         'description': [u'description'],
+         'variants': [
+             {u'name': [u'name 1']},
+             {u'name': [u'name 3']},
+             {u'name': [u'name 2']}
              ]
          }
-    ),
+     ),
     ('dont fail if extra required attribute has no field descriptor', [ANNOTATED_PAGE5a], EXTRACT_PAGE5,
         DEFAULT_DESCRIPTOR,
-          {
-             'description': [u'description'],
-             'variants': [
-                 {u'colour': [u'colour 1'], u'price': [u'price 1']},
-                 {u'colour': [u'colour 2'], u'price': [u'price 2']},
-                 {u'colour': [u'colour 3'], u'price': [u'price 3']}
+     {
+         'description': [u'description'],
+         'variants': [
+             {u'colour': [u'colour 1'], u'price': [u'price 1']},
+             {u'colour': [u'colour 2'], u'price': [u'price 2']},
+             {u'colour': [u'colour 3'], u'price': [u'price 3']}
              ]
          }
-    ),
+     ),
 
     # discovering repeated variants in table columns
-#    ('variants in table columns', [ANNOTATED_PAGE7], EXTRACT_PAGE7, DEFAULT_DESCRIPTOR,
-#         {'variants': [
-#             {u'colour': [u'colour 1'], u'price': [u'price 1']},
-#             {u'colour': [u'colour 2'], u'price': [u'price 2']},
-#             {u'colour': [u'colour 3'], u'price': [u'price 3']}
-#         ]}
-#    ),
+    #    ('variants in table columns', [ANNOTATED_PAGE7], EXTRACT_PAGE7, DEFAULT_DESCRIPTOR,
+    #         {'variants': [
+    #             {u'colour': [u'colour 1'], u'price': [u'price 1']},
+    #             {u'colour': [u'colour 2'], u'price': [u'price 2']},
+    #             {u'colour': [u'colour 3'], u'price': [u'price 3']}
+    #         ]}
+    #    ),
 
 
     # ignored regions
     (
-    'ignored_regions', [ANNOTATED_PAGE8], EXTRACT_PAGE8, DEFAULT_DESCRIPTOR,
-          {
-             'description': [u'\n A very nice product for all intelligent people \n \n'],
-             'price': [u'\n12.00\n(VAT exc.)'],
-          }
+        'ignored_regions', [ANNOTATED_PAGE8], EXTRACT_PAGE8, DEFAULT_DESCRIPTOR,
+        {
+            'description': [u'\n A very nice product for all intelligent people \n \n'],
+            'price': [u'\n12.00\n(VAT exc.)'],
+            }
     ),
     # ignored regions and text content extraction
     (
-    'ignored_regions', [ANNOTATED_PAGE8], EXTRACT_PAGE8, SAMPLE_DESCRIPTOR4,
-          {
-             'description': [u'\n A very nice product for all intelligent people \n \n'],
-             'price': [u'\n12.00\n(VAT exc.)'],
-          }
+        'ignored_regions', [ANNOTATED_PAGE8], EXTRACT_PAGE8, SAMPLE_DESCRIPTOR4,
+        {
+            'description': [u'\n A very nice product for all intelligent people \n \n'],
+            'price': [u'\n12.00\n(VAT exc.)'],
+            }
     ),
     # shifted ignored regions (detected by region similarity)
     (
-    'shifted_ignored_regions', [ANNOTATED_PAGE9], EXTRACT_PAGE9, DEFAULT_DESCRIPTOR,
-          {
-             'description': [u'\n A very nice product for all intelligent people \n \n'],
-             'price': [u'\n12.00\n(VAT exc.)'],
-          }
+        'shifted_ignored_regions', [ANNOTATED_PAGE9], EXTRACT_PAGE9, DEFAULT_DESCRIPTOR,
+        {
+            'description': [u'\n A very nice product for all intelligent people \n \n'],
+            'price': [u'\n12.00\n(VAT exc.)'],
+            }
     ),
-    (# special case with partial annotations
-    'special_partial_annotation', [ANNOTATED_PAGE11], EXTRACT_PAGE11, DEFAULT_DESCRIPTOR,
-          {
+    (  # special case with partial annotations
+        'special_partial_annotation', [ANNOTATED_PAGE11], EXTRACT_PAGE11, DEFAULT_DESCRIPTOR,
+        {
             'name': [u'SL342'],
             'description': ['\nSL342\n \nNice product for ladies\n \n&pound;85.00\n'],
             'price': [u'\xa385.00'],
             'price_before_discount': [u'\xa3100.00'],
-          }
+            }
     ),
-    (# with ignore-beneath feature
-    'ignore-beneath', [ANNOTATED_PAGE12], EXTRACT_PAGE12a, DEFAULT_DESCRIPTOR,
-          {
+    (  # with ignore-beneath feature
+        'ignore-beneath', [ANNOTATED_PAGE12], EXTRACT_PAGE12a, DEFAULT_DESCRIPTOR,
+        {
             'description': [u'\n A very nice product for all intelligent people \n'],
-          }
+            }
     ),
-    (# ignore-beneath with extra tags
-    'ignore-beneath with extra tags', [ANNOTATED_PAGE12], EXTRACT_PAGE12b, DEFAULT_DESCRIPTOR,
-          {
+    (  # ignore-beneath with extra tags
+        'ignore-beneath with extra tags', [ANNOTATED_PAGE12], EXTRACT_PAGE12b, DEFAULT_DESCRIPTOR,
+        {
             'description': [u'\n A very nice product for all intelligent people \n'],
-          }
+            }
     ),
     ('nested annotation with replica outside', [ANNOTATED_PAGE13a], EXTRACT_PAGE13a, DEFAULT_DESCRIPTOR,
-          {'description': [u'\n A product \n $50.00 \nThis product is excelent. Buy it!\n \n'],
-           'price': ["$50.00"],
-           'name': [u'A product']}
-    ),
+     {'description': [u'\n A product \n $50.00 \nThis product is excelent. Buy it!\n \n'],
+      'price': ["$50.00"],
+      'name': [u'A product']}
+     ),
     ('outside annotation with nested replica', [ANNOTATED_PAGE13b], EXTRACT_PAGE13b, DEFAULT_DESCRIPTOR,
-          {'description': [u'\n A product \n $50.00 \nThis product is excelent. Buy it!\n'],
-           'price': ["$45.00"],
-           'name': [u'A product']}
-    ),
+     {'description': [u'\n A product \n $50.00 \nThis product is excelent. Buy it!\n'],
+      'price': ["$45.00"],
+      'name': [u'A product']}
+     ),
     ('consistency check', [ANNOTATED_PAGE14], EXTRACT_PAGE14, DEFAULT_DESCRIPTOR,
-          None,
-    ),
+     None,
+     ),
     ('consecutive nesting', [ANNOTATED_PAGE15], EXTRACT_PAGE15, DEFAULT_DESCRIPTOR,
-          {'description': [u'Description\n \n'],
-           'price': [u'80.00']},
-    ),
+     {'description': [u'Description\n \n'],
+      'price': [u'80.00']},
+     ),
     ('nested inside not found', [ANNOTATED_PAGE16], EXTRACT_PAGE16, DEFAULT_DESCRIPTOR,
-          {'price': [u'90.00'],
-           'name': [u'product name']},
-    ),
+     {'price': [u'90.00'],
+      'name': [u'product name']},
+     ),
     ('ignored region helps to find attributes', [ANNOTATED_PAGE17], EXTRACT_PAGE17, DEFAULT_DESCRIPTOR,
-          {'description': [u'\nThis product is excelent. Buy it!\n']},
-    ),
+     {'description': [u'\nThis product is excelent. Buy it!\n']},
+     ),
     ('ignored region in partial annotation', [ANNOTATED_PAGE18], EXTRACT_PAGE18, DEFAULT_DESCRIPTOR,
-          {u'site_id': [u'Item Id'],
-           u'description': [u'\nDescription\n']},
-    ),
+     {u'site_id': [u'Item Id'],
+      u'description': [u'\nDescription\n']},
+     ),
     ('extra required attribute product', [ANNOTATED_PAGE19], EXTRACT_PAGE19a,
-         SAMPLE_DESCRIPTOR1,
-         {u'price': [u'60.00'],
-          u'description': [u'description'],
-          u'image_urls': [['http://example.com/image.jpg']],
-          u'name': [u'Product name']},
-    ),
+     SAMPLE_DESCRIPTOR1,
+     {u'price': [u'60.00'],
+      u'description': [u'description'],
+      u'image_urls': [['http://example.com/image.jpg']],
+      u'name': [u'Product name']},
+     ),
     ('extra required attribute no product', [ANNOTATED_PAGE19], EXTRACT_PAGE19b,
-         SAMPLE_DESCRIPTOR1,
-         None,
-    ),
-    ('repeated partial annotations with variants', [ANNOTATED_PAGE20], EXTRACT_PAGE20, DEFAULT_DESCRIPTOR,
-            {u'variants': [
-                {'price': ['270'], 'name': ['Twin']},
-                {'price': ['330'], 'name': ['Queen']},
-            ]},
-    ),
+     SAMPLE_DESCRIPTOR1,
+     None,
+     ),
+    ('repeated partial annotations with variants', [ANNOTATED_PAGE20],
+     EXTRACT_PAGE20, DEFAULT_DESCRIPTOR,
+     {u'variants': [
+         {'price': ['270'], 'name': ['Twin']},
+         {'price': ['330'], 'name': ['Queen']},
+         ]},
+     ),
     ('variants with swatches', [ANNOTATED_PAGE21], EXTRACT_PAGE21, DEFAULT_DESCRIPTOR,
-            {u'category': [u'chairs'],
-             u'image_urls': [u'image.jpg'],
-             u'variants': [
-                {'swatches': ['swatch1.jpg']},
-                {'swatches': ['swatch2.jpg']},
-                {'swatches': ['swatch3.jpg']},
-                {'swatches': ['swatch4.jpg']},
-             ]
-            },
-    ),
+     {u'category': [u'chairs'],
+      u'image_urls': [u'image.jpg'],
+      u'variants': [
+          {'swatches': ['swatch1.jpg']},
+          {'swatches': ['swatch2.jpg']},
+          {'swatches': ['swatch3.jpg']},
+          {'swatches': ['swatch4.jpg']},
+          ]
+      },
+     ),
     ('variants with swatches complete', [ANNOTATED_PAGE22], EXTRACT_PAGE22, DEFAULT_DESCRIPTOR,
-            {u'category': [u'chairs'],
-             u'variants': [
-                 {u'swatches': [u'swatch1.jpg'],
-                  u'price': [u'$70'],
-                  u'name': [u'product 1']},
-                 {u'swatches': [u'swatch2.jpg'],\
-                  u'price': [u'$80'],
-                  u'name': [u'product 2']},
-                 {u'swatches': [u'swatch3.jpg'],
-                  u'price': [u'$90'],
-                  u'name': [u'product 3']},
-                 {u'swatches': [u'swatch4.jpg'],
-                  u'price': [u'$100'],
-                  u'name': [u'product 4']}
-             ],
-             u'image_urls': [u'image.jpg']},
-    ),
+     {u'category': [u'chairs'],
+      u'variants': [
+          {u'swatches': [u'swatch1.jpg'],
+           u'price': [u'$70'],
+           u'name': [u'product 1']},
+          {u'swatches': [u'swatch2.jpg'],
+           u'price': [u'$80'],
+           u'name': [u'product 2']},
+          {u'swatches': [u'swatch3.jpg'],
+           u'price': [u'$90'],
+           u'name': [u'product 3']},
+          {u'swatches': [u'swatch4.jpg'],
+           u'price': [u'$100'],
+           u'name': [u'product 4']}
+          ],
+      u'image_urls': [u'image.jpg']},
+     ),
     ('repeated (variants) with ignore annotations', [ANNOTATED_PAGE23], EXTRACT_PAGE23, DEFAULT_DESCRIPTOR,
         {'variants': [
             {u'price': [u'300'], u'name': [u'Variant 1']},
             {u'price': [u'320'], u'name': [u'Variant 2']},
             {u'price': [u'340'], u'name': [u'Variant 3']}
             ]},
-    ),
-    (# dont fail when there are two consecutive ignore-beneath
-    'double ignore-beneath inside annotation', [ANNOTATED_PAGE24], EXTRACT_PAGE24, DEFAULT_DESCRIPTOR,
-          {
+     ),
+    (  # dont fail when there are two consecutive ignore-beneath
+        'double ignore-beneath inside annotation', [ANNOTATED_PAGE24], EXTRACT_PAGE24, DEFAULT_DESCRIPTOR,
+        {
             'description': [u'\n A very nice product for all intelligent people \n'],
-          }
+            }
     ),
     ('repeated partial annotation within same tag', [ANNOTATED_PAGE25], EXTRACT_PAGE25, DEFAULT_DESCRIPTOR,
-            {"name": ['"Large"', '"X Large"', '"XX Large"']}
-    ),
+     {"name": ['"Large"', '"X Large"', '"XX Large"']}
+     ),
     ('repeated partial annotation within same tag, variants version', [ANNOTATED_PAGE26], EXTRACT_PAGE26, DEFAULT_DESCRIPTOR,
-            {"variants": [
-                {"name": ['"Large"']},
-                {"name": ['"X Large"']},
-                {"name": ['"XX Large"']}
-            ]}
-    ),
+     {"variants": [
+         {"name": ['"Large"']},
+         {"name": ['"X Large"']},
+         {"name": ['"XX Large"']}
+         ]}
+     ),
     ('repeated partial annotation within same tag, variants version with more than one attribute',
-            [ANNOTATED_PAGE27], EXTRACT_PAGE27, DEFAULT_DESCRIPTOR,
-            {"variants": [
-                {"name": ['"Large"'], "site_id": ["44"]},
-                {"name": ['"X Large"'], "site_id": ["45"]},
-                {"name": ['"XX Large"'], "site_id": ["46"]}
-            ]}
-    ),
+     [ANNOTATED_PAGE27], EXTRACT_PAGE27, DEFAULT_DESCRIPTOR,
+     {"variants": [
+         {"name": ['"Large"'], "site_id": ["44"]},
+         {"name": ['"X Large"'], "site_id": ["45"]},
+         {"name": ['"XX Large"'], "site_id": ["46"]}
+         ]}
+     ),
     ('repeated partial annotation within same tag, variants version with more than one attribute, more annotations around',
-            [ANNOTATED_PAGE28], EXTRACT_PAGE28, DEFAULT_DESCRIPTOR, {
-                "price": ["Price: 45"],
-                "variants": [
-                    {"name": ['"Large"'], "site_id": ["44"]},
-                    {"name": ['"X Large"'], "site_id": ["45"]},
-                    {"name": ['"XX Large"'], "site_id": ["46"]}]
-            }
-    ),
+     [ANNOTATED_PAGE28], EXTRACT_PAGE28, DEFAULT_DESCRIPTOR, {
+         "price": ["Price: 45"],
+         "variants": [
+             {"name": ['"Large"'], "site_id": ["44"]},
+             {"name": ['"X Large"'], "site_id": ["45"]},
+             {"name": ['"XX Large"'], "site_id": ["46"]}]
+         }
+     ),
     ('repeated annotation inside variants', [ANNOTATED_PAGE29], EXTRACT_PAGE29, DEFAULT_DESCRIPTOR,
-            {'variants': [
-                {u'tag': [u'Tag 1', u'Tag 2', u'Tag 3'], u'description': [u'Desc 1'], u'name': [u'Name 1']},
-                {u'tag': [u'Tag 4', u'Tag 5', u'Tag 6'], u'description': [u'Desc 2'], u'name': [u'Name 2']},
-                {u'tag': [u'Tag 7', u'Tag 8', u'Tag 9'], u'description': [u'Desc 3'], u'name': [u'Name 3']}]
-            }
+     {'variants': [
+         {u'tag': [u'Tag 1', u'Tag 2', u'Tag 3'], u'description': [u'Desc 1'], u'name': [u'Name 1']},
+         {u'tag': [u'Tag 4', u'Tag 5', u'Tag 6'], u'description': [u'Desc 2'], u'name': [u'Name 2']},
+         {u'tag': [u'Tag 7', u'Tag 8', u'Tag 9'], u'description': [u'Desc 3'], u'name': [u'Name 3']}]
+      }
 
-    ),
+     ),
     ('avoid false positives by allowing to extract only from text content', [ANNOTATED_PAGE30], EXTRACT_PAGE30a, SAMPLE_DESCRIPTOR3,
         None
-    ),
+     ),
     ('only extract from text content', [ANNOTATED_PAGE30], EXTRACT_PAGE30b, SAMPLE_DESCRIPTOR3,
         {u'phone': [u'029847272']}
-    ),
+     ),
     ('avoid false positives on comments', [ANNOTATED_PAGE30], EXTRACT_PAGE30c, SAMPLE_DESCRIPTOR3,
         None
-    ),
+     ),
     ('avoid false positives on scripts', [ANNOTATED_PAGE30], EXTRACT_PAGE30d, SAMPLE_DESCRIPTOR3,
         None
-    ),
+     ),
     ('correctly extract regions that follows more than one consecutive misses', [ANNOTATED_PAGE31], EXTRACT_PAGE31, SAMPLE_DESCRIPTOR1a,
         {
             u'price': [u'60.00'],
             u'name': [u'Product name'],
             u'image_urls': [['http://example.com/image.jpg']]
         }
-    ),
+     ),
     ('single ignored region inside a repeated structure', [ANNOTATED_PAGE32], EXTRACT_PAGE32, DEFAULT_DESCRIPTOR,
         {'features': [u'feature1', u'feature2', u'feature3']}
-    ),
+     ),
 ]
 
 
-
 class TestExtraction(TestCase):
+
     @parameterized.expand(TEST_DATA)
-    def test_extraction(self, name, templates, page, descriptor, expected_output):
+    def test_extraction(
+            self,
+            name,
+            templates,
+            page,
+            descriptor,
+            expected_output):
         template_pages = [HtmlPage(None, {}, t) for t in templates]
 
-        extractor = InstanceBasedLearningExtractor([(t, descriptor) for t in template_pages])
+        extractor = InstanceBasedLearningExtractor(
+            [(t, descriptor) for t in template_pages])
         actual_output, _ = extractor.extract(HtmlPage(None, {}, page))
 
         self.assertEqual(expected_output, actual_output and actual_output[0])

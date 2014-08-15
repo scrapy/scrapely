@@ -1,9 +1,9 @@
-import sys
 import json
 from os import path
 from itertools import count
 
-_PATH  = path.abspath(path.dirname(__file__))
+_PATH = path.abspath(path.dirname(__file__))
+
 
 def iter_samples(prefix, html_encoding='utf-8', **json_kwargs):
     """Iterate through (raw_data, extracted_data) for all samples
