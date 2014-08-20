@@ -544,18 +544,26 @@ class TemplatePageExtractor(object):
     """Top level extractor for a template page"""
 
     def __init__(self, template, extractors):
-        # fixme: handle multiple items per page
-        self.extractor = extractors[0]
+        self.extractors = extractors
         self.template = template
 
     def extract(self, page, start_index=0, end_index=None):
-        return self.extractor.extract(page, start_index, end_index, self.template.ignored_regions)
-    
+        items = []
+        for extractor in self.extractors:
+            items.extend(extractor.extract(page, start_index, end_index, self.template.ignored_regions))
+        return [self._merge_list_dicts(items)]
+
+    def _merge_list_dicts(self, dicts):
+        res = {}
+        for d in dicts:
+            res.update(d)
+        return res
+
     def __repr__(self):
-        return repr(self.extractor)
+        return repr(self.extractors)
 
     def __str__(self):
-        return str(self.extractor)
+        return str(self.extractors)
 
 # Based on nltk's WordPunctTokenizer
 _tokenize = re.compile(r'\w+|[^\w\s]+', re.UNICODE | re.MULTILINE | re.DOTALL).findall
