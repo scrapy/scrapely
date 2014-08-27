@@ -9,6 +9,7 @@ import copy
 import pprint
 import cStringIO
 import json
+import warnings
 from itertools import groupby, izip, starmap
 
 from numpy import array
@@ -117,8 +118,11 @@ class BasicTypeExtractor(object):
             region = FragmentedHtmlPageRegion(extraction_page.htmlpage, list(regions))
         else:
             region = extraction_page.htmlpage_region_inside(start_index, end_index)
-        validated = self.content_validate(region)
-        return [(self.annotation.surrounds_attribute, validated)] if validated else []
+        if kwargs.get('no_content_validate'):
+            validated = True
+        else:
+            validated = self.content_validate(region)
+        return [(self.annotation.surrounds_attribute, self.content_validate(region))] if validated else []
     
     def _extract_attribute(self, extraction_page, start_index, end_index, ignored_regions=None, **kwargs):
         data = []
@@ -488,21 +492,29 @@ class MdrExtractor(object):
 
         doc = document_fromstring(page.htmlpage.body)
         element = doc.xpath(self.xpath)
+
+        if not element:
+            warnings.warn("MDRExtractor can't find element with xpath: %s" % self.xpath)
+            return [{}]
+
         items = {}
 
-        if element:
-            _, mapping = mdr.extract(element[0], record=self.record)
-            for seed_elem, elements in mapping.iteritems():
-                annotation_elem = [elem for elem in ([seed_elem] + elements) if elem.attrib.get('data-scrapy-annotate')]
-                if annotation_elem:
-                    annotation = self._read_template_annotation(annotation_elem[0])
-                    name = annotation.get('annotations', {}).get('content')
-                    ex = self.extractors[name]
-                    for elem in elements:
-                        elem_page = HtmlPage(None, {}, tostring(elem, encoding='unicode'))
-                        parsed_elem_page = parse_extraction_page(self.token_dict, elem_page)
-                        items.setdefault(name, []).extend([v for _, v in ex.extract(parsed_elem_page, 0,
-                            len(parsed_elem_page.page_tokens) - 1)])
+        _, mapping = mdr.extract(element[0], record=self.record)
+        for seed_elem, elements in mapping.iteritems():
+            annotation_elem = [elem for elem in ([seed_elem] + elements) if elem.attrib.get('data-scrapy-annotate')]
+            if annotation_elem:
+                annotation = self._read_template_annotation(annotation_elem[0])
+                name = annotation.get('annotations', {}).get('content')
+                ex = self.extractors[name]
+                for elem in elements:
+                    elem_page = HtmlPage(None, {}, tostring(elem, encoding='unicode'))
+                    parsed_elem_page = parse_extraction_page(self.token_dict, elem_page)
+                    items.setdefault(name, []).extend([v for _, v in ex.extract(parsed_elem_page, 0,
+                        len(parsed_elem_page.page_tokens) - 1, no_content_validate=True)])
+
+        if items:
+            lengths = [len(values) for values in items.values()]
+            assert len(set(lengths)) == 1, 'extract items %r should be have same count' % items
         return [items]
 
     @classmethod
@@ -510,7 +522,6 @@ class MdrExtractor(object):
         try:
             from mdr import MDR
         except ImportError:
-            import warnings
             warnings.warn("MDR is not available")
             return None, extractors
 
@@ -519,14 +530,14 @@ class MdrExtractor(object):
 
         candidates, doc = mdr.list_candidates(htmlpage.encode('utf8'))
 
-        # no repated data detected
+        # early return if no repated data detected
         if not candidates:
             return None, extractors
 
         candidate_xpaths = [doc.getpath(candidate) for candidate in candidates]
 
         listing_data_annotations = [a for a in template.annotations if a.metadata.get('listingData')]
-        # no annotation has listingData property
+        # early return if no annotations has listingData property set
         if not listing_data_annotations:
             return None, extractors
 
@@ -538,7 +549,7 @@ class MdrExtractor(object):
         # XXX: use xpath to find the element on target page, using ``similar_region`` might be better
         if candidate.xpath('.//*[@data-scrapy-annotate]'):
             # remove the listing annotation from the template and basic extractor,
-            # since they're going to extract them with MdrExtractor
+            # since they're going to extract by MdrExtractor
             listing_data_extractors = []
             for annotation in listing_data_annotations:
                 template.annotations.remove(annotation)
@@ -551,7 +562,7 @@ class MdrExtractor(object):
             cls._propagate_annotations(mapping)
             return cls(template.token_dict, cls._get_candidate_xpath(doc, candidate), record, listing_data_extractors), extractors
 
-        return extractors
+        return None, extractors
 
     @staticmethod
     def _get_candidate_xpath(doc, element):
@@ -606,10 +617,10 @@ class MdrExtractor(object):
                     _elem.attrib['data-scrapy-annotate'] = annotation
 
     def __repr__(self):
-        return "MDR(%r)" % self.extractors
+        return "MdrExtractor(%s %r)" % (self.xpath, self.extractors)
 
     def __str__(self):
-        return "MDR(%s)" % self.extractors
+        return "MdrExtractor(%s %s)" % (self.xpath, self.extractors)
 
 class TraceExtractor(object):
     """Extractor that wraps other extractors and prints an execution
