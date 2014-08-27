@@ -1,7 +1,6 @@
 """
 Test MDR extractor.
 """
-from lxml.html import document_fromstring
 from unittest import TestCase, SkipTest
 from scrapely.extraction import InstanceBasedLearningExtractor
 from scrapely.extraction.regionextract import (BasicTypeExtractor, TraceExtractor, RepeatedDataExtractor, MdrExtractor,
@@ -13,6 +12,7 @@ from scrapely.htmlpage import HtmlPage
 from . import get_page
 
 def _get_value_with_xpath(html, xpath):
+    from lxml.html import document_fromstring
     return document_fromstring(html).xpath(xpath)[0]
 
 class MdrIBL(InstanceBasedLearningExtractor):
@@ -48,11 +48,11 @@ class TestMdrExtractor(TestCase):
         template, _ = parse_strings(get_page('mdrparsing_template_0'), u'')
         descriptor = FieldDescriptor('text', None, lambda x: x.strip())
         ex = BasicTypeExtractor(template.annotations[-1], {'text': descriptor})
-        extractors = MdrExtractor.apply(template, [ex])
-        self.assertTrue(isinstance(extractors[0], MdrExtractor))
-        record = extractors[0].record
-        for element in record:
-            self.assertTrue(element.xpath('.//*[@data-scrapy-annotate]'), 'annnotation should be propagated')
+        extractor = MdrExtractor.apply(template, [ex])[0]
+        self.assertTrue(isinstance(extractor, MdrExtractor))
+        for element in extractor.record:
+            self.assertTrue(element.xpath('descendant-or-self::*[@data-scrapy-annotate]'), 'annnotation should be propagated')
+
 
     def test_extract(self):
         try:
@@ -78,6 +78,31 @@ class TestMdrExtractor(TestCase):
         self.assertEquals(_get_value_with_xpath(items['date'][0], '//meta/@content'), '2014-07-02')
         self.assertEquals(_get_value_with_xpath(items['date'][-1], '//meta/@content'), '2014-05-18')
 
+    def test_extract2(self):
+        try:
+            from mdr import MDR
+        except ImportError:
+            raise SkipTest("MDR is not available")
+
+        template, page = parse_strings(get_page('mdrparsing_template_1'), get_page('mdrparsing_page_1'))
+
+        d1 = FieldDescriptor('review', None, lambda x: x.strip())
+        ex1 = BasicTypeExtractor(template.annotations[-1], {'review': d1})
+
+        extractor = MdrExtractor.apply(template, [ex1])[0]
+        items = extractor.extract(page)[0]
+        self.assertEqual(len(items['review']), 6)
+
+        # extracted items are orderred
+        self.assertEquals(items['review'][0], "Although it's expensive book I think it "
+            "worth the money as it is the \"Bible\" of Machine Learning and Pattern recognition. However, "
+            "has a lot of mathematics meaning that a strong mathematical background is necessary. "
+            "I suggest it especially for PhD candidates in this field.")
+
+        self.assertEquals(items['review'][-1], "As a newbie to pattern recognition I found this book very helpful. "
+            "It is the clearest book I ever read! Accompanying examples and material are very illuminating. "
+            "I particularly appreciated the gradual introduction of key concepts, often accompanied with practical "
+            "examples and stimulating exercises.")
 
     def test_ibl_extraction(self):
         try:

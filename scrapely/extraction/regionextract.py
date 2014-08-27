@@ -534,7 +534,7 @@ class MdrExtractor(object):
         if not candidates:
             return None, extractors
 
-        candidate_xpaths = [doc.getpath(candidate) for candidate in candidates]
+        candidate_xpaths = [doc.getpath(candidate) for candidate in candidates if not candidate.get('data-scrapy-annotate')]
 
         listing_data_annotations = [a for a in template.annotations if a.metadata.get('listingData')]
         # early return if no annotations has listingData property set
@@ -547,7 +547,7 @@ class MdrExtractor(object):
         candidate = doc.xpath(candidate_xpath)[0]
 
         # XXX: use xpath to find the element on target page, using ``similar_region`` might be better
-        if candidate.xpath('.//*[@data-scrapy-annotate]'):
+        if candidate.xpath('descendant-or-self::*[@data-scrapy-annotate]'):
             # remove the listing annotation from the template and basic extractor,
             # since they're going to extract by MdrExtractor
             listing_data_extractors = []
