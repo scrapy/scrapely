@@ -69,14 +69,13 @@ class TestMdrExtractor(TestCase):
         ex2 = BasicTypeExtractor(template.annotations[-2], {'date': d2})
 
         extractor = MdrExtractor.apply(template, [ex1, ex2])[0]
-        items = extractor.extract(page)[0]
+        items = extractor.extract(page)[0].values()[0]
 
-        self.assertEqual(len(items['date']), 40)
-        self.assertEqual(len(items['text']), 40)
+        self.assertEqual(len(items), 40)
 
         # extracted items are orderred
-        self.assertEquals(_get_value_with_xpath(items['date'][0], '//meta/@content'), '2014-07-02')
-        self.assertEquals(_get_value_with_xpath(items['date'][-1], '//meta/@content'), '2014-05-18')
+        self.assertEquals(_get_value_with_xpath(items[0]['date'][0], '//meta/@content'), '2014-07-02')
+        self.assertEquals(_get_value_with_xpath(items[-1]['date'][0], '//meta/@content'), '2014-05-18')
 
     def test_extract2(self):
         try:
@@ -90,16 +89,16 @@ class TestMdrExtractor(TestCase):
         ex1 = BasicTypeExtractor(template.annotations[-1], {'review': d1})
 
         extractor = MdrExtractor.apply(template, [ex1])[0]
-        items = extractor.extract(page)[0]
-        self.assertEqual(len(items['review']), 6)
+        items = extractor.extract(page)[0].values()[0]
+        self.assertEqual(len(items), 6)
 
         # extracted items are orderred
-        self.assertEquals(items['review'][0], "Although it's expensive book I think it "
+        self.assertEquals(items[0]['review'][0], "Although it's expensive book I think it "
             "worth the money as it is the \"Bible\" of Machine Learning and Pattern recognition. However, "
             "has a lot of mathematics meaning that a strong mathematical background is necessary. "
             "I suggest it especially for PhD candidates in this field.")
 
-        self.assertEquals(items['review'][-1], "As a newbie to pattern recognition I found this book very helpful. "
+        self.assertEquals(items[-1]['review'][0], "As a newbie to pattern recognition I found this book very helpful. "
             "It is the clearest book I ever read! Accompanying examples and material are very illuminating. "
             "I particularly appreciated the gradual introduction of key concepts, often accompanied with practical "
             "examples and stimulating exercises.")
@@ -123,9 +122,9 @@ class TestMdrExtractor(TestCase):
 
         self.assertEqual(actual_output[0].get('name')[0].strip(), 'Gary Danko')
         self.assertEqual(actual_output[0].get('phone')[0].strip(), '(415) 749-2060')
-        self.assertEqual(len(actual_output[0].get('date')), 40)
-        self.assertEqual(len(actual_output[0].get('text')), 40)
+
+        self.assertEqual(len(actual_output[0].get('default_group')), 40)
 
         # extracted items are orderred
-        self.assertEquals(_get_value_with_xpath(actual_output[0].get('date')[0], '//meta/@content'), '2014-07-02')
-        self.assertEquals(_get_value_with_xpath(actual_output[0].get('date')[-1], '//meta/@content'), '2014-05-18')
+        self.assertEquals(_get_value_with_xpath(actual_output[0].get('default_group')[0]['date'][0], '//meta/@content'), '2014-07-02')
+        self.assertEquals(_get_value_with_xpath(actual_output[0].get('default_group')[-1]['date'][0], '//meta/@content'), '2014-05-18')

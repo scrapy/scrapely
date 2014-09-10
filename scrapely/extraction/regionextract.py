@@ -118,11 +118,8 @@ class BasicTypeExtractor(object):
             region = FragmentedHtmlPageRegion(extraction_page.htmlpage, list(regions))
         else:
             region = extraction_page.htmlpage_region_inside(start_index, end_index)
-        if kwargs.get('no_content_validate'):
-            validated = True
-        else:
-            validated = self.content_validate(region)
-        return [(self.annotation.surrounds_attribute, self.content_validate(region))] if validated else []
+        validated = self.content_validate(region)
+        return [(self.annotation.surrounds_attribute, validated)] if validated else []
     
     def _extract_attribute(self, extraction_page, start_index, end_index, ignored_regions=None, **kwargs):
         data = []
@@ -497,25 +494,27 @@ class MdrExtractor(object):
             warnings.warn("MDRExtractor can't find element with xpath: %s" % self.xpath)
             return [{}]
 
-        items = {}
+        items = []
+        _, mappings = mdr.extract(element[0], record=self.record)
 
-        _, mapping = mdr.extract(element[0], record=self.record)
-        for seed_elem, elements in mapping.iteritems():
-            annotation_elem = [elem for elem in ([seed_elem] + elements) if elem.attrib.get('data-scrapy-annotate')]
-            if annotation_elem:
-                annotation = self._read_template_annotation(annotation_elem[0])
-                name = annotation.get('annotations', {}).get('content')
-                ex = self.extractors[name]
-                for elem in elements:
+        for record, mapping in mappings.iteritems():
+            item = {}
+            for seed_elem, element in mapping.iteritems():
+                annotation_elem = [elem for elem in [seed_elem, element] if elem.attrib.get('data-scrapy-annotate')]
+                if annotation_elem:
+                    annotation = self._read_template_annotation(annotation_elem[0])
+                    group_name = annotation.get('listingDateGroupName', 'default_group')
+                    name = annotation.get('annotations', {}).get('content')
+                    ex = self.extractors[name]
                     elem_page = HtmlPage(None, {}, tostring(elem, encoding='unicode'))
                     parsed_elem_page = parse_extraction_page(self.token_dict, elem_page)
-                    items.setdefault(name, []).extend([v for _, v in ex.extract(parsed_elem_page, 0,
-                        len(parsed_elem_page.page_tokens) - 1, no_content_validate=True)])
+                    item.setdefault(name, []).extend([v for _, v in ex.extract(parsed_elem_page, 0,
+                        len(parsed_elem_page.page_tokens) - 1)])
+            items.append(item)
 
         if items:
-            lengths = [len(values) for values in items.values()]
-            assert len(set(lengths)) == 1, 'extract items %r should be have same count' % items
-        return [items]
+            return [{group_name: items}]
+        return []
 
     @classmethod
     def apply(cls, template, extractors):
@@ -558,8 +557,8 @@ class MdrExtractor(object):
                     if name == extractor.annotation.surrounds_attribute:
                         listing_data_extractors.append(extractor)
                         extractors.remove(extractor)
-            record, mapping = mdr.extract(candidate)
-            cls._propagate_annotations(mapping)
+            record, mappings = mdr.extract(candidate)
+            cls._propagate_annotations(mappings)
             return cls(template.token_dict, cls._get_candidate_xpath(doc, candidate), record, listing_data_extractors), extractors
 
         return None, extractors
@@ -605,16 +604,16 @@ class MdrExtractor(object):
         return "/".join(common_prefix(*[doc.getpath(elem).split('/') for elem in elements]))
 
     @staticmethod
-    def _propagate_annotations(mapping):
-        for elem, targ_elements in mapping.iteritems():
-            elements = [elem] + targ_elements
-            for _elem in elements:
-                annotation = _elem.attrib.get('data-scrapy-annotate')
+    def _propagate_annotations(mappings):
+        for record, mapping in mappings.iteritems():
+            for elem, targ_elem in mapping.iteritems():
+                for _elem in [elem, targ_elem]:
+                    annotation = _elem.attrib.get('data-scrapy-annotate')
+                    if annotation:
+                        break
                 if annotation:
-                    break
-            if annotation:
-                for _elem in elements:
-                    _elem.attrib['data-scrapy-annotate'] = annotation
+                    for _elem in [elem, targ_elem]:
+                        _elem.attrib['data-scrapy-annotate'] = annotation
 
     def __repr__(self):
         return "MdrExtractor(%s %r)" % (self.xpath, self.extractors)
