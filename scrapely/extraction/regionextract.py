@@ -497,13 +497,14 @@ class MdrExtractor(object):
         items = []
         _, mappings = mdr.extract(element[0], record=self.record)
 
+        group_name = 'defaultgroup'
         for record, mapping in mappings.iteritems():
             item = {}
             for seed_elem, element in mapping.iteritems():
-                annotation_elem = [elem for elem in [seed_elem, element] if elem.attrib.get('data-scrapy-annotate')]
+                annotation_elem = [elem for elem in [seed_elem, element] if elem != None and elem.get('data-scrapy-annotate')]
                 if annotation_elem:
                     annotation = self._read_template_annotation(annotation_elem[0])
-                    group_name = annotation.get('listingDateGroupName', 'default_group')
+                    group_name = annotation.get('listingDataGroupName', 'defaultgroup')
                     name = annotation.get('annotations', {}).get('content')
                     ex = self.extractors[name]
                     elem_page = HtmlPage(None, {}, tostring(elem, encoding='unicode'))
@@ -607,13 +608,11 @@ class MdrExtractor(object):
     def _propagate_annotations(mappings):
         for record, mapping in mappings.iteritems():
             for elem, targ_elem in mapping.iteritems():
-                for _elem in [elem, targ_elem]:
-                    annotation = _elem.attrib.get('data-scrapy-annotate')
-                    if annotation:
-                        break
-                if annotation:
-                    for _elem in [elem, targ_elem]:
-                        _elem.attrib['data-scrapy-annotate'] = annotation
+                if targ_elem != None:
+                    if targ_elem.get('data-scrapy-annotate') and not elem.get('data-scrapy-annotate'):
+                        elem.attrib['data-scrapy-annotate'] = targ_elem.get('data-scrapy-annotate')
+                    elif elem.get('data-scrapy-annotate') and not targ_elem.get('data-scrapy-annotate'):
+                        targ_elem.attrib['data-scrapy-annotate'] = elem.get('data-scrapy-annotate')
 
     def __repr__(self):
         return "MdrExtractor(%s %r)" % (self.xpath, self.extractors)

@@ -123,8 +123,8 @@ class TestMdrExtractor(TestCase):
         self.assertEqual(actual_output[0].get('name')[0].strip(), 'Gary Danko')
         self.assertEqual(actual_output[0].get('phone')[0].strip(), '(415) 749-2060')
 
-        self.assertEqual(len(actual_output[0].get('default_group')), 40)
+        self.assertEqual(len(actual_output[0].get('defaultgroup')), 40)
 
         # extracted items are orderred
-        self.assertEquals(_get_value_with_xpath(actual_output[0].get('default_group')[0]['date'][0], '//meta/@content'), '2014-07-02')
-        self.assertEquals(_get_value_with_xpath(actual_output[0].get('default_group')[-1]['date'][0], '//meta/@content'), '2014-05-18')
+        self.assertEquals(_get_value_with_xpath(actual_output[0].get('defaultgroup')[0]['date'][0], '//meta/@content'), '2014-07-02')
+        self.assertEquals(_get_value_with_xpath(actual_output[0].get('defaultgroup')[-1]['date'][0], '//meta/@content'), '2014-05-18')
