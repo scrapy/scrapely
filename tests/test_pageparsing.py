@@ -2,7 +2,7 @@
 Unit tests for pageparsing
 """
 import os
-from cStringIO import StringIO
+from six import StringIO
 from unittest import TestCase
 import numpy
 

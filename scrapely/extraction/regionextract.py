@@ -7,10 +7,14 @@ import re
 import operator
 import copy
 import pprint
-import cStringIO
-from itertools import groupby, izip, starmap
+import six
+
+from itertools import groupby, starmap
 
 from numpy import array
+
+from six import StringIO
+from six.moves import zip as izip, xrange
 
 from scrapely.descriptor import FieldDescriptor
 from scrapely.htmlpage import HtmlPageRegion
@@ -32,6 +36,14 @@ __all__ = ['BasicTypeExtractor',
            'attrs2dict',
            'labelled_element']
 
+
+def _int_cmp(a, b, op='lt'):
+    op = getattr(operator, op)
+    a = -float('inf') if a is None else a
+    b = -float('inf') if b is None else b
+    return op(a, b)
+
+
 def labelled_element(obj):
     """
     Returns labelled element of the object (extractor or labelled region)
@@ -47,9 +59,9 @@ def _compose(f, g):
     return _exec
 
 class BasicTypeExtractor(object):
-    """The BasicTypeExtractor extracts single attributes corresponding to 
+    """The BasicTypeExtractor extracts single attributes corresponding to
     annotations.
-    
+
     For example:
     >>> from scrapely.extraction.pageparsing import parse_strings
     >>> template, page = parse_strings( \
@@ -63,7 +75,7 @@ class BasicTypeExtractor(object):
     >>> ex = BasicTypeExtractor(template.annotations[0], {'name': descriptor})
     >>> ex.extract(page, 0, 1, None)
     [(u'name', u'a name')]
-    
+
     It supports ignoring regions
     >>> template, page = parse_strings(\
         u'<div data-scrapy-annotate="{&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">x<b> xx</b></div>',\
@@ -95,15 +107,15 @@ class BasicTypeExtractor(object):
 
             self.extract = self._extract_both if \
                     annotation.surrounds_attribute else self._extract_attribute
-        
+
     def _extract_both(self, page, start_index, end_index, ignored_regions=None, **kwargs):
         return self._extract_content(page, start_index, end_index, ignored_regions) + \
             self._extract_attribute(page, start_index, end_index, ignored_regions)
 
     def _extract_content(self, extraction_page, start_index, end_index, ignored_regions=None, **kwargs):
         """extract content between annotation indexes"""
-        if ignored_regions and (start_index <= ignored_regions[0].start_index and
-                    end_index >= ignored_regions[-1].end_index):
+        if ignored_regions and (_int_cmp(start_index, ignored_regions[0].start_index, 'le') and
+                                _int_cmp(end_index, ignored_regions[-1].end_index, 'ge')):
             starts = [start_index] + [i.end_index for i in ignored_regions if i.end_index is not None]
             ends = [i.start_index for i in ignored_regions]
             if starts[-1] is not None:
@@ -117,7 +129,7 @@ class BasicTypeExtractor(object):
             region = extraction_page.htmlpage_region_inside(start_index, end_index)
         validated = self.content_validate(region)
         return [(self.annotation.surrounds_attribute, validated)] if validated else []
-    
+
     def _extract_attribute(self, extraction_page, start_index, end_index, ignored_regions=None, **kwargs):
         data = []
         for (f, ta, ea) in self.tag_data:
@@ -139,28 +151,28 @@ class BasicTypeExtractor(object):
         return [cls._create_basic_extractor(annotation, attribute_descriptors) \
             for annotation in annotations \
             if annotation.surrounds_attribute or annotation.tag_attributes]
-    
+
     @staticmethod
     def _create_basic_extractor(annotation, attribute_descriptors):
         """Create a basic type extractor for the annotation"""
         text_region = annotation.annotation_text
         if text_region is not None:
-            region_extract = TextRegionDataExtractor(text_region.start_text, 
+            region_extract = TextRegionDataExtractor(text_region.start_text,
                 text_region.follow_text).extract
             # copy attribute_descriptors and add the text extractor
             descriptor_copy = dict(attribute_descriptors)
-            attr_descr = descriptor_copy.get(annotation.surrounds_attribute, 
+            attr_descr = descriptor_copy.get(annotation.surrounds_attribute,
                     _DEFAULT_DESCRIPTOR)
             attr_descr = copy.copy(attr_descr)
             attr_descr.extractor = _compose(attr_descr.extractor, region_extract)
             descriptor_copy[annotation.surrounds_attribute] = attr_descr
             attribute_descriptors = descriptor_copy
         return BasicTypeExtractor(annotation, attribute_descriptors)
-    
+
     def extracted_item(self):
         """key used to identify the item extracted"""
         return (self.annotation.surrounds_attribute, self.annotation.tag_attributes)
-    
+
     def __repr__(self):
         return str(self)
 
@@ -169,9 +181,9 @@ class BasicTypeExtractor(object):
         if self.annotation.surrounds_attribute:
             messages.append(self.annotation.surrounds_attribute)
             if self.content_validate != _EXTRACT_HTML:
-                messages += [', extracted with \'', 
+                messages += [', extracted with \'',
                         self.content_validate.__name__, '\'']
-        
+
         if self.annotation.tag_attributes:
             if self.annotation.surrounds_attribute:
                 messages.append(';')
@@ -194,7 +206,7 @@ class RepeatedDataExtractor(object):
         self.annotation.end_index = extractors[-1].annotation.end_index
 
     def extract(self, page, start_index, end_index, ignored_regions, **kwargs):
-        """repeatedly find regions bounded by the repeated 
+        """repeatedly find regions bounded by the repeated
         prefix and suffix and extract them
         """
         prefixlen = len(self.prefix)
@@ -209,7 +221,7 @@ class RepeatedDataExtractor(object):
                 for peek in xrange(prefix_end, max_index + 1):
                     if (page.page_tokens[peek:peek + suffixlen] \
                             == self.suffix).all():
-                        extracted += self.extractor.extract(page, 
+                        extracted += self.extractor.extract(page,
                                 prefix_end - 1, peek, ignored_regions, suffix_max_length=suffixlen)
                         index = max(peek, index + 1)
                         break
@@ -233,7 +245,7 @@ class RepeatedDataExtractor(object):
             separating_tokens = [ \
                 tokens[x.annotation.end_index:y.annotation.start_index+1] \
                 for (x, y) in zip(extraction_group[:-1], extraction_group[1:])]
-            
+
             # calculate the common prefix
             group_start = extraction_group[0].annotation.start_index
             prefix_start = max(0, group_start - len(separating_tokens[0]))
@@ -241,29 +253,29 @@ class RepeatedDataExtractor(object):
             prefixes = [first_prefix] + separating_tokens
             prefix_pattern = list(reversed(
                 common_prefix(*map(reversed, prefixes))))
-            
+
             # calculate the common suffix
             group_end = extraction_group[-1].annotation.end_index
             last_suffix = tokens[group_end:group_end + \
                     len(separating_tokens[-1])]
             suffixes = separating_tokens + [last_suffix]
             suffix_pattern = common_prefix(*suffixes)
-            
-            # create a repeated data extractor, if there is a suitable 
+
+            # create a repeated data extractor, if there is a suitable
             # prefix and suffix. (TODO: tune this heuristic)
             matchlen = len(prefix_pattern) + len(suffix_pattern)
             if matchlen >= len(separating_tokens):
-                group_extractor = RepeatedDataExtractor(prefix_pattern, 
+                group_extractor = RepeatedDataExtractor(prefix_pattern,
                     suffix_pattern, extraction_group)
                 output_extractors.append(group_extractor)
             else:
                 output_extractors += extraction_group
         return output_extractors
-    
+
     def extracted_item(self):
         """key used to identify the item extracted"""
         return self.extractor.extracted_item()
-    
+
     def __repr__(self):
         return "Repeat(%r)" % self.extractor
 
@@ -278,7 +290,7 @@ _namef = operator.itemgetter(0)
 _valuef = operator.itemgetter(1)
 def attrs2dict(attributes):
     """convert a list of attributes (name, value) tuples
-    into a dict of lists. 
+    into a dict of lists.
 
     For example:
     >>> l = [('name', 'sofa'), ('colour', 'red'), ('colour', 'green')]
@@ -286,18 +298,18 @@ def attrs2dict(attributes):
     True
     """
     grouped_data = groupby(sorted(attributes, key=_namef), _namef)
-    return dict((name, map(_valuef, data)) for (name, data)  in grouped_data)
+    return dict((name, list(map(_valuef, data))) for (name, data)  in grouped_data)
 
 class RecordExtractor(object):
     """The RecordExtractor will extract records given annotations.
-    
+
     It looks for a similar region in the target document, using the ibl
     similarity algorithm. The annotations are partitioned by the first similar
     region found and searched recursively.
 
     Records are represented as dicts mapping attribute names to lists
     containing their values.
-    
+
     For example:
     >>> from scrapely.extraction.pageparsing import parse_strings
     >>> template, page = parse_strings( \
@@ -309,7 +321,7 @@ class RecordExtractor(object):
     >>> ex.extract(page) == [{u'description': [u'description'], u'name': [u'name']}]
     True
     """
-    
+
     def __init__(self, extractors, template_tokens):
         """Construct a RecordExtractor for the given annotations and their
         corresponding region extractors
@@ -321,22 +333,22 @@ class RecordExtractor(object):
         end_index = max(e.annotation.end_index for e in extractors)
         self.annotation = AnnotationTag(start_index, end_index)
         self.best_match = longest_unique_subsequence
-    
+
     def extract(self, page, start_index=0, end_index=None, ignored_regions=None, **kwargs):
         """extract data from an extraction page
-        
+
         The region in the page to be extracted from may be specified using
         start_index and end_index
         """
         if ignored_regions is None:
             ignored_regions = []
         region_elements = sorted(self.extractors + ignored_regions, key=lambda x: labelled_element(x).start_index)
-        _, _, attributes = self._doextract(page, region_elements, start_index, 
+        _, _, attributes = self._doextract(page, region_elements, start_index,
                 end_index, **kwargs)
         # collect variant data, maintaining the order of variants
         variant_ids = []; variants = {}; items = []
         for k, v in attributes:
-            if isinstance(k, int):
+            if isinstance(k, six.integer_types):
                 if k in variants:
                     variants[k] += v
                 else:
@@ -344,12 +356,12 @@ class RecordExtractor(object):
                     variants[k] = v
             else:
                 items.append((k, v))
-        
+
         variant_records = [('variants', attrs2dict(variants[vid])) \
                 for vid in variant_ids]
         items += variant_records
         return [attrs2dict(items)]
-    
+
     def _doextract(self, page, region_elements, start_index, end_index, nested_regions=None, ignored_regions=None, **kwargs):
         """Carry out extraction of records using the given annotations
         in the page tokens bounded by start_index and end_index
@@ -359,13 +371,17 @@ class RecordExtractor(object):
         nested_regions = nested_regions or []
         ignored_regions = ignored_regions or []
         first_region, following_regions = region_elements[0], region_elements[1:]
-        while following_regions and labelled_element(following_regions[0]).start_index \
-                < labelled_element(first_region).end_index:
+        while (following_regions and
+               _int_cmp(labelled_element(following_regions[0]).start_index,
+                        labelled_element(first_region).end_index)):
             region = following_regions.pop(0)
             labelled = labelled_element(region)
-            if isinstance(labelled, AnnotationTag) or (nested_regions and \
-                    labelled_element(nested_regions[-1]).start_index < labelled.start_index \
-                    < labelled_element(nested_regions[-1]).end_index):
+            if (isinstance(labelled, AnnotationTag) or
+                (nested_regions and
+                 _int_cmp(labelled_element(nested_regions[-1]).start_index,
+                          labelled.start_index) and
+                 _int_cmp(labelled.start_index,
+                          labelled_element(nested_regions[-1]).end_index))):
                 nested_regions.append(region)
             else:
                 ignored_regions.append(region)
@@ -390,14 +406,14 @@ class RecordExtractor(object):
                 if extracted_data:
                     if first_region.annotation.variant_id:
                         extracted_data = [(first_region.annotation.variant_id, extracted_data)]
-            
+
             if nested_regions:
                 _, _, nested_data = self._doextract(page, nested_regions, pindex, sindex, **kwargs)
                 extracted_data += nested_data
             if following_regions:
                 _, _, following_data = self._doextract(page, following_regions, sindex or start_index, end_index, **kwargs)
                 extracted_data += following_data
-        
+
         elif following_regions:
             end_index, _, following_data = self._doextract(page, following_regions, start_index, end_index, **kwargs)
             if end_index is not None:
@@ -407,20 +423,21 @@ class RecordExtractor(object):
             _, _, nested_data = self._doextract(page, nested_regions, start_index, end_index, **kwargs)
             extracted_data += nested_data
         return pindex, sindex, extracted_data
-                
+
     @classmethod
     def apply(cls, template, extractors):
         return [cls(extractors, template.page_tokens)]
-    
+
     def extracted_item(self):
         return [self.__class__.__name__] + \
-                sorted(e.extracted_item() for e in self.extractors)
-    
+                sorted((e.extracted_item() for e in self.extractors),
+                       key=lambda x: '' if x[0] is None else x[0])
+
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        stream = cStringIO.StringIO()
+        stream = StringIO()
         pprint.pprint(self.extractors, stream)
         stream.seek(0)
         template_data = stream.read()
@@ -434,14 +451,14 @@ class AdjacentVariantExtractor(RecordExtractor):
     This simply extends the RecordExtractor to output data in a "variants"
     attribute.
 
-    The "apply" method will only apply to variants whose items are all adjacent and 
-    it will appear as one record so that it can be handled by the RepeatedDataExtractor. 
+    The "apply" method will only apply to variants whose items are all adjacent and
+    it will appear as one record so that it can be handled by the RepeatedDataExtractor.
     """
 
     def extract(self, page, start_index=0, end_index=None, ignored_regions=None, **kwargs):
         records = RecordExtractor.extract(self, page, start_index, end_index, ignored_regions, **kwargs)
         return [('variants', r['variants'][0]) for r in records if r]
-    
+
     @classmethod
     def apply(cls, template, extractors):
         adjacent_variants = set([])
@@ -480,17 +497,17 @@ class TraceExtractor(object):
             for t in template.page_tokens[tstart-4:tstart+1]])
         self.tsuffix = " ".join([template.token_dict.token_string(t)
             for t in template.page_tokens[tend:tend+5]])
-    
+
     def summarize_trace(self, page, start, end, ret):
         text_start = page.htmlpage.parsed_body[page.token_page_indexes[start]].start
         text_end = page.htmlpage.parsed_body[page.token_page_indexes[end or -1]].end
         page_snippet = "(...%s)%s(%s...)" % (
-                page.htmlpage.body[text_start-50:text_start].replace('\n', ' '), 
-                page.htmlpage.body[text_start:text_end], 
+                page.htmlpage.body[text_start-50:text_start].replace('\n', ' '),
+                page.htmlpage.body[text_start:text_end],
                 page.htmlpage.body[text_end:text_end+50].replace('\n', ' '))
         pre_summary = "\nstart %s page[%s:%s]\n" % (self.traced.__class__.__name__, start, end)
         post_summary = """
-%s page[%s:%s] 
+%s page[%s:%s]
 
 html
 %s
@@ -502,7 +519,7 @@ annotation
 
 extracted
 %s
-        """ % (self.traced.__class__.__name__, start, end, page_snippet, 
+        """ % (self.traced.__class__.__name__, start, end, page_snippet,
                 self.tprefix, self.annotation, self.tsuffix, [r for r in ret if 'trace' not in r])
         return pre_summary, post_summary
 
@@ -521,10 +538,10 @@ extracted
             pre_summary, post_summary = self.summarize_trace(page, start, end, ret)
             item['trace'] = [pre_summary] + trace + [post_summary]
             return ret
-        
+
         pre_summary, post_summary = self.summarize_trace(page, start, end, ret)
         return [('trace', pre_summary)] + ret + [('trace', post_summary)]
-    
+
     @staticmethod
     def apply(template, extractors):
         output = []
@@ -533,7 +550,7 @@ extracted
                 extractor = TraceExtractor(extractor, template)
             output.append(extractor)
         return output
-    
+
     def extracted_item(self):
         return self.traced.extracted_item()
 
@@ -596,7 +613,7 @@ class TextRegionDataExtractor(object):
         self.suffix = suffix or ''
         self.minprefix = self.minmatch(self.prefix)
         self.minsuffix = self.minmatch(self.suffix)
- 
+
     @staticmethod
     def minmatch(matchstring):
         """the minimum number of characters that should match in order
