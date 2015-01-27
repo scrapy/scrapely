@@ -8,16 +8,19 @@ import operator
 import copy
 import pprint
 import cStringIO
+import json
+import warnings
 from itertools import groupby, izip, starmap
 
 from numpy import array
 
 from scrapely.descriptor import FieldDescriptor
-from scrapely.htmlpage import HtmlPageRegion
+from scrapely.htmlpage import HtmlPage, HtmlPageRegion
 from scrapely.extraction.similarity import (similar_region,
-    longest_unique_subsequence, common_prefix)
+    longest_unique_subsequence, common_prefix, common_prefix_length)
 from scrapely.extraction.pageobjects import (AnnotationTag,
     PageRegion, FragmentedHtmlPageRegion)
+from scrapely.extraction.pageparsing import parse_extraction_page
 
 _EXTRACT_HTML = lambda x: x
 _DEFAULT_DESCRIPTOR = FieldDescriptor('none', None)
@@ -465,6 +468,157 @@ class AdjacentVariantExtractor(RecordExtractor):
 
     def __repr__(self):
         return str(self)
+
+class MdrExtractor(object):
+    """Extractor to use MDR_ to detect and extract listing data.
+
+    .. MDR: https://pypi.python.org/pypi/mdr/
+
+    """
+    def __init__(self, token_dict, xpath, record, extractors):
+        self.token_dict = token_dict
+        self.xpath = xpath
+        self.record = record
+        self.extractors = dict([extractor.annotation.surrounds_attribute, extractor] for extractor in extractors)
+
+    def extract(self, page, start_index=0, end_index=None, ignored_regions=None, **kwargs):
+        from mdr import MDR
+        from lxml.html import document_fromstring, tostring
+
+        mdr = MDR()
+
+        doc = document_fromstring(page.htmlpage.body)
+        element = doc.xpath(self.xpath)
+
+        if not element:
+            warnings.warn("MDRExtractor can't find element with xpath: %s" % self.xpath)
+            return [{}]
+
+        items = []
+        _, mappings = mdr.extract(element[0], record=self.record)
+
+        group_name = 'defaultgroup'
+        for record, mapping in mappings.iteritems():
+            item = {}
+            for seed_elem, element in mapping.iteritems():
+                annotation_elem = [elem for elem in [seed_elem, element] if elem != None and elem.get('data-scrapy-annotate')]
+                if annotation_elem:
+                    annotation = self._read_template_annotation(annotation_elem[0])
+                    group_name = annotation.get('listingDataGroupName', 'defaultgroup')
+                    name = annotation.get('annotations', {}).get('content')
+                    ex = self.extractors[name]
+                    elem_page = HtmlPage(None, {}, tostring(elem, encoding='unicode'))
+                    parsed_elem_page = parse_extraction_page(self.token_dict, elem_page)
+                    item.setdefault(name, []).extend([v for _, v in ex.extract(parsed_elem_page, 0,
+                        len(parsed_elem_page.page_tokens) - 1)])
+            items.append(item)
+
+        if items:
+            return [{group_name: items}]
+        return []
+
+    @classmethod
+    def apply(cls, template, extractors):
+        try:
+            from mdr import MDR
+        except ImportError:
+            warnings.warn("MDR is not available")
+            return None, extractors
+
+        mdr = MDR()
+        htmlpage = template.htmlpage.body
+
+        candidates, doc = mdr.list_candidates(htmlpage.encode('utf8'))
+
+        # early return if no repated data detected
+        if not candidates:
+            return None, extractors
+
+        candidate_xpaths = [doc.getpath(candidate) for candidate in candidates if not candidate.get('data-scrapy-annotate')]
+
+        listing_data_annotations = [a for a in template.annotations if a.metadata.get('listingData')]
+        # early return if no annotations has listingData property set
+        if not listing_data_annotations:
+            return None, extractors
+
+        ancestor_xpath = cls._get_common_ancestor_xpath(doc, cls._get_listingdata_elements(doc))
+        candidate_xpath = max(candidate_xpaths, key=lambda x: common_prefix_length(x.split('/'), ancestor_xpath.split(('/'))))
+
+        candidate = doc.xpath(candidate_xpath)[0]
+
+        # XXX: use xpath to find the element on target page, using ``similar_region`` might be better
+        if candidate.xpath('descendant-or-self::*[@data-scrapy-annotate]'):
+            # remove the listing annotation from the template and basic extractor,
+            # since they're going to extract by MdrExtractor
+            listing_data_extractors = []
+            for annotation in listing_data_annotations:
+                template.annotations.remove(annotation)
+                name = annotation.surrounds_attribute
+                for extractor in list(extractors):
+                    if name == extractor.annotation.surrounds_attribute:
+                        listing_data_extractors.append(extractor)
+                        extractors.remove(extractor)
+            record, mappings = mdr.extract(candidate)
+            cls._propagate_annotations(mappings)
+            return cls(template.token_dict, cls._get_candidate_xpath(doc, candidate), record, listing_data_extractors), extractors
+
+        return None, extractors
+
+    @staticmethod
+    def _get_candidate_xpath(doc, element):
+        _id = element.attrib.get('id')
+        _class = element.attrib.get('class')
+
+        if _id:
+            xpath = '//%s[@id="%s"]' % (element.tag, _id)
+            if len(doc.xpath(xpath)) == 1:
+                return xpath
+
+        if _class:
+            xpath = '//%s[@class="%s"]' % (element.tag, _class)
+            if len(doc.xpath(xpath)) == 1:
+                return xpath
+
+        return doc.getpath(element)
+
+    @staticmethod
+    def _get_listingdata_elements(doc):
+        """ Gets the elements has the listingData in the data-scrapy-annotate. """
+        elements = []
+        for element in doc.xpath('//*[@data-scrapy-annotate]'):
+            annotation = MdrExtractor._read_template_annotation(element)
+            if annotation.get('listingData'):
+                elements.append(element)
+        return elements
+
+    @staticmethod
+    def _read_template_annotation(element):
+        template_attr = element.attrib.get('data-scrapy-annotate')
+        if template_attr is None:
+            return None
+        unescaped = template_attr.replace('&quot;', '"')
+        return json.loads(unescaped)
+
+    @staticmethod
+    def _get_common_ancestor_xpath(doc, elements):
+        """ Gets the xpath of the common ancestor of the given elements. """
+        return "/".join(common_prefix(*[doc.getpath(elem).split('/') for elem in elements]))
+
+    @staticmethod
+    def _propagate_annotations(mappings):
+        for record, mapping in mappings.iteritems():
+            for elem, targ_elem in mapping.iteritems():
+                if targ_elem != None:
+                    if targ_elem.get('data-scrapy-annotate') and not elem.get('data-scrapy-annotate'):
+                        elem.attrib['data-scrapy-annotate'] = targ_elem.get('data-scrapy-annotate')
+                    elif elem.get('data-scrapy-annotate') and not targ_elem.get('data-scrapy-annotate'):
+                        targ_elem.attrib['data-scrapy-annotate'] = elem.get('data-scrapy-annotate')
+
+    def __repr__(self):
+        return "MdrExtractor(%s %r)" % (self.xpath, self.extractors)
+
+    def __str__(self):
+        return "MdrExtractor(%s %s)" % (self.xpath, self.extractors)
 
 class TraceExtractor(object):
     """Extractor that wraps other extractors and prints an execution
