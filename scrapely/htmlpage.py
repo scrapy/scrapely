@@ -11,7 +11,7 @@ import six
 
 from six.moves.urllib.request import urlopen
 from copy import deepcopy
-from w3lib.encoding import html_to_unicode, http_content_type_encoding
+from w3lib.encoding import html_to_unicode
 
 def url_to_page(url, encoding=None, default_encoding='utf-8'):
     """Fetch a URL, using python urllib2, and return an HtmlPage object.
