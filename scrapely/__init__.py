@@ -35,12 +35,11 @@ class Scraper(object):
         assert data, "Cannot train with empty data"
         tm = TemplateMaker(htmlpage)
         for field, values in data.items():
-            if (isinstance(values, bytes) or
+            if (isinstance(values, bytes) or isinstance(values, str) or
                     not hasattr(values, '__iter__')):
                 values = [values]
             for value in values:
-                if isinstance(value, bytes):
-                    value = str_to_unicode(value, htmlpage.encoding)
+                value = str_to_unicode(value, htmlpage.encoding)
                 tm.annotate(field, best_match(value))
         self.add_template(tm.get_template())
 
