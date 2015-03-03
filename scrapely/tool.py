@@ -1,6 +1,9 @@
-from __future__ import with_statement
-import sys, os, re, cmd, shlex, json, optparse, json, urllib, pprint
-from cStringIO import StringIO
+from __future__ import print_function
+import sys, os, re, cmd, shlex, optparse, json, pprint
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
@@ -21,13 +24,13 @@ class IblTool(cmd.Cmd):
         templates = self._load_templates()
         templates.append(t)
         self._save_templates(templates)
-        print "[%d] %s" % (len(templates) - 1, t.url)
+        print("[%d] %s" % (len(templates) - 1, t.url))
 
     def do_tl(self, line):
         """tl - list templates"""
         templates = self._load_templates()
         for n, t in enumerate(templates):
-            print "[%d] %s" % (n, t.url)
+            print("[%d] %s" % (n, t.url))
 
     def do_td(self, template_id):
         """dt <template> - delete template"""
@@ -35,9 +38,9 @@ class IblTool(cmd.Cmd):
         try:
             del templates[int(template_id)]
             self._save_templates(templates)
-            print "template deleted: %s" % template_id
+            print("template deleted: %s" % template_id)
         except IndexError:
-            print "template not found: %s" % template_id
+            print("template not found: %s" % template_id)
 
     def do_t(self, line):
         """t <template> <text> - test selection text"""
@@ -47,7 +50,7 @@ class IblTool(cmd.Cmd):
         tm = TemplateMaker(t)
         selection = apply_criteria(criteria, tm)
         for n, i in enumerate(selection):
-            print "[%d] %r" % (n, remove_annotation(tm.selected_data(i)))
+            print("[%d] %r" % (n, remove_annotation(tm.selected_data(i))))
 
     def do_a(self, line):
         """a <template> <data> [-n number] [-f field]- add or test annotation
@@ -65,11 +68,11 @@ class IblTool(cmd.Cmd):
                 index = selection[0]
                 tm.annotate_fragment(index, criteria.field)
                 self._save_template(template_id, tm.get_template())
-                print "[new] (%s) %r" % (criteria.field,
-                    remove_annotation(tm.selected_data(index)))
+                print("[new] (%s) %r" % (criteria.field,
+                    remove_annotation(tm.selected_data(index))))
         else:
             for n, i in enumerate(selection):
-                print "[%d] %r" % (n, remove_annotation(tm.selected_data(i)))
+                print("[%d] %r" % (n, remove_annotation(tm.selected_data(i))))
 
     def do_al(self, template_id):
         """al <template> - list annotations"""
@@ -78,8 +81,8 @@ class IblTool(cmd.Cmd):
         t = self._load_template(template_id)
         tm = TemplateMaker(t)
         for n, (a, i) in enumerate(tm.annotations()):
-            print "[%s-%d] (%s) %r" % (template_id, n, a['annotations']['content'],
-                remove_annotation(tm.selected_data(i)))
+            print("[%s-%d] (%s) %r" % (template_id, n, a['annotations']['content'],
+                remove_annotation(tm.selected_data(i))))
 
     def do_s(self, url):
         """s <url> - scrape url"""
@@ -94,7 +97,7 @@ class IblTool(cmd.Cmd):
     def default(self, line):
         if line == 'EOF':
             if self.use_rawinput:
-                print
+                print("")
             return True
         elif line:
             return cmd.Cmd.default(self, line)
@@ -133,9 +136,11 @@ class IblTool(cmd.Cmd):
         p.add_option('-f', '--field', help='field to annotate')
         p.add_option('-n', '--number', type="int", help='number of result to select')
         o, a = p.parse_args(shlex.split(criteria_str))
-
-        encoding = getattr(self.stdin, 'encoding', None) or sys.stdin.encoding
-        o.text = ' '.join(a).decode(encoding or 'ascii')
+        o.text = ' '.join(a)
+        if isinstance(o.text, bytes):
+            # Python 2.x
+            encoding = getattr(self.stdin, 'encoding', None) or sys.stdin.encoding
+            o.text = o.text.decode(encoding or 'ascii')
         return o
 
 
@@ -176,7 +181,7 @@ def args_to_file(args):
 
 def main():
     if len(sys.argv) == 1:
-        print "usage: %s <scraper_file> [command arg ...]" % sys.argv[0]
+        print("usage: %s <scraper_file> [command arg ...]" % sys.argv[0])
         sys.exit(2)
 
     filename, args = sys.argv[1], sys.argv[2:]

@@ -11,7 +11,7 @@ import six
 
 from six.moves.urllib.request import urlopen
 from copy import deepcopy
-from w3lib.encoding import html_to_unicode
+from w3lib.encoding import html_to_unicode, http_content_type_encoding
 
 def url_to_page(url, encoding=None, default_encoding='utf-8'):
     """Fetch a URL, using python urllib2, and return an HtmlPage object.
@@ -31,12 +31,17 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
     body_str = fh.read()
     # guess content encoding if not specified
     if encoding is None:
-        content_type_header = info.getheader("content-encoding")
+        try:
+            # Python 3.x
+            content_type_header = fh.getheader("content-type")
+        except AttributeError:
+            # Python 2.x
+            content_type_header = info.getheader("content-type")
         encoding, body = html_to_unicode(content_type_header, body_str,
                 default_encoding=default_encoding)
     else:
         body = body_str.decode(encoding)
-    return HtmlPage(fh.geturl(), headers=info.dict, body=body, encoding=encoding)
+    return HtmlPage(fh.geturl(), headers=dict(info.items()), body=body, encoding=encoding)
 
 def dict_to_page(jsonpage, body_key='body'):
     """Create an HtmlPage object from a dict object.
