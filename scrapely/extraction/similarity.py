@@ -1,7 +1,8 @@
 """
 Similarity calculation for Instance based extraction algorithm.
 """
-from itertools import izip, count
+from itertools import count
+from six.moves import zip as izip, xrange
 from operator import itemgetter
 from heapq import nlargest
 

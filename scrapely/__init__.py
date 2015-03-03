@@ -1,6 +1,8 @@
 import urllib
 import json
 
+from w3lib.util import str_to_unicode
+
 from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
@@ -33,11 +35,11 @@ class Scraper(object):
         assert data, "Cannot train with empty data"
         tm = TemplateMaker(htmlpage)
         for field, values in data.items():
-            if not hasattr(values, '__iter__'):
+            if (isinstance(values, (bytes, str)) or
+                    not hasattr(values, '__iter__')):
                 values = [values]
             for value in values:
-                if isinstance(value, str):
-                    value = value.decode(htmlpage.encoding or 'utf-8')
+                value = str_to_unicode(value, htmlpage.encoding)
                 tm.annotate(field, best_match(value))
         self.add_template(tm.get_template())
 

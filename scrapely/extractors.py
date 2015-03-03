@@ -3,7 +3,8 @@ Extractors collection
 """
 
 import re
-import urlparse
+
+from six.moves.urllib.parse import urlparse, urlunparse
 
 from w3lib.html import remove_entities, remove_comments
 from w3lib.url import safe_url_string
@@ -347,7 +348,7 @@ def extract_image_url(txt):
         # check if the text is style content
         m = _CSS_IMAGERE.search(txt)
         txt = m.groups()[0] if m else txt
-        parsed = urlparse.urlparse(txt)
+        parsed = urlparse(txt)
         path = None
         m = _IMAGE_PATH_RE.search(parsed.path)
         if m:
@@ -359,7 +360,7 @@ def extract_image_url(txt):
         if path is not None:
             parsed = list(parsed)
             parsed[2] = path
-            imgurl = urlparse.urlunparse(parsed)
+            imgurl = urlunparse(parsed)
         if not imgurl:
             imgurl = txt
     return imgurl

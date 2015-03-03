@@ -5,7 +5,11 @@ Container objects for representing html pages and their parts in the IBL
 system. This encapsulates page related information and prevents parsing
 multiple times.
 """
-import re, hashlib, urllib2
+import re
+import hashlib
+import six
+
+from six.moves.urllib.request import urlopen
 from copy import deepcopy
 from w3lib.encoding import html_to_unicode
 
@@ -22,7 +26,7 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
     unspecified, the encoding is guessed using `w3lib.encoding.html_to_unicode`.
     `default_encoding` is used if the encoding cannot be determined.
     """
-    fh = urllib2.urlopen(url)
+    fh = urlopen(url)
     info = fh.info()
     body_str = fh.read()
     # guess content encoding if not specified
@@ -75,13 +79,13 @@ class HtmlPage(object):
     entities or encoding urls.
     """
     def __init__(self, url=None, headers=None, body=None, page_id=None, encoding='utf-8'):
-        assert isinstance(body, unicode), "unicode expected, got: %s" % type(body).__name__
+        assert isinstance(body, six.text_type), "unicode expected, got: %s" % type(body).__name__
         self.headers = headers or {}
         self.body = body
         self.url = url or u''
         self.encoding = encoding
         if page_id is None and url:
-            self.page_id = hashlib.sha1(url).hexdigest()
+            self.page_id = hashlib.sha1(url.encode(self.encoding)).hexdigest()
         else:
             self.page_id = page_id
 
@@ -110,11 +114,11 @@ class TextPage(HtmlPage):
         self.parsed_body = [HtmlDataFragment(0, len(self._body), True)]
     body = property(lambda x: x._body, _set_body, doc="raw text for the page")
 
-class HtmlPageRegion(unicode):
+class HtmlPageRegion(six.text_type):
     """A Region of an HtmlPage that has been extracted
     """
     def __new__(cls, htmlpage, data):
-        return unicode.__new__(cls, data)
+        return six.text_type.__new__(cls, data)
 
     def __init__(self, htmlpage, data):
         """Construct a new HtmlPageRegion object.
