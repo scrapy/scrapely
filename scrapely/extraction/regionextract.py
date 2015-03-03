@@ -37,7 +37,7 @@ __all__ = ['BasicTypeExtractor',
            'labelled_element']
 
 
-def _int_cmp(a, b, op='lt'):
+def _int_cmp(a, b, op):
     op = getattr(operator, op)
     a = -float('inf') if a is None else a
     b = -float('inf') if b is None else b
@@ -373,15 +373,16 @@ class RecordExtractor(object):
         first_region, following_regions = region_elements[0], region_elements[1:]
         while (following_regions and
                _int_cmp(labelled_element(following_regions[0]).start_index,
-                        labelled_element(first_region).end_index)):
+                        labelled_element(first_region).end_index, 'lt')):
             region = following_regions.pop(0)
             labelled = labelled_element(region)
             if (isinstance(labelled, AnnotationTag) or
                 (nested_regions and
                  _int_cmp(labelled_element(nested_regions[-1]).start_index,
-                          labelled.start_index) and
+                          labelled.start_index, 'lt') and
                  _int_cmp(labelled.start_index,
-                          labelled_element(nested_regions[-1]).end_index))):
+                          labelled_element(nested_regions[-1]).end_index,
+                          'lt'))):
                 nested_regions.append(region)
             else:
                 ignored_regions.append(region)
