@@ -2,6 +2,9 @@
 Scrapely
 ========
 
+.. image:: https://travis-ci.org/scrapy/scrapely.svg?branch=master
+    :target: https://travis-ci.org/scrapy/scrapely
+
 Scrapely is a library for extracting structured data from HTML pages. Given
 some example web pages and the data to be extracted, scrapely constructs a
 parser for all similar pages.
@@ -83,7 +86,7 @@ Example::
     ========================================
     a  al  s  ta  td  tl
 
-    scrapely> 
+    scrapely>
 
 To create a scraper and add a template::
 
@@ -105,7 +108,7 @@ To add a new annotation, you usually test the selection criteria first::
     [0] u'<a href="/pypi/w3lib/1.1">w3lib 1.1</a>'
     [1] u'<h1>w3lib 1.1</h1>'
     [2] u'<title>Python Package Index : w3lib 1.1</title>'
-    
+
 You can also quote the text, if you need to specify an arbitrary number of
 spaces, for example::
 
@@ -138,14 +141,11 @@ To scrape another similar page with the already added templates::
 Requirements
 ============
 
-* Python 2.6 or 2.7
+* Python 2.6, 2.7 or 3.3+
 * numpy
 * w3lib
 
-A couple of notes regarding dependencies:
-
-* Scrapely **does not** depend on `Scrapy`_ in any way
-* Python 3 is not supported yet (pull requests welcome!)
+Scrapely **does not** depend on `Scrapy`_ in any way.
 
 Additional requirements for running tests:
 
