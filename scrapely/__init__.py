@@ -35,7 +35,7 @@ class Scraper(object):
         assert data, "Cannot train with empty data"
         tm = TemplateMaker(htmlpage)
         for field, values in data.items():
-            if (isinstance(values, bytes) or isinstance(values, str) or
+            if (isinstance(values, (bytes, str)) or
                     not hasattr(values, '__iter__')):
                 values = [values]
             for value in values:
