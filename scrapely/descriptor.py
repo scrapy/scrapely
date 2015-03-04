@@ -5,6 +5,7 @@ from itertools import chain
 
 from scrapely.extractors import text
 
+
 class FieldDescriptor(object):
     """description of a scraped attribute"""
     __slots__ = ('name', 'description', 'extractor', 'required')
@@ -17,6 +18,7 @@ class FieldDescriptor(object):
 
     def __str__(self):
         return "FieldDescriptor(%s)" % self.name
+
 
 class ItemDescriptor(object):
     """Simple auto scraping item descriptor.

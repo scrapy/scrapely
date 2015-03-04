@@ -9,9 +9,11 @@ from numpy import array, ndarray
 
 from scrapely.htmlpage import HtmlTagType, HtmlPageRegion, HtmlPageParsedRegion
 
+
 class TokenType(HtmlTagType):
     """constants for token types"""
     WORD = 0
+
 
 class TokenDict(object):
     """Mapping from parse tokens to integers
@@ -66,6 +68,7 @@ class TokenDict(object):
         templates = ["%s", "<%s>", "</%s>", "<%s/>"]
         return templates[tid >> 24] % self.find_token(tid)
 
+
 class PageRegion(object):
     """A region in a page, defined by a start and end index"""
 
@@ -82,6 +85,7 @@ class PageRegion(object):
     def __repr__(self):
         return str(self)
 
+
 class FragmentedHtmlPageRegion(HtmlPageParsedRegion, HtmlPageRegion):
     """An HtmlPageRegion consisting of possibly non-contiguous sub-regions"""
     def __new__(cls, htmlpage, regions):
@@ -95,6 +99,7 @@ class FragmentedHtmlPageRegion(HtmlPageParsedRegion, HtmlPageRegion):
     @property
     def parsed_fragments(self):
         return chain(*(r.parsed_fragments for r in self.regions))
+
 
 class Page(object):
     """Basic representation of a page. This consists of a reference to a
@@ -110,6 +115,7 @@ class Page(object):
         if not isinstance(page_tokens, ndarray):
             page_tokens = array(page_tokens)
         self.page_tokens = page_tokens
+
 
 class TemplatePage(Page):
     __slots__ = ('annotations', 'id', 'ignored_regions', 'extra_required_attrs')
@@ -132,6 +138,7 @@ class TemplatePage(Page):
             summary.append(text)
         return "TemplatePage\n============\nTokens: (index, token)\n%s\nAnnotations: %s\n" % \
                 ('\n'.join(summary), '\n'.join(map(str, self.annotations)))
+
 
 class ExtractionPage(Page):
     """Parsed data belonging to a web page upon which we wish to perform
@@ -183,6 +190,7 @@ class ExtractionPage(Page):
             summary.append(text)
         return "ExtractionPage\n==============\nTokens: %s\n\nRaw text: %s\n\n" \
                 % ('\n'.join(summary), self.htmlpage.body)
+
 
 class AnnotationText(object):
     __slots__ = ('start_text', 'follow_text')

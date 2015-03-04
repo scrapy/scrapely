@@ -11,6 +11,7 @@ from scrapely.htmlpage import HtmlTagType, HtmlTag, HtmlPage
 from scrapely.extraction.pageobjects import (AnnotationTag,
     TemplatePage, ExtractionPage, AnnotationText, TokenDict, FragmentedHtmlPageRegion)
 
+
 def parse_strings(template_html, extraction_html):
     """Create a template and extraction page from raw strings
 
@@ -22,17 +23,20 @@ def parse_strings(template_html, extraction_html):
     return (parse_template(t, template_page),
             parse_extraction_page(t, extraction_page))
 
+
 def parse_template(token_dict, template_html):
     """Create an TemplatePage object by parsing the annotated html"""
     parser = TemplatePageParser(token_dict)
     parser.feed(template_html)
     return parser.to_template()
 
+
 def parse_extraction_page(token_dict, page_html):
     """Create an ExtractionPage object by parsing the html"""
     parser = ExtractionPageParser(token_dict)
     parser.feed(page_html)
     return parser.to_extraction_page()
+
 
 class InstanceLearningParser(object):
     """Base parser for instance based learning algorithm
@@ -64,6 +68,7 @@ class InstanceLearningParser(object):
 
     def handle_tag(self, html_tag, index):
         pass
+
 
 _END_UNPAIREDTAG_TAGS = ["form", "div", "p", "table", "tr", "td"]
 _AUTO_CLOSE_TAGS_ON_OPEN = {
@@ -316,6 +321,7 @@ class TemplatePageParser(InstanceLearningParser):
         """create a TemplatePage from the data fed to this parser"""
         return TemplatePage(self.html_page, self.token_dict, self.token_list, self.annotations,
                 self.html_page.page_id, self.ignored_regions, self.extra_required_attrs)
+
 
 class ExtractionPageParser(InstanceLearningParser):
     """Parse an HTML page for extraction using the instance based learning

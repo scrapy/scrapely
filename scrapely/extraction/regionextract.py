@@ -195,6 +195,7 @@ class BasicTypeExtractor(object):
                 (self.annotation.start_index, self.annotation.end_index))
         return ''.join(messages)
 
+
 class RepeatedDataExtractor(object):
     """Data extractor for handling repeated data"""
 

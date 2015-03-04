@@ -13,6 +13,7 @@ from six.moves.urllib.request import urlopen
 from copy import deepcopy
 from w3lib.encoding import html_to_unicode
 
+
 def url_to_page(url, encoding=None, default_encoding='utf-8'):
     """Fetch a URL, using python urllib2, and return an HtmlPage object.
 
@@ -43,6 +44,7 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
         body = body_str.decode(encoding)
     return HtmlPage(fh.geturl(), headers=dict(info.items()), body=body, encoding=encoding)
 
+
 def dict_to_page(jsonpage, body_key='body'):
     """Create an HtmlPage object from a dict object.
 
@@ -57,6 +59,7 @@ def dict_to_page(jsonpage, body_key='body'):
     encoding = jsonpage.get('encoding', 'utf-8')
     return HtmlPage(url, headers, body, page_id, encoding)
 
+
 def page_to_dict(page, body_key='body'):
     """Create a dict from the given HtmlPage
 
@@ -70,6 +73,7 @@ def page_to_dict(page, body_key='body'):
         'page_id': page.page_id,
         'encoding': page.encoding,
     }
+
 
 class HtmlPage(object):
     """HtmlPage
@@ -110,6 +114,7 @@ class HtmlPage(object):
         """portion of the body corresponding to the HtmlDataFragment"""
         return self.body[data_fragment.start:data_fragment.end]
 
+
 class TextPage(HtmlPage):
     """An HtmlPage with one unique HtmlDataFragment, needed to have a
     convenient text with same interface as html page but avoiding unnecesary
@@ -118,6 +123,7 @@ class TextPage(HtmlPage):
         self._body = text
         self.parsed_body = [HtmlDataFragment(0, len(self._body), True)]
     body = property(lambda x: x._body, _set_body, doc="raw text for the page")
+
 
 class HtmlPageRegion(six.text_type):
     """A Region of an HtmlPage that has been extracted
@@ -135,6 +141,7 @@ class HtmlPageRegion(six.text_type):
     @property
     def text_content(self):
         return self
+
 
 class HtmlPageParsedRegion(HtmlPageRegion):
     """A region of an HtmlPage that has been extracted
@@ -186,6 +193,7 @@ class HtmlTagType(object):
     CLOSE_TAG = 2
     UNPAIRED_TAG = 3
 
+
 class HtmlDataFragment(object):
     __slots__ = ('start', 'end', 'is_text_content')
 
@@ -199,6 +207,7 @@ class HtmlDataFragment(object):
 
     def __repr__(self):
         return str(self)
+
 
 class HtmlTag(HtmlDataFragment):
     __slots__ = ('tag_type', 'tag', 'attributes')
@@ -216,6 +225,7 @@ class HtmlTag(HtmlDataFragment):
     def __repr__(self):
         return str(self)
 
+
 _ATTR = "((?:[^=/<>\s]|/(?!>))+)(?:\s*=(?:\s*\"(.*?)\"|\s*'(.*?)'|([^>\s]+))?)?"
 _TAG = "<(\/?)(\w+(?::\w+)?)((?:\s*" + _ATTR + ")+\s*|\s*)(\/?)>?"
 _DOCTYPE = r"<!DOCTYPE.*?>"
@@ -226,6 +236,7 @@ _ATTR_REGEXP = re.compile(_ATTR, re.I | re.DOTALL)
 _HTML_REGEXP = re.compile("%s|%s|%s" % (_COMMENT, _SCRIPT, _TAG), re.I | re.DOTALL)
 _DOCTYPE_REGEXP = re.compile("(?:%s)" % _DOCTYPE)
 _COMMENT_REGEXP = re.compile(_COMMENT, re.DOTALL)
+
 
 def parse_html(text):
     """Higher level html parser. Calls lower level parsers and joins sucesive
@@ -256,6 +267,7 @@ def parse_html(text):
     if prev_end < textlen:
         yield HtmlDataFragment(prev_end, textlen, True)
 
+
 def _parse_script(match):
     """parse a <script>...</script> region matched by _HTML_REGEXP"""
     open_text, content, close_text = match.groups()[1:4]
@@ -279,6 +291,7 @@ def _parse_script(match):
         if open_tag.end + start_pos < close_tag.start:
             yield HtmlDataFragment(open_tag.end + start_pos, close_tag.start)
     yield close_tag
+
 
 def _parse_tag(match):
     """

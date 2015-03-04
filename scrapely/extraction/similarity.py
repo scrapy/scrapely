@@ -6,6 +6,7 @@ from six.moves import zip as izip, xrange
 from operator import itemgetter
 from heapq import nlargest
 
+
 def common_prefix_length(a, b):
     """Calculate the length of the common prefix in both sequences passed.
 
@@ -23,6 +24,7 @@ def common_prefix_length(a, b):
             return i
     return i + 1
 
+
 def common_prefix(*sequences):
     """determine the common prefix of all sequences passed
 
@@ -38,6 +40,7 @@ def common_prefix(*sequences):
         else:
             break
     return prefix
+
 
 def longest_unique_subsequence(to_search, subsequence, range_start=0,
         range_end=None):
@@ -79,6 +82,7 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
         return best2[0]
     return None, None
 
+
 def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=None):
     """Find the first longest subsequence of the items in a list or array.
 
@@ -109,6 +113,7 @@ def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=N
         return None, None
     # secondary sort on position and prefer the smaller one (near)
     return max(matches, key=lambda x: (x[1], -x[0]))
+
 
 def similar_region(extracted_tokens, template_tokens, labelled_region,
         range_start=0, range_end=None, best_match=longest_unique_subsequence, **kwargs):
@@ -168,4 +173,3 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     if match_index is None:
         return 0, None, None
     return (pscore + sscore, prefix_index, match_index)
-
