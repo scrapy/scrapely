@@ -9,27 +9,23 @@ Scrapely is a library for extracting structured data from HTML pages. Given
 some example web pages and the data to be extracted, scrapely constructs a
 parser for all similar pages.
 
-How does Scrapely relate to `Scrapy`_?
-======================================
+Installation
+============
 
-Despite the similarity in their names, Scrapely and `Scrapy`_ are quite
-different things. The only similarity they share is that they both depend on
-`w3lib`_, and they are both maintained by the same group of developers (which
-is why both are hosted on the `same Github account`_).
+Scrapely works in Python 2.6, 2.7 or 3.3+.
+It requires numpy and w3lib Python packages.
 
-Scrapy is an application framework for building web crawlers, while Scrapely is
-a library for extracting structured data from HTML pages. If anything, Scrapely
-is more similar to `BeautifulSoup`_ or `lxml`_ than Scrapy.
+To install scrapely on any platform use::
 
-Scrapely doesn't depend on Scrapy nor the other way around. In fact, it is
-quite common to use Scrapy without Scrapely, and viceversa.
+    pip install scrapely
 
-If you are looking for a complete crawler-scraper solution, there is (at least)
-one project called `Slybot`_ that integrates both, but you can definitely use
-Scrapely on other web crawlers since it's just a library.
+If you're using Ubuntu (9.10 or above), you can install scrapely from the
+Scrapy Ubuntu repos. Just add the Ubuntu repos as described here:
+http://doc.scrapy.org/en/latest/topics/ubuntu.html
 
-Scrapy has a builtin extraction mechanism called `selectors`_ which (unlike
-Scrapely) is based on XPaths.
+And then install scrapely with::
+
+    aptitude install python-scrapely
 
 Usage (API)
 ===========
@@ -90,38 +86,37 @@ Example::
 
 To create a scraper and add a template::
 
-    scrapely> ta http://pypi.python.org/pypi/w3lib
-    [0] http://pypi.python.org/pypi/w3lib
+    scrapely> ta http://pypi.python.org/pypi/w3lib/1.1
+    [0] http://pypi.python.org/pypi/w3lib/1.1
 
 This is equivalent as typing the following in one command::
 
-    python -m scrapely.tool myscraper.json ta http://pypi.python.org/pypi/w3lib
+    python -m scrapely.tool myscraper.json ta http://pypi.python.org/pypi/w3lib/1.1
 
 To list available templates from a scraper::
 
     scrapely> tl
-    [0] http://pypi.python.org/pypi/w3lib
+    [0] http://pypi.python.org/pypi/w3lib/1.1
 
 To add a new annotation, you usually test the selection criteria first::
 
     scrapely> t 0 w3lib 1.1
-    [0] u'<a href="/pypi/w3lib/1.1">w3lib 1.1</a>'
-    [1] u'<h1>w3lib 1.1</h1>'
-    [2] u'<title>Python Package Index : w3lib 1.1</title>'
+    [0] u'<h1>w3lib 1.1</h1>'
+    [1] u'<title>Python Package Index : w3lib 1.1</title>'
 
 You can also quote the text, if you need to specify an arbitrary number of
 spaces, for example::
 
     scrapely> t 0 "w3lib 1.1"
 
-You can refine by position. To take the one in position [1]::
+You can refine by position. To take the one in position [0]::
 
-    scrapely> a 0 w3lib 1.1 -n 1
+    scrapely> a 0 w3lib 1.1 -n 0
     [0] u'<h1>w3lib 1.1</h1>'
 
 To annotate some fields on the template::
 
-    scrapely> a 0 w3lib 1.1 -n 1 -f name
+    scrapely> a 0 w3lib 1.1 -n 0 -f name
     [new] (name) u'<h1>w3lib 1.1</h1>'
     scrapely> a 0 Scrapy project -n 0 -f author
     [new] u'<span>Scrapy project</span>'
@@ -137,34 +132,6 @@ To scrape another similar page with the already added templates::
     scrapely> s http://pypi.python.org/pypi/Django/1.3
     [{u'author': [u'Django Software Foundation'], u'name': [u'Django 1.3']}]
 
-
-Requirements
-============
-
-* Python 2.6, 2.7 or 3.3+
-* numpy
-* w3lib
-
-Scrapely **does not** depend on `Scrapy`_ in any way.
-
-Additional requirements for running tests:
-
-* `tox`_
-
-Installation
-============
-
-To install scrapely on any platform use::
-
-    pip install scrapely
-
-If you're using Ubuntu (9.10 or above), you can install scrapely from the
-Scrapy Ubuntu repos. Just add the Ubuntu repos as described here:
-http://doc.scrapy.org/en/latest/topics/ubuntu.html
-
-And then install scrapely with::
-
-    aptitude install python-scrapely
 
 Tests
 =====
@@ -211,6 +178,29 @@ make sure it annotates the area of the page you intended.
 Alternatively, you can use the Scrapely command line tool to annotate pages,
 which provides more manual control for higher accuracy.
 
+How does Scrapely relate to `Scrapy`_?
+======================================
+
+Despite the similarity in their names, Scrapely and `Scrapy`_ are quite
+different things. The only similarity they share is that they both depend on
+`w3lib`_, and they are both maintained by the same group of developers (which
+is why both are hosted on the `same Github account`_).
+
+Scrapy is an application framework for building web crawlers, while Scrapely is
+a library for extracting structured data from HTML pages. If anything, Scrapely
+is more similar to `BeautifulSoup`_ or `lxml`_ than Scrapy.
+
+Scrapely doesn't depend on Scrapy nor the other way around. In fact, it is
+quite common to use Scrapy without Scrapely, and viceversa.
+
+If you are looking for a complete crawler-scraper solution, there is (at least)
+one project called `Slybot`_ that integrates both, but you can definitely use
+Scrapely on other web crawlers since it's just a library.
+
+Scrapy has a builtin extraction mechanism called `selectors`_ which (unlike
+Scrapely) is based on XPaths.
+
+
 License
 =======
 
@@ -226,4 +216,4 @@ Scrapely library is licensed under the BSD license.
 .. _nose: http://readthedocs.org/docs/nose/en/latest/
 .. _scrapy@freenode: http://webchat.freenode.net/?channels=scrapy
 .. _Scrapy community: http://scrapy.org/community/
-.. _tox: http://pypi.python.org/pypi/tox
+.. _tox: https://pypi.python.org/pypi/tox
