@@ -5,6 +5,7 @@ Extractors collection
 import re
 
 from six.moves.urllib.parse import urlparse, urlunparse
+from six import unichr
 
 from w3lib.html import remove_entities, remove_comments
 from w3lib.url import safe_url_string
