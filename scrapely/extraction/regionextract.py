@@ -50,6 +50,7 @@ def labelled_element(obj):
     """
     return getattr(obj, 'annotation', obj)
 
+
 def _compose(f, g):
     """given unary functions f and g, return a function that computes f(g(x))
     """
@@ -57,6 +58,7 @@ def _compose(f, g):
         ret = g(x)
         return f(ret) if ret is not None else None
     return _exec
+
 
 class BasicTypeExtractor(object):
     """The BasicTypeExtractor extracts single attributes corresponding to
@@ -283,9 +285,11 @@ class RepeatedDataExtractor(object):
     def __str__(self):
         return "Repeat(%s)" % self.extractor
 
+
 class TransposedDataExtractor(object):
     """ """
     pass
+
 
 _namef = operator.itemgetter(0)
 _valuef = operator.itemgetter(1)
@@ -300,6 +304,7 @@ def attrs2dict(attributes):
     """
     grouped_data = groupby(sorted(attributes, key=_namef), _namef)
     return dict((name, list(map(_valuef, data))) for (name, data)  in grouped_data)
+
 
 class RecordExtractor(object):
     """The RecordExtractor will extract records given annotations.
@@ -447,6 +452,7 @@ class RecordExtractor(object):
             return "%s[\n%s\n]" % (self.__class__.__name__, template_data)
         return "%s[none]" % (self.__class__.__name__)
 
+
 class AdjacentVariantExtractor(RecordExtractor):
     """Extractor for variants
 
@@ -484,6 +490,7 @@ class AdjacentVariantExtractor(RecordExtractor):
 
     def __repr__(self):
         return str(self)
+
 
 class TraceExtractor(object):
     """Extractor that wraps other extractors and prints an execution
@@ -559,6 +566,7 @@ extracted
     def __repr__(self):
         return "Trace(%s)" % repr(self.traced)
 
+
 class TemplatePageExtractor(object):
     """Top level extractor for a template page"""
 
@@ -583,6 +591,7 @@ class TemplatePageExtractor(object):
 
     def __str__(self):
         return str(self.extractors)
+
 
 # Based on nltk's WordPunctTokenizer
 _tokenize = re.compile(r'\w+|[^\w\s]+', re.UNICODE | re.MULTILINE | re.DOTALL).findall

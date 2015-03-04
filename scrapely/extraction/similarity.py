@@ -74,7 +74,7 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
 
     # the comparison to startval ensures only matches of length >= 1 and
     # reduces the number of calls to the common_length function
-    matches = ((i, common_prefix_length(to_search[i:], subsequence)) \
+    matches = ((i, common_prefix_length(to_search[i:], subsequence))
         for i in xrange(range_start, range_end) if startval == to_search[i])
     best2 = nlargest(2, matches, key=itemgetter(1))
     # if there is a single unique best match, return that
@@ -106,7 +106,7 @@ def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=N
 
     # the comparison to startval ensures only matches of length >= 1 and
     # reduces the number of calls to the common_length function
-    matches = [(i, common_prefix_length(to_search[i:], subsequence)) \
+    matches = [(i, common_prefix_length(to_search[i:], subsequence))
         for i in xrange(range_start, range_end) if startval == to_search[i]]
 
     if not matches:
