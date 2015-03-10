@@ -37,7 +37,7 @@ __all__ = ['BasicTypeExtractor',
            'labelled_element']
 
 
-def _int_cmp(a, b, op):
+def _int_cmp(a, op, b):
     op = getattr(operator, op)
     a = -float('inf') if a is None else a
     b = -float('inf') if b is None else b
@@ -114,8 +114,8 @@ class BasicTypeExtractor(object):
 
     def _extract_content(self, extraction_page, start_index, end_index, ignored_regions=None, **kwargs):
         """extract content between annotation indexes"""
-        if ignored_regions and (_int_cmp(start_index, ignored_regions[0].start_index, 'le') and
-                                _int_cmp(end_index, ignored_regions[-1].end_index, 'ge')):
+        if ignored_regions and (_int_cmp(start_index, 'le', ignored_regions[0].start_index) and
+                                _int_cmp(end_index, 'ge', ignored_regions[-1].end_index)):
             starts = [start_index] + [i.end_index for i in ignored_regions if i.end_index is not None]
             ends = [i.start_index for i in ignored_regions]
             if starts[-1] is not None:
@@ -371,17 +371,14 @@ class RecordExtractor(object):
         ignored_regions = ignored_regions or []
         current_extractor, following_extractors = extractors[0], extractors[1:]
         while (following_extractors and
-               _int_cmp(labelled_element(following_extractors[0]).start_index,
-                        labelled_element(current_extractor).end_index, 'lt')):
+               _int_cmp(labelled_element(following_extractors[0]).start_index, 'lt',
+                        labelled_element(current_extractor).end_index)):
             ex = following_extractors.pop(0)
             labelled = labelled_element(ex)
             if (isinstance(labelled, AnnotationTag) or
                 (nested_regions and
-                 _int_cmp(labelled_element(nested_regions[-1]).start_index,
-                          labelled.start_index, 'lt') and
-                 _int_cmp(labelled.start_index,
-                          labelled_element(nested_regions[-1]).end_index,
-                          'lt'))):
+                 _int_cmp(labelled_element(nested_regions[-1]).start_index, 'lt', labelled.start_index) and
+                 _int_cmp(labelled.start_index, 'lt', labelled_element(nested_regions[-1]).end_index))):
                 nested_regions.append(ex)
             else:
                 ignored_regions.append(ex)
