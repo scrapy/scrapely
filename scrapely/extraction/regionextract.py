@@ -388,11 +388,11 @@ class RecordExtractor(object):
                 ignored_regions.append(region)
         extracted_data = []
         # end_index is inclusive, but similar_region treats it as exclusive
-        end_region = None if end_index is None else end_index + 1
+        end_index_exclusive = None if end_index is None else end_index + 1
         labelled = labelled_element(first_region)
         score, pindex, sindex = \
             similar_region(page.page_tokens, self.template_tokens,
-                labelled, start_index, end_region, self.best_match, **kwargs)
+                labelled, start_index, end_index_exclusive, self.best_match, **kwargs)
         if score > 0:
             if isinstance(labelled, AnnotationTag):
                 similar_ignored_regions = []
