@@ -3,14 +3,18 @@ import json
 
 from scrapely.htmlpage import HtmlTag, HtmlTagType
 
+
 class AnnotationError(Exception):
     pass
+
 
 class FragmentNotFound(AnnotationError):
     pass
 
+
 class FragmentAlreadyAnnotated(AnnotationError):
     pass
+
 
 class TemplateMaker(object):
 
@@ -98,6 +102,7 @@ def best_match(text):
         else:
             return 0.0
     return func
+
 
 def _enclosing_tags(htmlpage, index):
     f = htmlpage.parsed_body[index]

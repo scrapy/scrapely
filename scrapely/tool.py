@@ -9,6 +9,7 @@ from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
+
 class IblTool(cmd.Cmd):
 
     prompt = 'scrapely> '
@@ -149,6 +150,7 @@ def parse_at(ta_line):
     p.add_option('-e', '--encoding', help='page encoding')
     return p.parse_args(shlex.split(ta_line))
 
+
 def apply_criteria(criteria, tm):
     """Apply the given criteria object to the given template"""
     func = best_match(criteria.text) if criteria.text else lambda x, y: False
@@ -160,13 +162,16 @@ def apply_criteria(criteria, tm):
             sel = []
     return sel
 
+
 def remove_annotation(text):
     return re.sub(u' ?data-scrapy-annotate=".*?"', '', text)
+
 
 def assert_or_print(condition, text):
     if not condition:
         sys.stderr.write(text + os.linesep)
         return True
+
 
 def args_to_file(args):
     s = []
@@ -178,6 +183,7 @@ def args_to_file(args):
                 a = '"%s"' % a
         s.append(a)
     return StringIO(' '.join(s))
+
 
 def main():
     if len(sys.argv) == 1:

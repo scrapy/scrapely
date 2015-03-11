@@ -53,11 +53,13 @@ _TAGS_TO_REPLACE = {
 # (overrides tags_to_keep and tags_to_replace)
 _TAGS_TO_PURGE = ('script', 'img', 'input')
 
+
 def htmlregion(text):
     """convenience function to make an html region from text.
     This is useful for testing
     """
     return HtmlPage(body=text).subregion()
+
 
 def notags(region, tag_replace=u' '):
     """Removes all html tags"""
@@ -67,6 +69,7 @@ def notags(region, tag_replace=u' '):
     page = region.htmlpage
     data = [page.fragment_data(f) for f in fragments if not isinstance(f, HtmlTag)]
     return tag_replace.join(data)
+
 
 def text(region):
     """Converts HTML to text. There is no attempt at formatting other than
@@ -98,6 +101,7 @@ def text(region):
     """
     text = remove_entities(region.text_content, encoding=region.htmlpage.encoding)
     return _WS.sub(u' ', text).strip()
+
 
 def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     tags_to_purge=_TAGS_TO_PURGE):
@@ -171,6 +175,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
         _process_tag, tags_to_purge)) + ["</%s>" % t for t in reversed(tagstack)]
     return u''.join(chunks).strip()
 
+
 def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
     fragments = getattr(region, 'parsed_fragments', None)
     if fragments is None:
@@ -200,9 +205,11 @@ def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
             if text:
                 yield text
 
+
 def html(pageregion):
     """A page region is already html, so this is the identity function"""
     return pageregion
+
 
 def contains_any_numbers(txt):
     """text that must contain at least one number
@@ -213,10 +220,12 @@ def contains_any_numbers(txt):
     if _NUMBER_RE.search(txt) is not None:
         return txt
 
+
 def contains_prices(txt):
     """text must contain a number that is not joined to text"""
     if _PRICE_NUMBER_RE.findall(txt) is not None:
         return txt
+
 
 def contains_numbers(txt, count=1):
     """Must contain a certain amount of numbers
@@ -228,6 +237,7 @@ def contains_numbers(txt, count=1):
     numbers = _NUMBER_RE.findall(txt)
     if len(numbers) == count:
         return txt
+
 
 def extract_number(txt):
     """Extract a numeric value.
@@ -246,6 +256,7 @@ def extract_number(txt):
     numbers = _NUMBER_RE.findall(txt)
     if len(numbers) == 1:
         return numbers[0]
+
 
 def extract_price(txt):
     """
@@ -278,6 +289,7 @@ def extract_price(txt):
         value = "".join(parts + [decimalpart]).replace(",", "")
         return value
 
+
 def url(txt):
     """convert text to a url
 
@@ -286,6 +298,7 @@ def url(txt):
     txt = txt.strip("\t\r\n '\"")
     if txt:
         return txt
+
 
 def image_url(txt):
     """convert text to a url
@@ -341,6 +354,7 @@ def image_url(txt):
     """
     imgurl = extract_image_url(txt)
     return [safe_url_string(remove_entities(url(imgurl)))] if imgurl else None
+
 
 def extract_image_url(txt):
     txt = url(txt)

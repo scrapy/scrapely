@@ -6,6 +6,7 @@ from six.moves import zip as izip, xrange
 from operator import itemgetter
 from heapq import nlargest
 
+
 def common_prefix_length(a, b):
     """Calculate the length of the common prefix in both sequences passed.
 
@@ -23,6 +24,7 @@ def common_prefix_length(a, b):
             return i
     return i + 1
 
+
 def common_prefix(*sequences):
     """determine the common prefix of all sequences passed
 
@@ -38,6 +40,7 @@ def common_prefix(*sequences):
         else:
             break
     return prefix
+
 
 def longest_unique_subsequence(to_search, subsequence, range_start=0,
         range_end=None):
@@ -71,13 +74,14 @@ def longest_unique_subsequence(to_search, subsequence, range_start=0,
 
     # the comparison to startval ensures only matches of length >= 1 and
     # reduces the number of calls to the common_length function
-    matches = ((i, common_prefix_length(to_search[i:], subsequence)) \
+    matches = ((i, common_prefix_length(to_search[i:], subsequence))
         for i in xrange(range_start, range_end) if startval == to_search[i])
     best2 = nlargest(2, matches, key=itemgetter(1))
     # if there is a single unique best match, return that
     if len(best2) == 1 or len(best2) == 2 and best2[0][1] != best2[1][1]:
         return best2[0]
     return None, None
+
 
 def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=None):
     """Find the first longest subsequence of the items in a list or array.
@@ -102,13 +106,14 @@ def first_longest_subsequence(to_search, subsequence, range_start=0, range_end=N
 
     # the comparison to startval ensures only matches of length >= 1 and
     # reduces the number of calls to the common_length function
-    matches = [(i, common_prefix_length(to_search[i:], subsequence)) \
+    matches = [(i, common_prefix_length(to_search[i:], subsequence))
         for i in xrange(range_start, range_end) if startval == to_search[i]]
 
     if not matches:
         return None, None
     # secondary sort on position and prefer the smaller one (near)
     return max(matches, key=lambda x: (x[1], -x[0]))
+
 
 def similar_region(extracted_tokens, template_tokens, labelled_region,
         range_start=0, range_end=None, best_match=longest_unique_subsequence, **kwargs):
@@ -168,4 +173,3 @@ def similar_region(extracted_tokens, template_tokens, labelled_region,
     if match_index is None:
         return 0, None, None
     return (pscore + sscore, prefix_index, match_index)
-

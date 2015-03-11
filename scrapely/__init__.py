@@ -7,6 +7,7 @@ from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
+
 class Scraper(object):
 
     def __init__(self, templates=None):
