@@ -37,7 +37,7 @@ __all__ = ['BasicTypeExtractor',
            'labelled_element']
 
 
-def _int_cmp(a, b, op):
+def _int_cmp(a, op, b):
     op = getattr(operator, op)
     a = -float('inf') if a is None else a
     b = -float('inf') if b is None else b
@@ -116,8 +116,8 @@ class BasicTypeExtractor(object):
 
     def _extract_content(self, extraction_page, start_index, end_index, ignored_regions=None, **kwargs):
         """extract content between annotation indexes"""
-        if ignored_regions and (_int_cmp(start_index, ignored_regions[0].start_index, 'le') and
-                                _int_cmp(end_index, ignored_regions[-1].end_index, 'ge')):
+        if ignored_regions and (_int_cmp(start_index, 'le', ignored_regions[0].start_index) and
+                                _int_cmp(end_index, 'ge', ignored_regions[-1].end_index)):
             starts = [start_index] + [i.end_index for i in ignored_regions if i.end_index is not None]
             ends = [i.start_index for i in ignored_regions]
             if starts[-1] is not None:
@@ -348,9 +348,8 @@ class RecordExtractor(object):
         """
         if ignored_regions is None:
             ignored_regions = []
-        region_elements = sorted(self.extractors + ignored_regions, key=lambda x: labelled_element(x).start_index)
-        _, _, attributes = self._doextract(page, region_elements, start_index,
-                end_index, **kwargs)
+        extractors = sorted(self.extractors + ignored_regions, key=lambda x: labelled_element(x).start_index)
+        _, _, attributes = self._doextract(page, extractors, start_index, end_index, **kwargs)
         # collect variant data, maintaining the order of variants
         variant_ids = []; variants = {}; items = []
         for k, v in attributes:
@@ -368,7 +367,7 @@ class RecordExtractor(object):
         items += variant_records
         return [attrs2dict(items)]
 
-    def _doextract(self, page, region_elements, start_index, end_index, nested_regions=None, ignored_regions=None, **kwargs):
+    def _doextract(self, page, extractors, start_index, end_index, nested_regions=None, ignored_regions=None, **kwargs):
         """Carry out extraction of records using the given annotations
         in the page tokens bounded by start_index and end_index
         """
@@ -376,55 +375,52 @@ class RecordExtractor(object):
         # ignore regions
         nested_regions = nested_regions or []
         ignored_regions = ignored_regions or []
-        first_region, following_regions = region_elements[0], region_elements[1:]
-        while (following_regions and
-               _int_cmp(labelled_element(following_regions[0]).start_index,
-                        labelled_element(first_region).end_index, 'lt')):
-            region = following_regions.pop(0)
-            labelled = labelled_element(region)
+        current_extractor, following_extractors = extractors[0], extractors[1:]
+        while (following_extractors and
+               _int_cmp(labelled_element(following_extractors[0]).start_index, 'lt',
+                        labelled_element(current_extractor).end_index)):
+            ex = following_extractors.pop(0)
+            labelled = labelled_element(ex)
             if (isinstance(labelled, AnnotationTag) or
                 (nested_regions and
-                 _int_cmp(labelled_element(nested_regions[-1]).start_index,
-                          labelled.start_index, 'lt') and
-                 _int_cmp(labelled.start_index,
-                          labelled_element(nested_regions[-1]).end_index,
-                          'lt'))):
-                nested_regions.append(region)
+                 _int_cmp(labelled_element(nested_regions[-1]).start_index, 'lt', labelled.start_index) and
+                 _int_cmp(labelled.start_index, 'lt', labelled_element(nested_regions[-1]).end_index))):
+                nested_regions.append(ex)
             else:
-                ignored_regions.append(region)
+                ignored_regions.append(ex)
         extracted_data = []
         # end_index is inclusive, but similar_region treats it as exclusive
-        end_region = None if end_index is None else end_index + 1
-        labelled = labelled_element(first_region)
+        end_index_exclusive = None if end_index is None else end_index + 1
+        labelled = labelled_element(current_extractor)
         score, pindex, sindex = \
             similar_region(page.page_tokens, self.template_tokens,
-                labelled, start_index, end_region, self.best_match, **kwargs)
+                labelled, start_index, end_index_exclusive, self.best_match, **kwargs)
         if score > 0:
             if isinstance(labelled, AnnotationTag):
                 similar_ignored_regions = []
                 start = pindex
                 for i in ignored_regions:
-                    s, p, e = similar_region(page.page_tokens, self.template_tokens, \
+                    s, p, e = similar_region(page.page_tokens, self.template_tokens,
                               i, start, sindex, self.best_match, **kwargs)
                     if s > 0:
                         similar_ignored_regions.append(PageRegion(p, e))
                         start = e or start
-                extracted_data = first_region.extract(page, pindex, sindex, similar_ignored_regions, **kwargs)
+                extracted_data = current_extractor.extract(page, pindex, sindex, similar_ignored_regions, **kwargs)
                 if extracted_data:
-                    if first_region.annotation.variant_id:
-                        extracted_data = [(first_region.annotation.variant_id, extracted_data)]
+                    if current_extractor.annotation.variant_id:
+                        extracted_data = [(current_extractor.annotation.variant_id, extracted_data)]
 
             if nested_regions:
                 _, _, nested_data = self._doextract(page, nested_regions, pindex, sindex, **kwargs)
                 extracted_data += nested_data
-            if following_regions:
-                _, _, following_data = self._doextract(page, following_regions, sindex or start_index, end_index, **kwargs)
+            if following_extractors:
+                _, _, following_data = self._doextract(page, following_extractors, sindex or start_index, end_index, **kwargs)
                 extracted_data += following_data
 
-        elif following_regions:
-            end_index, _, following_data = self._doextract(page, following_regions, start_index, end_index, **kwargs)
+        elif following_extractors:
+            end_index, _, following_data = self._doextract(page, following_extractors, start_index, end_index, **kwargs)
             if end_index is not None:
-                pindex, sindex, extracted_data = self._doextract(page, [first_region], start_index, end_index - 1, nested_regions, ignored_regions, **kwargs)
+                pindex, sindex, extracted_data = self._doextract(page, [current_extractor], start_index, end_index - 1, nested_regions, ignored_regions, **kwargs)
             extracted_data += following_data
         elif nested_regions:
             _, _, nested_data = self._doextract(page, nested_regions, start_index, end_index, **kwargs)
