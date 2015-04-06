@@ -15,7 +15,7 @@ from scrapely.htmlpage import HtmlPage, HtmlTag, HtmlTagType
 #FIXME: the use of "." needs to be localized
 _NUMERIC_ENTITIES = re.compile("&#([0-9]+)(?:;|\s)", re.U)
 _PRICE_NUMBER_RE = re.compile('(?:^|[^a-zA-Z0-9])(\d+(?:\.\d+)?)(?:$|[^a-zA-Z0-9])')
-_NUMBER_RE = re.compile('(\d+(?:\.\d+)?)')
+_NUMBER_RE = re.compile('(-?\d+(?:\.\d+)?)')
 _DECIMAL_RE = re.compile(r'(\d[\d\,]*(?:(?:\.\d+)|(?:)))', re.U | re.M)
 _VALPARTS_RE = re.compile("([\.,]?\d+)")
 
@@ -244,6 +244,10 @@ def extract_number(txt):
 
     This will fail if more than one numeric value is present.
 
+    >>> extract_number('  -45.3')
+    '-45.3'
+    >>> extract_number('  +45.3')
+    '45.3'
     >>> extract_number('  45.3')
     '45.3'
     >>> extract_number('  45.3, 7')
