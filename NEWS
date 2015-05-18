@@ -1,15 +1,35 @@
 Scrapely release notes
 ======================
 
-Version 0.10
+0.13.0 (TBA)
 ------------
-(release date to be announced)
 
-- Allow training the Scraper class with an HtmlPage
-- Some bug fixes and minor improvements to the IBL extraction logic
+- Python 3 support;
+- fixed incorrect webpage encoding detection;
+- usability improvements for scrapely.tool;
+- internal cleanups;
+- number extractor now supports numbers with a sign.
 
-Version 0.9
------------
-(released on April 19th, 2011)
+0.12.0 (2015-01-26)
+-------------------
+
+- TemplatePageExtractor can now use multiple top-level extractors;
+- internal cleanups;
+
+0.11.0 (2014-08-01)
+-------------------
+
+- HtmlPageParsedRegion can be copied/deepcopied.
+
+0.10 (2014-01-14)
+-----------------
+
+- Several bug fixes and improvements to the IBL extraction logic;
+- allow training the Scraper class with an HtmlPage;
+- Python 2.5 support is dropped;
+- Unicode improvements for scrapely.tool.
+
+0.9 (2011-04-19)
+----------------
 
 First release of Scrapely.
