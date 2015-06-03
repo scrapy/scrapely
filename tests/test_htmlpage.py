@@ -135,6 +135,11 @@ class TestParseHtml(TestCase):
         parsed = [_decode_element(d) for d in PARSED9]
         self._test_sample(PAGE9, parsed)
 
+    def test_malformed3(self):
+        """Test case where attributes are repeated (should take first attribute, accoring to spec)"""
+        parsed = [_decode_element(d) for d in PARSED10]
+        self._test_sample(PAGE10, parsed)
+
     def test_empty_subregion(self):
         htmlpage = HtmlPage(body=u"")
         self.assertEqual(htmlpage.subregion(), u"")
