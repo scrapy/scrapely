@@ -120,7 +120,7 @@ class InstanceBasedLearningExtractor(object):
             correctly_extracted = self.validated[extraction_tree.template.id](extracted)
             # Make sure that correctly_extracted list does not contain empty dicts
             correctly_extracted = [extracted_data for extracted_data in correctly_extracted if extracted_data]
-            if correctly_extracted:
+            if correctly_extracted and len(correctly_extracted[0].keys()) >= 2:
                 return correctly_extracted, extraction_tree.template
         return None, None
 
