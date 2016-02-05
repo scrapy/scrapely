@@ -229,7 +229,10 @@ class HtmlTag(HtmlDataFragment):
             for attr_match in _ATTR_REGEXP.findall(self._attr_text):
                 name = attr_match[0].lower()
                 values = [v for v in attr_match[1:] if v]
-                self._attributes[name] = values[0] if values else None
+                # According to HTML spec if attribute name is repeated only the
+                # first one is taken into account
+                if name not in self._attributes:
+                    self._attributes[name] = values[0] if values else None
         return self._attributes
 
     def __str__(self):
