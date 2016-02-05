@@ -210,13 +210,30 @@ class HtmlDataFragment(object):
 
 
 class HtmlTag(HtmlDataFragment):
-    __slots__ = ('tag_type', 'tag', 'attributes')
+    __slots__ = ('tag_type', 'tag', '_attributes', '_attr_text')
 
-    def __init__(self, tag_type, tag, attributes, start, end):
+    def __init__(self, tag_type, tag, attr_text, start, end):
         HtmlDataFragment.__init__(self, start, end)
         self.tag_type = tag_type
         self.tag = tag
-        self.attributes = attributes
+        if isinstance(attr_text, dict):
+            self._attributes = attr_text
+            self._attr_text = None
+        else: # defer loading attributes until necessary
+            self._attributes = {}
+            self._attr_text = attr_text
+
+    @property
+    def attributes(self):
+        if not self._attributes and self._attr_text:
+            for attr_match in _ATTR_REGEXP.findall(self._attr_text):
+                name = attr_match[0].lower()
+                values = [v for v in attr_match[1:] if v]
+                # According to HTML spec if attribute name is repeated only the
+                # first one is taken into account
+                if name not in self._attributes:
+                    self._attributes[name] = values[0] if values else None
+        return self._attributes
 
     def __str__(self):
         return "<HtmlTag tag='%s' attributes={%s} type='%d' [%s:%s]>" % (self.tag, ', '.join(sorted\
@@ -309,8 +326,4 @@ def _parse_tag(match):
         else:
             tag_type = HtmlTagType.OPEN_TAG
         attributes = []
-        for attr_match in _ATTR_REGEXP.findall(attr_text):
-            name = attr_match[0].lower()
-            values = [v for v in attr_match[1:] if v]
-            attributes.append((name, values[0] if values else None))
-        return HtmlTag(tag_type, tag.lower(), dict(attributes), match.start(), match.end())
+        return HtmlTag(tag_type, tag.lower(), attr_text, match.start(), match.end())

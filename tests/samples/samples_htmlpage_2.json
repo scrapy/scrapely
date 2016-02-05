@@ -9061,7 +9061,7 @@
         {
                 "attributes": {
                         "onerror": null, 
-                        "src": "http://images.play.com/covers/8986420m.jpg", 
+                        "src": "http://images.play.com/SiteCSS/Play/Live1/img/proxy/02m.gif",
                         "alt": "Samsung Series 5 550 37&quot; LE37B550 / HD 1080p / Freeview / LCD TV (Black)", 
                         "style": "border-width:0px;height:170px;width:170px;"
                 }, 
@@ -13481,7 +13481,7 @@
         {
                 "attributes": {
                         "onerror": null, 
-                        "src": "http://images.play.com/covers/8986409s.jpg", 
+                        "src": "http://images.play.com/SiteCSS/Play/Live1/img/proxy/02s.gif",
                         "alt": "Samsung Series 5 550 32&quot; LE32B550 / HD 1080p / Freeview / LCD TV (Black)", 
                         "style": "height:85px;width:85px;border-width:0px;"
                 }, 
@@ -15324,7 +15324,7 @@
         {
                 "attributes": {
                         "onerror": null, 
-                        "src": "http://images.play.com/covers/8986397s.jpg", 
+                        "src": "http://images.play.com/SiteCSS/Play/Live1/img/proxy/02xs.gif",
                         "alt": "Samsung Series 4 450 32&quot; LE32B450 / HD Ready / Freeview / LCD TV (Black)", 
                         "style": "height:60px;width:60px;border-width:0px;", 
                         "class": "sideimageline"
@@ -18831,7 +18831,7 @@
         {
                 "attributes": {
                         "onerror": null, 
-                        "src": "http://images.play.com/covers/8839534s.jpg", 
+                        "src": "http://images.play.com/SiteCSS/Play/Live1/img/proxy/02xs.gif",
                         "alt": "Sony Bravia S Series 26&quot; 26S5500 HD Ready Freeview Widescreen LCD TV", 
                         "style": "height:60px;width:60px;border-width:0px;", 
                         "class": "sideimageline"
