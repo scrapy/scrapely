@@ -275,3 +275,20 @@ PARSED9 = [
     {'attributes' : {}, 'end': 110, 'start': 103, 'tag': 'body', 'tag_type': 2},
     {'attributes' : {}, 'end': 117, 'start': 110, 'tag': 'html', 'tag_type': 2},
 ]
+
+PAGE10 = u"""\
+<html>\
+<body>\
+<img src='/images/9589.jpg' width='230' height='150' src='/IGNORED.jpg'>\
+</body>\
+</html>\
+"""
+
+PARSED10 = [
+    {"attributes": {}, "end": 6, "start": 0, "tag": "html", "tag_type": 1},
+    {"attributes": {}, "end": 12, "start": 6, "tag": "body", "tag_type": 1},
+    {"attributes": {"height": "150", "src": "/images/9589.jpg", "width": "230"}, "end": 84, "start": 12, "tag": "img", "tag_type": 1},
+    {"attributes": {}, "end": 91, "start": 84, "tag": "body", "tag_type": 2},
+    {"attributes": {}, "end": 98, "start": 91, "tag": "html", "tag_type": 2}
+]
+
