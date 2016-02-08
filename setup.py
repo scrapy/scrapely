@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
+from setuptools.extension import Extension
+from Cython.Build import cythonize
+
+
+extensions = [
+    Extension("scrapely._htmlpage", ["scrapely/_htmlpage.pyx"]),
+]
+
 
 setup(
     name='scrapely',
@@ -26,5 +34,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Text Processing :: Markup :: HTML',
     ],
-    install_requires=['numpy', 'w3lib'],
+    install_requires=['numpy', 'w3lib', 'cython'],
+    ext_modules=cythonize(extensions),
 )
