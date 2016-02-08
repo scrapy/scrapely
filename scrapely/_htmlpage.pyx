@@ -58,18 +58,16 @@ class HtmlTag(HtmlDataFragment):
         return str(self)
 
 
-cdef class CommentParser(object):
+cdef class CommentParser:
     cdef int start
     cdef int end
-    cdef int index
     cdef int open_state, open_count
     cdef int close_state, close_count
     cdef int inside_comment
-    
+
     def __init__(self):
         self.start = -1
         self.end = -1
-        self.index = -1
         self.reset()
 
     cdef void reset(self):
@@ -78,12 +76,7 @@ cdef class CommentParser(object):
         self.open_count = 0
         self.close_count = 0
 
-    cdef int parse(self, unicode c, int i=-1):
-        if i != -1:
-            self.index = i
-        else:
-            self.index += 1
-
+    cdef int parse(self, Py_UCS4 c, int i):
         if ((self.open_state == 1 and c == u'<') or
             (self.open_state == 2 and c == u'!') or
             (self.open_state == 3 and c == u'-') or
@@ -94,51 +87,42 @@ cdef class CommentParser(object):
 
         if self.open_state == 5:
             if self.open_count == 0:
-                self.start = self.index - 3
+                self.start = i - 3
             self.open_state = 1
             self.open_count += 1
+            self.inside_comment = True
 
-        if ((self.close_state == 1 and c == u'-') or
-            (self.close_state == 2 and c == u'-') or
-            (self.close_state == 3 and c == u'>')):
-            self.close_state += 1
-        else:
-            self.close_state = 1
-        if self.close_state == 4:
-            self.close_state = 1
-            self.close_count += 1
-
-        if self.open_count > 0:
-            if self.close_count >= self.open_count:
-                self.end = self.index
-                self.reset()
-                self.inside_comment = False
-                return True
+        if self.close_count < self.open_count:
+            if ((self.close_state == 1 and c == u'-') or
+                (self.close_state == 2 and c == u'-') or
+                (self.close_state == 3 and c == u'>')):
+                self.close_state += 1
             else:
-                self.inside_comment = True
+                self.close_state = 1
+            if self.close_state == 4:
+                self.close_state = 1
+                self.close_count += 1
+                if self.close_count >= self.open_count:
+                    self.end = i
+                    self.reset()
+                    self.inside_comment = False
+                    return True
         return False
 
 
-cdef class ScriptParser(object):
+cdef class ScriptParser:
     cdef int start
     cdef int end
-    cdef int index
     cdef int state
 
     def __init__(self):
         self.start = -1
         self.end = -1
         self.state = 1
-        self.index = -1
 
-    cdef int parse(self, unicode c, int i=-1):
+    cdef int parse(self, Py_UCS4 c, int i):
         if self.state == 10:
             self.state = 1
-
-        if i != -1:
-            self.index = i
-        else:
-            self.index += 1
 
         if ((self.state == 1 and c == u'<') or
             (self.state == 2 and c == u'/') or
@@ -154,9 +138,9 @@ cdef class ScriptParser(object):
             self.state = 1
 
         if self.state == 2:
-            self.start = self.index
+            self.start = i
         elif self.state == 10:
-            self.end = self.index
+            self.end = i
 
         return self.state == 10
 
@@ -165,9 +149,8 @@ cpdef parse_html(unicode text):
     cdef int OPEN_TAG = HtmlTagType.OPEN_TAG
     cdef int CLOSE_TAG = HtmlTagType.CLOSE_TAG
     cdef int UNPAIRED_TAG = HtmlTagType.UNPAIRED_TAG
-    
+
     parsed = []
-    
     comment_parser = CommentParser()
     script_parser = ScriptParser()
 
