@@ -255,75 +255,129 @@ _DOCTYPE_REGEXP = re.compile("(?:%s)" % _DOCTYPE)
 _COMMENT_REGEXP = re.compile(_COMMENT, re.DOTALL)
 
 
-def parse_html(text):
-    """Higher level html parser. Calls lower level parsers and joins sucesive
-    HtmlDataFragment elements in a single one.
-    """
-    # If have doctype remove it.
-    start_pos = 0
-    match = _DOCTYPE_REGEXP.match(text)
-    if match:
-        start_pos = match.end()
-    prev_end = start_pos
-    for match in _HTML_REGEXP.finditer(text, start_pos):
-        start = match.start()
-        end = match.end()
+class ParseCommentState(object):
+    STOP = 0
+    START = 1
+    END = 6
+    ERROR = -1
 
-        if start > prev_end:
-            yield HtmlDataFragment(prev_end, start, True)
-
-        if match.groups()[0] is not None: # comment
-            yield HtmlDataFragment(start, end)
-        elif match.groups()[1] is not None: # <script>...</script>
-            for e in _parse_script(match):
-                yield e
-        else: # tag
-            yield _parse_tag(match)
-        prev_end = end
-    textlen = len(text)
-    if prev_end < textlen:
-        yield HtmlDataFragment(prev_end, textlen, True)
-
-
-def _parse_script(match):
-    """parse a <script>...</script> region matched by _HTML_REGEXP"""
-    open_text, content, close_text = match.groups()[1:4]
-
-    open_tag = _parse_tag(_HTML_REGEXP.match(open_text))
-    open_tag.start = match.start()
-    open_tag.end = match.start() + len(open_text)
-
-    close_tag = _parse_tag(_HTML_REGEXP.match(close_text))
-    close_tag.start = match.end() - len(close_text)
-    close_tag.end = match.end()
-
-    yield open_tag
-    if open_tag.end < close_tag.start:
-        start_pos = 0
-        for m in _COMMENT_REGEXP.finditer(content):
-            if m.start() > start_pos:
-                yield HtmlDataFragment(open_tag.end + start_pos, open_tag.end + m.start())
-            yield HtmlDataFragment(open_tag.end + m.start(), open_tag.end + m.end())
-            start_pos = m.end()
-        if open_tag.end + start_pos < close_tag.start:
-            yield HtmlDataFragment(open_tag.end + start_pos, close_tag.start)
-    yield close_tag
-
-
-def _parse_tag(match):
-    """
-    parse a tag matched by _HTML_REGEXP
-    """
-    data = match.groups()
-    closing, tag, attr_text = data[4:7]
-    # if tag is None then the match is a comment
-    if tag is not None:
-        unpaired = data[-1]
-        if closing:
-            tag_type = HtmlTagType.CLOSE_TAG
-        elif unpaired:
-            tag_type = HtmlTagType.UNPAIRED_TAG
+def parse_comment(state, c):
+    if state == 1:        # <!
+        if c == '-':
+            state = 2
         else:
-            tag_type = HtmlTagType.OPEN_TAG
-        attributes = []
-        return HtmlTag(tag_type, tag.lower(), attr_text, match.start(), match.end())
+            state = ParseCommentState.ERROR
+    elif state == 2:     # <!-
+        if c == '-':
+            state = 3
+        else:
+            state = ParseCommentState.ERROR
+    elif state == 3:     # <!--
+        if c == '-':
+            state = 4
+    elif state == 4:     # <!-- -
+        if c == '-':
+            state = 5
+        else:
+            state = 3
+    elif state == 5:    # <!-- --
+        if c == '>':
+            state = 6   # <!-- -->
+        else:
+            state = ParseCommentState.ERROR
+    return state
+
+
+def parse_html(text):
+    start = True
+    prev_char = None
+    tag_end = -1
+    tag_start = -1
+    script = False
+    open_tag = False
+    for i, curr_char in enumerate(text):
+        if start:
+            start = False
+            comment = ParseCommentState.STOP
+            slash = False
+            has_attributes = False
+            tag_name = ''
+            tag_attributes = ''
+            yield_tag = False
+            quote_single = False
+            quote_double = False
+
+        if open_tag or script:
+            if curr_char == '"' and not quote_single:
+                quote_double = not quote_double
+            if curr_char == "'" and not quote_double:
+                quote_single = not quote_single
+            quoted = quote_double or quote_single
+        else:
+            quoted = False
+
+        if script:
+            pass
+        elif open_tag:
+            if comment == ParseCommentState.STOP:
+                if curr_char == '<' and not quoted:
+                    tag_end = i - 1
+                    yield_tag = True
+                    open_tag = True
+                elif curr_char == '>' and not quoted:
+                    tag_end = i
+                    yield_tag = True
+                    open_tag = False
+                elif curr_char == '/':
+                    if not quoted:
+                        slash = True
+                    elif has_attributes:
+                        tag_attributes += curr_char
+                elif curr_char == '!' and not tag_name:
+                    comment = 1
+                elif curr_char.isspace():
+                    if has_attributes:
+                        tag_attributes += curr_char
+                    elif tag_name:
+                        has_attributes = True
+                else:
+                    if has_attributes:
+                        tag_attributes += curr_char
+                    else:
+                        tag_name += curr_char
+                if yield_tag:
+                    if not slash:
+                        tag_type = HtmlTagType.OPEN_TAG
+                    elif prev_char != '/':
+                        tag_type = HtmlTagType.CLOSE_TAG
+                    else:
+                        tag_type = HtmlTagType.UNPAIRED_TAG
+                    tag_name = tag_name.lower()
+                    yield HtmlTag(tag_type, tag_name,
+                                  tag_attributes, tag_start, tag_end + 1)
+                    if tag_name == 'script':
+                        script = not slash
+                    if open_tag:
+                        tag_start = i
+                    start = True
+            else:
+                comment = parse_comment(comment, curr_char)
+                if comment == ParseCommentState.END:
+                    tag_end = i
+                    yield HtmlDataFragment(tag_start, tag_end + 1, False)
+                    comment = ParseCommentState.STOP
+                elif comment == ParseCommentState.ERROR: # ERROR
+                    comment = ParseCommentState.STOP
+                if comment == ParseCommentState.STOP:
+                    start = True
+                    open_tag = False
+        else:
+            if curr_char == '<' and not quoted and not script:
+                tag_start = i
+                if tag_start > tag_end + 1:
+                    yield HtmlDataFragment(tag_end + 1, tag_start, not script)
+                tag_end = tag_start
+                open_tag = True
+        prev_char = curr_char
+    if tag_end + 1 < len(text):
+        yield HtmlDataFragment(tag_end + 1, len(text), True)
