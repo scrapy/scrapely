@@ -1,7 +1,7 @@
 """
 htmlpage.py tests
 """
-import os, copy
+import copy
 from unittest import TestCase
 
 from scrapely.htmlpage import parse_html, HtmlTag, HtmlDataFragment, HtmlPage
