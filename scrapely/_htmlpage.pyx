@@ -94,13 +94,28 @@ cdef class CommentParser:
             self.inside_comment = True
 
         if self.close_count < self.open_count:
-            if ((self.close_state == 1 and c == u'-') or
-                (self.close_state == 2 and c == u'-') or
-                (self.close_state == 3 and c == u'>')):
-                self.close_state += 1
-            else:
-                self.close_state = 1
-            if self.close_state == 4:
+            if self.close_state == 1:
+                if c == u'-':
+                    self.close_state += 1
+            elif self.close_state == 2:
+                if c == u'-':
+                    self.close_state += 1
+                else:
+                    self.close_state = 1
+            elif self.close_state == 3:
+                if c == u'!':
+                    self.close_state = 4
+                elif c == u'>':
+                    self.close_state = 5
+                else:
+                    self.close_state = 1
+            elif self.close_state == 4:
+                if c == u'>':
+                    self.close_state = 5
+                else:
+                    self.close_state = 1
+
+            if self.close_state == 5:
                 self.close_state = 1
                 self.close_count += 1
                 if self.close_count >= self.open_count:
