@@ -5,7 +5,6 @@ Container objects for representing html pages and their parts in the IBL
 system. This encapsulates page related information and prevents parsing
 multiple times.
 """
-import re
 import hashlib
 import six
 

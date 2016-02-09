@@ -1,3 +1,4 @@
+from cpython.version cimport PY_MAJOR_VERSION
 import re
 
 _ATTR = "((?:[^=/<>\s]|/(?!>))+)(?:\s*=(?:\s*\"(.*?)\"|\s*'(.*?)'|([^>\s]+))?)?"
@@ -145,10 +146,29 @@ cdef class ScriptParser:
         return self.state == 10
 
 
-cpdef parse_html(unicode text):
+# directly copied from cython's docs
+cdef unicode _ustring(s):
+    if type(s) is unicode:
+        # fast path for most common case(s)
+        return <unicode>s
+    elif PY_MAJOR_VERSION < 3 and isinstance(s, bytes):
+        # only accept byte strings in Python 2.x, not in Py3
+        return (<bytes>s).decode('ascii')
+    elif isinstance(s, unicode):
+        # an evil cast to <unicode> might work here in some(!) cases,
+        # depending on what the further processing does.  to be safe,
+        # we can always create a copy instead
+        return unicode(s)
+    else:
+        raise TypeError('unicode or str expected')
+
+
+cpdef parse_html(s):
     cdef int OPEN_TAG = HtmlTagType.OPEN_TAG
     cdef int CLOSE_TAG = HtmlTagType.CLOSE_TAG
     cdef int UNPAIRED_TAG = HtmlTagType.UNPAIRED_TAG
+
+    cdef unicode text = _ustring(s)
 
     parsed = []
     comment_parser = CommentParser()
