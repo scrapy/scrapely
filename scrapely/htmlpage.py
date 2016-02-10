@@ -12,7 +12,7 @@ from six.moves.urllib.request import urlopen
 from copy import deepcopy
 from w3lib.encoding import html_to_unicode
 
-import _htmlpage
+from . import _htmlpage
 
 
 parse_html = _htmlpage.parse_html
