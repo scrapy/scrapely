@@ -5,13 +5,20 @@ Container objects for representing html pages and their parts in the IBL
 system. This encapsulates page related information and prevents parsing
 multiple times.
 """
-import re
 import hashlib
 import six
 
 from six.moves.urllib.request import urlopen
 from copy import deepcopy
 from w3lib.encoding import html_to_unicode
+
+from . import _htmlpage
+
+
+parse_html = _htmlpage.parse_html
+HtmlDataFragment = _htmlpage.HtmlDataFragment
+HtmlTag = _htmlpage.HtmlTag
+HtmlTagType = _htmlpage.HtmlTagType
 
 
 def url_to_page(url, encoding=None, default_encoding='utf-8'):
@@ -186,144 +193,3 @@ class HtmlPageParsedRegion(HtmlPageRegion):
                 not isinstance(_element, HtmlTag) and _element.is_text_content)
         return TextPage(self.htmlpage.url, self.htmlpage.headers, \
                 text_all, encoding=self.htmlpage.encoding).subregion()
-
-
-class HtmlTagType(object):
-    OPEN_TAG = 1
-    CLOSE_TAG = 2
-    UNPAIRED_TAG = 3
-
-
-class HtmlDataFragment(object):
-    __slots__ = ('start', 'end', 'is_text_content')
-
-    def __init__(self, start, end, is_text_content=False):
-        self.start = start
-        self.end = end
-        self.is_text_content = is_text_content
-
-    def __str__(self):
-        return "<HtmlDataFragment [%s:%s] is_text_content: %s>" % (self.start, self.end, self.is_text_content)
-
-    def __repr__(self):
-        return str(self)
-
-
-class HtmlTag(HtmlDataFragment):
-    __slots__ = ('tag_type', 'tag', '_attributes', '_attr_text')
-
-    def __init__(self, tag_type, tag, attr_text, start, end):
-        HtmlDataFragment.__init__(self, start, end)
-        self.tag_type = tag_type
-        self.tag = tag
-        if isinstance(attr_text, dict):
-            self._attributes = attr_text
-            self._attr_text = None
-        else: # defer loading attributes until necessary
-            self._attributes = {}
-            self._attr_text = attr_text
-
-    @property
-    def attributes(self):
-        if not self._attributes and self._attr_text:
-            for attr_match in _ATTR_REGEXP.findall(self._attr_text):
-                name = attr_match[0].lower()
-                values = [v for v in attr_match[1:] if v]
-                # According to HTML spec if attribute name is repeated only the
-                # first one is taken into account
-                if name not in self._attributes:
-                    self._attributes[name] = values[0] if values else None
-        return self._attributes
-
-    def __str__(self):
-        return "<HtmlTag tag='%s' attributes={%s} type='%d' [%s:%s]>" % (self.tag, ', '.join(sorted\
-                (["%s: %s" % (k, repr(v)) for k, v in self.attributes.items()])), self.tag_type, self.start, self.end)
-
-    def __repr__(self):
-        return str(self)
-
-
-_ATTR = "((?:[^=/<>\s]|/(?!>))+)(?:\s*=(?:\s*\"(.*?)\"|\s*'(.*?)'|([^>\s]+))?)?"
-_TAG = "<(\/?)(\w+(?::\w+)?)((?:\s*" + _ATTR + ")+\s*|\s*)(\/?)>?"
-_DOCTYPE = r"<!DOCTYPE.*?>"
-_SCRIPT = "(<script.*?>)(.*?)(</script.*?>)"
-_COMMENT = "(<!--.*?-->|<\?.+?>)"
-
-_ATTR_REGEXP = re.compile(_ATTR, re.I | re.DOTALL)
-_HTML_REGEXP = re.compile("%s|%s|%s" % (_COMMENT, _SCRIPT, _TAG), re.I | re.DOTALL)
-_DOCTYPE_REGEXP = re.compile("(?:%s)" % _DOCTYPE)
-_COMMENT_REGEXP = re.compile(_COMMENT, re.DOTALL)
-
-
-def parse_html(text):
-    """Higher level html parser. Calls lower level parsers and joins sucesive
-    HtmlDataFragment elements in a single one.
-    """
-    # If have doctype remove it.
-    start_pos = 0
-    match = _DOCTYPE_REGEXP.match(text)
-    if match:
-        start_pos = match.end()
-    prev_end = start_pos
-    for match in _HTML_REGEXP.finditer(text, start_pos):
-        start = match.start()
-        end = match.end()
-
-        if start > prev_end:
-            yield HtmlDataFragment(prev_end, start, True)
-
-        if match.groups()[0] is not None: # comment
-            yield HtmlDataFragment(start, end)
-        elif match.groups()[1] is not None: # <script>...</script>
-            for e in _parse_script(match):
-                yield e
-        else: # tag
-            yield _parse_tag(match)
-        prev_end = end
-    textlen = len(text)
-    if prev_end < textlen:
-        yield HtmlDataFragment(prev_end, textlen, True)
-
-
-def _parse_script(match):
-    """parse a <script>...</script> region matched by _HTML_REGEXP"""
-    open_text, content, close_text = match.groups()[1:4]
-
-    open_tag = _parse_tag(_HTML_REGEXP.match(open_text))
-    open_tag.start = match.start()
-    open_tag.end = match.start() + len(open_text)
-
-    close_tag = _parse_tag(_HTML_REGEXP.match(close_text))
-    close_tag.start = match.end() - len(close_text)
-    close_tag.end = match.end()
-
-    yield open_tag
-    if open_tag.end < close_tag.start:
-        start_pos = 0
-        for m in _COMMENT_REGEXP.finditer(content):
-            if m.start() > start_pos:
-                yield HtmlDataFragment(open_tag.end + start_pos, open_tag.end + m.start())
-            yield HtmlDataFragment(open_tag.end + m.start(), open_tag.end + m.end())
-            start_pos = m.end()
-        if open_tag.end + start_pos < close_tag.start:
-            yield HtmlDataFragment(open_tag.end + start_pos, close_tag.start)
-    yield close_tag
-
-
-def _parse_tag(match):
-    """
-    parse a tag matched by _HTML_REGEXP
-    """
-    data = match.groups()
-    closing, tag, attr_text = data[4:7]
-    # if tag is None then the match is a comment
-    if tag is not None:
-        unpaired = data[-1]
-        if closing:
-            tag_type = HtmlTagType.CLOSE_TAG
-        elif unpaired:
-            tag_type = HtmlTagType.UNPAIRED_TAG
-        else:
-            tag_type = HtmlTagType.OPEN_TAG
-        attributes = []
-        return HtmlTag(tag_type, tag.lower(), attr_text, match.start(), match.end())

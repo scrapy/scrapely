@@ -5,6 +5,7 @@ env:
 - TOXENV=py33
 - TOXENV=py34
 install:
+- pip install cython
 - pip install -U tox
 script: tox
 notifications:
