@@ -1,1 +1,2 @@
 include scrapely/*.pyx
+include scrapely/extraction/*.pyx

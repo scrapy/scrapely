@@ -6,6 +6,7 @@ from Cython.Build import cythonize
 
 extensions = [
     Extension("scrapely._htmlpage", ["scrapely/_htmlpage.pyx"]),
+    Extension("scrapely.extraction._similarity", ["scrapely/extraction/_similarity.pyx"]),
 ]
 
 
