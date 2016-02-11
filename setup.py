@@ -2,11 +2,15 @@
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 from Cython.Build import cythonize
-
+import numpy as np
 
 extensions = [
-    Extension("scrapely._htmlpage", ["scrapely/_htmlpage.pyx"]),
-    Extension("scrapely.extraction._similarity", ["scrapely/extraction/_similarity.pyx"]),
+    Extension("scrapely._htmlpage",
+              ["scrapely/_htmlpage.pyx"],
+              include_dirs=[np.get_include()]),
+    Extension("scrapely.extraction._similarity",
+              ["scrapely/extraction/_similarity.pyx"],
+              include_dirs=[np.get_include()]),
 ]
 
 
