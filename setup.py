@@ -39,6 +39,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Text Processing :: Markup :: HTML',
     ],
-    install_requires=['numpy', 'w3lib', 'cython'],
+    install_requires=['numpy', 'w3lib', 'six', 'cython'],
     ext_modules=cythonize(extensions),
 )
