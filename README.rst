@@ -12,7 +12,7 @@ parser for all similar pages.
 Installation
 ============
 
-Scrapely works in Python 2.6, 2.7 or 3.3+.
+Scrapely works in Python 2.7 or 3.3+.
 It requires numpy and w3lib Python packages.
 
 To install scrapely on any platform use::
