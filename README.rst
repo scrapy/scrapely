@@ -2,7 +2,7 @@
 Scrapely
 ========
 
-.. image:: https://img.shields.io/travis/scrapy/scrapely/master.svg
+.. image:: https://api.travis-ci.org/scrapy/scrapely.svg?branch=master
     :target: https://travis-ci.org/scrapy/scrapely
 
 Scrapely is a library for extracting structured data from HTML pages. Given
