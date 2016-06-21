@@ -22,17 +22,19 @@ HtmlTagType = _htmlpage.HtmlTagType
 
 
 def url_to_page(url, encoding=None, default_encoding='utf-8'):
-    """Fetch a URL, using python urllib2, and return an HtmlPage object.
+    """Fetch a URL, using python urllib, and return an HtmlPage object.
 
-    The `url` may be a string, or a `urllib2.Request` object. The `encoding`
-    argument can be used to force the interpretation of the page encoding.
+    The `url` may be a string, or a `urllib.request.Request` object. The
+    `encoding` argument can be used to force the interpretation of the page
+    encoding.
 
-    Redirects are followed, and the `url` property of the returned HtmlPage object
-    is the url of the final page redirected to.
+    Redirects are followed, and the `url` property of the returned HtmlPage
+    object is the url of the final page redirected to.
 
-    If the encoding of the page is known, it can be passed as a keyword argument. If
-    unspecified, the encoding is guessed using `w3lib.encoding.html_to_unicode`.
-    `default_encoding` is used if the encoding cannot be determined.
+    If the encoding of the page is known, it can be passed as a keyword
+    argument. If unspecified, the encoding is guessed using
+    `w3lib.encoding.html_to_unicode`. `default_encoding` is used if the
+    encoding cannot be determined.
     """
     fh = urlopen(url)
     info = fh.info()

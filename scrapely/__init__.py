@@ -1,4 +1,3 @@
-import urllib
 import json
 
 from w3lib.util import str_to_unicode
