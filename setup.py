@@ -1,17 +1,23 @@
 #!/usr/bin/env python
+import os
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-from Cython.Build import cythonize
 import numpy as np
 
+
+USE_CYTHON = 'CYTHONIZE' in os.environ
+ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [
     Extension("scrapely._htmlpage",
-              ["scrapely/_htmlpage.pyx"],
+              ["scrapely/_htmlpage%s" % ext],
               include_dirs=[np.get_include()]),
     Extension("scrapely.extraction._similarity",
-              ["scrapely/extraction/_similarity.pyx"],
+              ["scrapely/extraction/_similarity%s" % ext],
               include_dirs=[np.get_include()]),
 ]
+if USE_CYTHON:
+    from Cython.Build import cythonize
+    extensions = cythonize(extensions)
 
 
 setup(
@@ -38,6 +44,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Text Processing :: Markup :: HTML',
     ],
-    install_requires=['numpy', 'w3lib', 'six', 'cython'],
-    ext_modules=cythonize(extensions),
+    install_requires=['numpy', 'w3lib', 'six'],
+    ext_modules=extensions,
 )

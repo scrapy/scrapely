@@ -8,8 +8,8 @@ env:
 
 install:
 - pip install cython
-- pip install -U tox codecov
-
+- CYTHONIZE=1 python setup.py build
+- pip install -U tox
 script: tox
 
 after_success:
