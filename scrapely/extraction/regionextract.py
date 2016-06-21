@@ -13,15 +13,14 @@ from itertools import groupby, starmap
 
 from numpy import array
 
-from six import StringIO
-from six.moves import zip as izip, xrange
+from six.moves import zip as izip, xrange, StringIO
 
 from scrapely.descriptor import FieldDescriptor
 from scrapely.htmlpage import HtmlPageRegion
-from scrapely.extraction.similarity import (similar_region,
-    longest_unique_subsequence, common_prefix)
-from scrapely.extraction.pageobjects import (AnnotationTag,
-    PageRegion, FragmentedHtmlPageRegion)
+from scrapely.extraction.similarity import (
+    similar_region, longest_unique_subsequence, common_prefix)
+from scrapely.extraction.pageobjects import (
+    AnnotationTag, PageRegion, FragmentedHtmlPageRegion)
 
 _EXTRACT_HTML = lambda x: x
 _DEFAULT_DESCRIPTOR = FieldDescriptor('none', None)

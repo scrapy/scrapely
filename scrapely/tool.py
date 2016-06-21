@@ -1,9 +1,6 @@
 from __future__ import print_function
 import sys, os, re, cmd, shlex, optparse, json, pprint
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+from six.moves import StringIO
 
 from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
