@@ -139,15 +139,14 @@ cdef class ScriptParser:
     cdef int parse(self, Py_UCS4 c, int i):
         if self.state == 10:
             self.state = 1
-
         if ((self.state == 1 and c == u'<') or
             (self.state == 2 and c == u'/') or
-            (self.state == 3 and c == u's') or
-            (self.state == 4 and c == u'c') or
-            (self.state == 5 and c == u'r') or
-            (self.state == 6 and c == u'i') or
-            (self.state == 7 and c == u'p') or
-            (self.state == 8 and c == u't') or
+            (self.state == 3 and c == u's' or c == u'S') or
+            (self.state == 4 and c == u'c' or c == u'C') or
+            (self.state == 5 and c == u'r' or c == u'R') or
+            (self.state == 6 and c == u'i' or c == u'I') or
+            (self.state == 7 and c == u'p' or c == u'P') or
+            (self.state == 8 and c == u't' or c == u'T') or
             (self.state == 9 and c == u'>')):
             self.state += 1
         else:
