@@ -1,13 +1,20 @@
 language: python
 python: 2.7
+
 env:
 - TOXENV=py27
 - TOXENV=py33
 - TOXENV=py34
+
 install:
 - pip install cython
-- pip install -U tox
+- pip install -U tox codecov
+
 script: tox
+
+after_success:
+  - codecov
+
 notifications:
   irc:
     use_notice: true
