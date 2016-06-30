@@ -51,7 +51,12 @@ _TAGS_TO_REPLACE = {
 }
 # tags whoose content will be completely removed (recursively)
 # (overrides tags_to_keep and tags_to_replace)
-_TAGS_TO_PURGE = ('script', 'img', 'input')
+_TAGS_TO_PURGE = ('script', 'style', 'img', 'input')
+# tags that are automatically closed in HTML4 and HTML5
+_VOID_TAGS = frozenset([
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen',
+    'link', 'meta', 'param', 'source', 'track', 'wbr'
+])
 
 
 def htmlregion(text):
@@ -104,7 +109,7 @@ def text(region):
 
 
 def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
-    tags_to_purge=_TAGS_TO_PURGE):
+             tags_to_purge=_TAGS_TO_PURGE):
     """Creates an HTML subset, using a whitelist of HTML tags.
 
     The HTML generated is safe for display on a website,without escaping and
@@ -117,7 +122,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
             opening and closing tag is removed.
 
     For example:
-    >>> t = lambda s: safehtml(htmlregion(s))
+    >>> t = lambda s, keep=_TAGS_TO_KEEP: safehtml(htmlregion(s), keep)
     >>> t(u'<strong>test <blink>test</blink></strong>')
     u'<strong>test test</strong>'
 
@@ -125,8 +130,8 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     >>> t(u'<script>test </script>test')
     u'test'
 
-    replace_tags define tags that are converted. By default all headers, bold and indenting
-    are converted to strong and em.
+    replace_tags define tags that are converted. By default all headers, bold
+    and indenting are converted to strong and em.
     >>> t(u'<h2>header</h2> test <b>bold</b> <i>indent</i>')
     u'<strong>header</strong> test <strong>bold</strong> <em>indent</em>'
 
@@ -145,14 +150,27 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
     >>> t(u'<p>test <i><br/><b>test</p>')
     u'<p>test <em><br/><strong>test</strong></em></p>'
 
+    Include or exclude tags that you want
+    >>> t(u'Keep <meta name="name" content="data"> and <b><hr> tags')
+    u'Keep  and <strong> tags</strong>'
+    >>> tags = set(list(_TAGS_TO_KEEP)[:] + ['meta', 'hr'])
+    >>> t(u'Keep <meta name="name" content="data"> and <b><hr> tags', tags)
+    u'Keep <meta> and <strong><hr> tags</strong>'
+
+    Handle void tags when purged
+    >>> t(u'Keep content around <img src="image.jpg"> <b>img</b> tag')
+    u'Keep content around  <strong>img</strong> tag'
+
     """
     tagstack = []
+
     def _process_tag(tag):
         tagstr = replace_tags.get(tag.tag, tag.tag)
         if tagstr not in allowed_tags:
             return
         if tag.tag_type == HtmlTagType.OPEN_TAG:
-            tagstack.append(tagstr)
+            if tag.tag not in _VOID_TAGS:
+                tagstack.append(tagstr)
             return u"<%s>" % tagstr
         elif tag.tag_type == HtmlTagType.CLOSE_TAG:
             try:
@@ -188,7 +206,8 @@ def _process_markup(region, textf, tagf, tags_to_purge=_TAGS_TO_PURGE):
             tag = fragment.tag
             if tag in tags_to_purge:
                 # if opening, keep going until closed
-                if fragment.tag_type == HtmlTagType.OPEN_TAG:
+                if (fragment.tag_type == HtmlTagType.OPEN_TAG and
+                        tag not in _VOID_TAGS):
                     for probe in fiter:
                         if isinstance(probe, HtmlTag) and \
                             probe.tag == tag and \
