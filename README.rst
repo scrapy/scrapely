@@ -9,6 +9,14 @@ Scrapely is a library for extracting structured data from HTML pages. Given
 some example web pages and the data to be extracted, scrapely constructs a
 parser for all similar pages.
 
+Overview
+========
+
+Scrapinghub wrote a nice `blog post`_ explaining how scrapely works and how it's used in Portia_.
+
+.. _blog post: https://blog.scrapinghub.com/2016/07/07/scrapely-the-brains-behind-portia-spiders/
+.. _Portia: http://portia.readthedocs.io/
+
 Installation
 ============
 
