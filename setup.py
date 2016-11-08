@@ -22,7 +22,7 @@ if USE_CYTHON:
 
 setup(
     name='scrapely',
-    version='0.12.0',
+    version='0.13.0b1',
     license='BSD',
     description='A pure-python HTML screen-scraping library',
     author='Scrapy project',
@@ -45,5 +45,8 @@ setup(
         'Topic :: Text Processing :: Markup :: HTML',
     ],
     install_requires=['numpy', 'w3lib', 'six'],
+    extras_requires={
+        'speedup': ['cython']
+    },
     ext_modules=extensions,
 )

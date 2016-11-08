@@ -64,17 +64,18 @@ class BasicTypeExtractor(object):
     annotations.
 
     For example:
+    >>> from scrapely.compat import utext
     >>> from scrapely.extraction.pageparsing import parse_strings
     >>> template, page = parse_strings( \
         u'<h1 data-scrapy-annotate="{&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">x</h1>', u'<h1> a name</h1>')
     >>> ex = BasicTypeExtractor(template.annotations[0])
-    >>> ex.extract(page, 0, 1, None)
+    >>> [tuple(map(utext, r)) for r in ex.extract(page, 0, 1, None)]
     [(u'name', u' a name')]
 
     It supports attribute descriptors
     >>> descriptor = FieldDescriptor('name', None, lambda x: x.strip())
     >>> ex = BasicTypeExtractor(template.annotations[0], {'name': descriptor})
-    >>> ex.extract(page, 0, 1, None)
+    >>> [tuple(map(utext, r)) for r in ex.extract(page, 0, 1, None)]
     [(u'name', u'a name')]
 
     It supports ignoring regions
@@ -82,7 +83,7 @@ class BasicTypeExtractor(object):
         u'<div data-scrapy-annotate="{&quot;annotations&quot;: {&quot;content&quot;: &quot;name&quot;}}">x<b> xx</b></div>',\
         u'<div>a name<b> id-9</b></div>')
     >>> ex = BasicTypeExtractor(template.annotations[0])
-    >>> ex.extract(page, 0, 3, [PageRegion(1, 2)])
+    >>> [tuple(map(utext, r)) for r in ex.extract(page, 0, 3, [PageRegion(1, 2)])]
     [(u'name', u'a name')]
     """
 
@@ -640,12 +641,12 @@ class TextRegionDataExtractor(object):
         pref_index = 0
         if self.minprefix > 0:
             rev_idx, plen = longest_unique_subsequence(text[::-1], self.prefix)
-            if plen < self.minprefix:
+            if plen is None or plen < self.minprefix:
                 return None
             pref_index = -rev_idx
         if self.minsuffix == 0:
             return text[pref_index:]
         sidx, slen = longest_unique_subsequence(text[pref_index:], self.suffix)
-        if slen < self.minsuffix:
+        if slen is None or slen < self.minsuffix:
             return None
         return text[pref_index:pref_index + sidx]
