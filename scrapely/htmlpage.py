@@ -82,7 +82,7 @@ except ImportError:
     _TAG = "<(\/?)(\w+(?::\w+)?)((?:\s*" + _ATTR + ")+\s*|\s*)(\/?)>?"
     _DOCTYPE = r"<!DOCTYPE.*?>"
     _SCRIPT = "(<script.*?>)(.*?)(</script.*?>)"
-    _COMMENT = "(<!--.*?-->|<\?.+?>)"
+    _COMMENT = "(<!--.*?--!?>|<\?.+?>|<!>)"
 
     _ATTR_REGEXP = re.compile(_ATTR, re.I | re.DOTALL)
     _HTML_REGEXP = re.compile("%s|%s|%s" % (_COMMENT, _SCRIPT, _TAG),

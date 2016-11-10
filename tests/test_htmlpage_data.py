@@ -1,6 +1,6 @@
 PAGE = u"""
-<style id="scrapy-style" type="text/css">@import url(http://localhost:8000/as/site_media/clean.css);                           
-</style>
+<style id="scrapy-style" type="text/css">@import url(http://localhost:8000/as/site_media/clean.css);
+                           </style>
 <body>
 <div class="scrapy-selected" id="header">
 <img src="company_logo.jpg" style="margin-left: 68px; padding-top:5px;" alt="Logo" width="530" height="105">
@@ -152,27 +152,52 @@ PARSED2 = [
  {'end': 150, 'start': 149},
 ]
 
-# for testing tags inside comments
-PAGE3 = u"""<html><body><h1>Helloooo!!</h1><p>Did i say hello??</p><!--<p>
-</p>--><script type="text/javascript">bla<!--comment-->blabla</script></body></html>"""
+# for testing tags in different forms
+PAGE3 = u"""<!DOCTYPE html>
+<html>
+    <head>
+    <!-- Standard comment style -->
+    <title>Page name</title>
+    <meta name="name" content="value"><!> <!-- <- Self Closing Comment --!>
+    </head>
+
+    <!-- Comment used for ignoring a script
+        <script type="text/javascript">
+            var a = 1;
+        </script>
+    -->
+    <body>
+    </body>
+</html>
+"""
 
 PARSED3 = [
- {'attributes': {}, 'end': 6, 'start': 0, 'tag': u'html', 'tag_type': 1},
- {'attributes': {}, 'end': 12, 'start': 6, 'tag': u'body', 'tag_type': 1},
- {'attributes': {}, 'end': 16, 'start': 12, 'tag': u'h1', 'tag_type': 1},
- {'end': 26, 'start': 16},
- {'attributes': {}, 'end': 31, 'start': 26, 'tag': u'h1', 'tag_type': 2},
- {'attributes': {}, 'end': 34, 'start': 31, 'tag': u'p', 'tag_type': 1},
- {'end': 51, 'start': 34},
- {'attributes': {}, 'end': 55, 'start': 51, 'tag': u'p', 'tag_type': 2},
- {'end': 70, 'start': 55, 'is_text_content': False},
- {'attributes': {u'type': u'text/javascript'}, 'end': 101, 'start': 70, 'tag': u'script', 'tag_type': 1},
- {'end': 104, 'start': 101, 'is_text_content': False},
- {'end': 118, 'start': 104, 'is_text_content': False},
- {'end': 124, 'start': 118, 'is_text_content': False},
- {'attributes': {}, 'end': 133, 'start': 124, 'tag': u'script', 'tag_type': 2},
- {'attributes': {}, 'end': 140, 'start': 133, 'tag': u'body', 'tag_type': 2},
- {'attributes': {}, 'end': 147, 'start': 140, 'tag': u'html', 'tag_type': 2}
+    {'end': 16, 'start': 15, 'is_text_content': True},
+    {'end': 22, 'start': 16, 'attributes': {}, 'tag_type': 1, 'is_text_content': False, 'tag': 'html'},
+    {'end': 27, 'start': 22, 'is_text_content': True},
+    {'end': 33, 'start': 27, 'attributes': {}, 'tag_type': 1, 'is_text_content': False, 'tag': 'head'},
+    {'end': 38, 'start': 33, 'is_text_content': True},
+    {'end': 69, 'start': 38, 'is_text_content': False},
+    {'end': 74, 'start': 69, 'is_text_content': True},
+    {'end': 81, 'start': 74, 'attributes': {}, 'tag_type': 1, 'is_text_content': False, 'tag': 'title'},
+    {'end': 90, 'start': 81, 'is_text_content': True},
+    {'end': 98, 'start': 90, 'attributes': {}, 'tag_type': 2, 'is_text_content': False, 'tag': 'title'},
+    {'end': 103, 'start': 98, 'is_text_content': True},
+    {'end': 137, 'start': 103, 'attributes': {'content': 'value', 'name': 'name'}, 'tag_type': 1, 'is_text_content': False, 'tag': 'meta'},
+    {'end': 140, 'start': 137, 'is_text_content': False},
+    {'end': 141, 'start': 140, 'is_text_content': True},
+    {'end': 174, 'start': 141, 'is_text_content': False},
+    {'end': 179, 'start': 174, 'is_text_content': True},
+    {'end': 186, 'start': 179, 'attributes': {}, 'tag_type': 2, 'is_text_content': False, 'tag': 'head'},
+    {'end': 192, 'start': 186, 'is_text_content': True},
+    {'end': 320, 'start': 192, 'is_text_content': False},
+    {'end': 325, 'start': 320, 'is_text_content': True},
+    {'end': 331, 'start': 325, 'attributes': {}, 'tag_type': 1, 'is_text_content': False, 'tag': 'body'},
+    {'end': 336, 'start': 331, 'is_text_content': True},
+    {'end': 343, 'start': 336, 'attributes': {}, 'tag_type': 2, 'is_text_content': False, 'tag': 'body'},
+    {'end': 344, 'start': 343, 'is_text_content': True},
+    {'end': 351, 'start': 344, 'attributes': {}, 'tag_type': 2, 'is_text_content': False, 'tag': 'html'},
+    {'end': 352, 'start': 351, 'is_text_content': True}
 ]
 
 # for testing tags inside scripts
@@ -293,4 +318,3 @@ PARSED10 = [
     {"attributes": {}, "end": 91, "start": 84, "tag": "body", "tag_type": 2},
     {"attributes": {}, "end": 98, "start": 91, "tag": "html", "tag_type": 2}
 ]
-

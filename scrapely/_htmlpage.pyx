@@ -84,8 +84,13 @@ cdef class CommentParser:
             (self.open_state == 4 and c == u'-')):
             self.open_state += 1
         else:
+            # Handle <!> comment
+            if self.open_state == 3 and c == u'>':
+                self.inside_comment = False
+                self.reset()
+                self.start, self.end = i - 2, i
+                return True
             self.open_state = 1
-
         if self.open_state == 5:
             if self.open_count == 0:
                 self.start = i - 3
@@ -233,6 +238,8 @@ cpdef parse_html(s):
                 parsed.append(
                     HtmlDataFragment(comment_parser.start, tag_end + 1, False))
                 reset_tag = True
+                if (comment_parser.end - comment_parser.start) == 2:
+                    open_tag = False
 
         if comment_parser.inside_comment:
             open_tag = False

@@ -81,8 +81,7 @@ def text(region):
     removing excessive whitespace,
 
     For example:
-    >>> from scrapely.compat import utext
-    >>> t = lambda s: utext(text(htmlregion(s)))
+    >>> t = lambda s: text(htmlregion(s))
     >>> t(u'<h1>test</h1>')
     u'test'
 
@@ -123,8 +122,7 @@ def safehtml(region, allowed_tags=_TAGS_TO_KEEP, replace_tags=_TAGS_TO_REPLACE,
             opening and closing tag is removed.
 
     For example:
-    >>> from scrapely.compat import utext
-    >>> t = lambda s, keep=_TAGS_TO_KEEP: utext(safehtml(htmlregion(s), keep))
+    >>> t = lambda s, keep=_TAGS_TO_KEEP: safehtml(htmlregion(s), keep)
     >>> t(u'<strong>test <blink>test</blink></strong>')
     u'<strong>test test</strong>'
 
@@ -274,8 +272,7 @@ def extract_number(txt):
     >>> extract_number('  45.3, 7')
 
     It will handle unescaped entities:
-    >>> from scrapely.compat import utext
-    >>> utext(extract_number(u'&#163;129&#46;99'))
+    >>> extract_number(u'&#163;129&#46;99')
     u'129.99'
     """
     txt = _NUMERIC_ENTITIES.sub(lambda m: unichr(int(m.groups()[0])), txt)
@@ -288,7 +285,6 @@ def extract_price(txt):
     """
     Extracts numbers making some price format specific assumptions
 
-    >>> from scrapely.compat import utext
     >>> extract_price('asdf 234,234.45sdf ')
     '234234.45'
     >>> extract_price('234,23')
@@ -302,7 +298,7 @@ def extract_price(txt):
     >>> extract_price('adsfg')
     >>> extract_price('stained, linseed oil finish, clear glas doors')
     >>> extract_price('')
-    >>> utext(extract_price(u'&#163;129&#46;99'))
+    >>> extract_price(u'&#163;129&#46;99')
     u'129.99'
     """
     txt = _NUMERIC_ENTITIES.sub(lambda m: unichr(int(m.groups()[0])), txt)
