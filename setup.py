@@ -1,22 +1,32 @@
 #!/usr/bin/env python
+import os
+import platform
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
-from Cython.Build import cythonize
 import numpy as np
 
+
+USE_CYTHON = 'CYTHONIZE' in os.environ
+IS_PYPY = platform.python_implementation() == 'PyPy'
+ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [
     Extension("scrapely._htmlpage",
-              ["scrapely/_htmlpage.pyx"],
+              ["scrapely/_htmlpage%s" % ext],
               include_dirs=[np.get_include()]),
     Extension("scrapely.extraction._similarity",
-              ["scrapely/extraction/_similarity.pyx"],
+              ["scrapely/extraction/_similarity%s" % ext],
               include_dirs=[np.get_include()]),
 ]
+if USE_CYTHON and not IS_PYPY:
+    from Cython.Build import cythonize
+    extensions = cythonize(extensions)
+if IS_PYPY:
+    extensions = []
 
 
 setup(
     name='scrapely',
-    version='0.12.0',
+    version='0.13.0b1',
     license='BSD',
     description='A pure-python HTML screen-scraping library',
     author='Scrapy project',
@@ -38,6 +48,9 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Text Processing :: Markup :: HTML',
     ],
-    install_requires=['numpy', 'w3lib', 'six', 'cython'],
-    ext_modules=cythonize(extensions),
+    install_requires=['numpy', 'w3lib', 'six'],
+    extras_require={
+        'speedup': ['cython']
+    },
+    ext_modules=extensions,
 )

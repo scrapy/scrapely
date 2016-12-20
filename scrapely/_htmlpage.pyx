@@ -84,13 +84,18 @@ cdef class CommentParser:
             (self.open_state == 4 and c == u'-')):
             self.open_state += 1
         else:
+            # Handle <!> comment
+            if self.open_state == 3 and c == u'>':
+                self.inside_comment = False
+                self.reset()
+                self.start, self.end = i - 2, i
+                return True
             self.open_state = 1
-
         if self.open_state == 5:
             if self.open_count == 0:
                 self.start = i - 3
             self.open_state = 1
-            self.open_count += 1
+            self.open_count = 1
             self.inside_comment = True
 
         if self.close_count < self.open_count:
@@ -141,12 +146,12 @@ cdef class ScriptParser:
             self.state = 1
         if ((self.state == 1 and c == u'<') or
             (self.state == 2 and c == u'/') or
-            (self.state == 3 and c == u's' or c == u'S') or
-            (self.state == 4 and c == u'c' or c == u'C') or
-            (self.state == 5 and c == u'r' or c == u'R') or
-            (self.state == 6 and c == u'i' or c == u'I') or
-            (self.state == 7 and c == u'p' or c == u'P') or
-            (self.state == 8 and c == u't' or c == u'T') or
+            (self.state == 3 and c in u'sS') or
+            (self.state == 4 and c in u'cC') or
+            (self.state == 5 and c in u'rR') or
+            (self.state == 6 and c in u'iI') or
+            (self.state == 7 and c in u'pP') or
+            (self.state == 8 and c in u'tT') or
             (self.state == 9 and c == u'>')):
             self.state += 1
         else:
@@ -233,6 +238,8 @@ cpdef parse_html(s):
                 parsed.append(
                     HtmlDataFragment(comment_parser.start, tag_end + 1, False))
                 reset_tag = True
+                if (comment_parser.end - comment_parser.start) == 2:
+                    open_tag = False
 
         if comment_parser.inside_comment:
             open_tag = False
@@ -288,7 +295,7 @@ cpdef parse_html(s):
                     if tag_name != u'!doctype':
                         parsed.append(
                             HtmlTag(tag_type, tag_name,
-                                      tag_attributes, tag_start, tag_end + 1))
+                                    tag_attributes, tag_start, tag_end + 1))
                     if tag_name == u'script':
                         script = True
                     if open_tag:

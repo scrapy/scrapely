@@ -640,12 +640,12 @@ class TextRegionDataExtractor(object):
         pref_index = 0
         if self.minprefix > 0:
             rev_idx, plen = longest_unique_subsequence(text[::-1], self.prefix)
-            if plen < self.minprefix:
+            if plen is None or plen < self.minprefix:
                 return None
             pref_index = -rev_idx
         if self.minsuffix == 0:
             return text[pref_index:]
         sidx, slen = longest_unique_subsequence(text[pref_index:], self.suffix)
-        if slen < self.minsuffix:
+        if slen is None or slen < self.minsuffix:
             return None
         return text[pref_index:pref_index + sidx]

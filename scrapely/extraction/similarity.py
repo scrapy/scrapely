@@ -6,9 +6,17 @@ from six.moves import zip as izip, xrange
 from operator import itemgetter
 from heapq import nlargest
 
-# For typical use cases (small sequences and patterns) the naive approach actually
-# runs faster than KMP algorithm
-from . _similarity import naive_match_length
+try:
+    # For typical use cases (small sequences and patterns) the naive approach
+    # actually runs faster than KMP algorithm
+    from . _similarity import naive_match_length
+except ImportError:
+    def naive_match_length(to_search, subsequence, range_start, range_end):
+        startval = subsequence[0]
+        return ((i, common_prefix_length(to_search[i:], subsequence))
+                for i in xrange(range_start, range_end)
+                if startval == to_search[i])
+
 
 def common_prefix_length(a, b):
     """Calculate the length of the common prefix in both sequences passed.
@@ -46,7 +54,7 @@ def common_prefix(*sequences):
 
 
 def longest_unique_subsequence(to_search, subsequence, range_start=0,
-        range_end=None):
+                               range_end=None):
     """Find the longest unique subsequence of items in an array or string.  This
     searches to_search looking for the longest overlapping
     match with subsequence. If the largest match is unique (there is no other
