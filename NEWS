@@ -1,8 +1,13 @@
 Scrapely release notes
 ======================
 
+0.13.1 (2016-12-21)
+-------------------
+
+- Remove numpy as a mandatory import in setup.py
+
 0.13.0 (2016-12-21)
-------------
+-------------------
 
 - Python 3 support;
 - fixed incorrect webpage encoding detection;
