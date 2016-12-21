@@ -1,7 +1,7 @@
 Scrapely release notes
 ======================
 
-0.13.0 (TBA)
+0.13.0 (2016-12-21)
 ------------
 
 - Python 3 support;
@@ -9,6 +9,7 @@ Scrapely release notes
 - usability improvements for scrapely.tool;
 - internal cleanups;
 - number extractor now supports numbers with a sign.
+- add C extension to speed up parsing and extraction
 
 0.12.0 (2015-01-26)
 -------------------
