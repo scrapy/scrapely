@@ -1,6 +1,11 @@
 Scrapely release notes
 ======================
 
+0.13.2 (2016-12-21)
+-------------------
+
+- Add python3 support for `url_to_page` function
+
 0.13.1 (2016-12-21)
 -------------------
 

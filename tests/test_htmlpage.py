@@ -1,12 +1,18 @@
 """
 htmlpage.py tests
 """
+import os
 import copy
+import json
 from unittest import TestCase
 
-from scrapely.htmlpage import parse_html, HtmlTag, HtmlDataFragment, HtmlPage
+from scrapely.htmlpage import (
+    parse_html, HtmlTag, HtmlDataFragment, HtmlPage, url_to_page
+)
 from .test_htmlpage_data import *
 from . import iter_samples
+BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+
 
 def _encode_element(el):
     """
@@ -14,21 +20,23 @@ def _encode_element(el):
     """
     if isinstance(el, HtmlTag):
         return {"tag": el.tag, "attributes": el.attributes,
-            "start": el.start, "end": el.end, "tag_type": el.tag_type}
+                "start": el.start, "end": el.end, "tag_type": el.tag_type}
     if isinstance(el, HtmlDataFragment):
         return {"start": el.start, "end": el.end, "is_text_content": el.is_text_content}
     raise TypeError
+
 
 def _decode_element(dct):
     """
     dejsonize parse element
     """
     if "tag" in dct:
-        return HtmlTag(dct["tag_type"], dct["tag"], \
-            dct["attributes"], dct["start"], dct["end"])
+        return HtmlTag(dct["tag_type"], dct["tag"],
+                       dct["attributes"], dct["start"], dct["end"])
     if "start" in dct:
         return HtmlDataFragment(dct["start"], dct["end"], dct.get("is_text_content", True))
     return dct
+
 
 class TestParseHtml(TestCase):
     """Test for parse_html"""
@@ -165,3 +173,12 @@ class TestParseHtml(TestCase):
         self.assertEqual(regiondeepcopy.end_index, 15)
         self.assertFalse(region is regiondeepcopy)
         self.assertFalse(region.htmlpage is regiondeepcopy.htmlpage)
+
+    def test_load_page_from_url(self):
+        filepath = os.path.join(BASE_PATH, 'samples/samples_htmlpage_0')
+        url = 'file://{}.{}'.format(filepath, 'html')
+        page = url_to_page(url)
+        parsed = json.load(open('{}.{}'.format(filepath, 'json')))
+        parsed = [_decode_element(d) for d in parsed]
+        self.assertEqual(page.url, url)
+        self._test_sample(page.body, parsed, 1)

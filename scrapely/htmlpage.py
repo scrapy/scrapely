@@ -187,7 +187,7 @@ def url_to_page(url, encoding=None, default_encoding='utf-8'):
     if encoding is None:
         try:
             # Python 3.x
-            content_type_header = fh.getheader("content-type")
+            content_type_header = fh.headers.get("content-type")
         except AttributeError:
             # Python 2.x
             content_type_header = info.getheader("content-type")
