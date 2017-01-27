@@ -3,8 +3,8 @@ cimport numpy as np
 cimport cython
 from cpython.version cimport PY_MAJOR_VERSION
 
-cdef np_kmp_match_length(np.ndarray[np.int_t, ndim=1] sequence,
-                         np.ndarray[np.int_t, ndim=1] pattern,
+cdef np_kmp_match_length(np.ndarray[np.int64_t, ndim=1] sequence,
+                         np.ndarray[np.int64_t, ndim=1] pattern,
                          int start=0,
                          int end=-1):
     """Adaptated from KMP substring search:
@@ -17,7 +17,7 @@ cdef np_kmp_match_length(np.ndarray[np.int_t, ndim=1] sequence,
     if end == -1:
         end = m
     # build table of shift amounts
-    cdef np.ndarray[np.int_t, ndim=1] shifts = np.ones((m + 1,), dtype=int)
+    cdef np.ndarray[np.int64_t, ndim=1] shifts = np.ones((m + 1,), dtype=int)
     cdef int shift = 1
     cdef int pos
     for pos in range(m):
@@ -56,7 +56,7 @@ cdef u_kmp_match_length(unicode sequence, unicode pattern, int start=0, int end=
     if end == -1:
         end = m
     # build table of shift amounts
-    cdef np.ndarray[np.int_t, ndim=1] shifts = np.ones((m + 1,), dtype=int)
+    cdef np.ndarray[np.int64_t, ndim=1] shifts = np.ones((m + 1,), dtype=int)
     cdef int shift = 1
     cdef int pos
     for pos in range(m):
@@ -84,8 +84,8 @@ cdef u_kmp_match_length(unicode sequence, unicode pattern, int start=0, int end=
     return ret
 
 
-cdef np_naive_match_length(np.ndarray[np.int_t, ndim=1] sequence,
-                           np.ndarray[np.int_t, ndim=1] pattern,
+cdef np_naive_match_length(np.ndarray[np.int64_t, ndim=1] sequence,
+                           np.ndarray[np.int64_t, ndim=1] pattern,
                            int start=0,
                            int end=-1):
     ret = []
