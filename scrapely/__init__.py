@@ -5,6 +5,7 @@ from w3lib.util import str_to_unicode
 from scrapely.htmlpage import HtmlPage, page_to_dict, url_to_page
 from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
+from scrapely.version import __version__
 
 
 class Scraper(object):
