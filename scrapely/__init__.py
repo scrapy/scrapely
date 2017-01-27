@@ -7,6 +7,9 @@ from scrapely.template import TemplateMaker, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
 
+__version__ = '0.13.2'
+
+
 class Scraper(object):
 
     def __init__(self, templates=None):
