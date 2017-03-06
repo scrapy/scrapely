@@ -16,8 +16,7 @@ from scrapely.htmlpage import HtmlPage, HtmlTag, HtmlTagType
 _NUMERIC_ENTITIES = re.compile("&#([0-9]+)(?:;|\s)", re.U)
 _PRICE_NUMBER_RE = re.compile('(?:^|[^a-zA-Z0-9])(\d+(?:\.\d+)?)(?:$|[^a-zA-Z0-9])')
 _NUMBER_RE = re.compile('(-?\d+(?:\.\d+)?)')
-_DECIMAL_RE = re.compile(r'(\d[\d\,]*(?:(?:\.\d+)|(?:)))', re.U | re.M)
-_VALPARTS_RE = re.compile("([\.,]?\d+)")
+_DECIMAL_RE = re.compile(r'(-?\d[\d\,\.]*)', re.U | re.M)
 
 _IMAGES = (
     'mng', 'pct', 'bmp', 'gif', 'jpg', 'jpeg', 'png', 'pst', 'psp', 'tif',
@@ -273,7 +272,7 @@ def extract_number(txt):
 
     It will handle unescaped entities:
     >>> extract_number(u'&#163;129&#46;99')
-    u'129.99'
+    '129.99'
     """
     txt = _NUMERIC_ENTITIES.sub(lambda m: unichr(int(m.groups()[0])), txt)
     numbers = _NUMBER_RE.findall(txt)
@@ -295,22 +294,59 @@ def extract_price(txt):
     '2234'
     >>> extract_price('947')
     '947'
+    >>> extract_price('-200,069,000,006.565456')
+    '-200069000006.565456'
+    >>> extract_price('1,000,000')
+    '1000000'
+    >>> extract_price('1,000,000.00')
+    '1000000.00'
+    >>> extract_price('1,000')
+    '1000'
+    >>> extract_price('1000,00')
+    '1000.00'
+    >>> extract_price('1,000.00')
+    '1000.00'
+    >>> extract_price('500,000.00')
+    '500000.00'
+    >>> extract_price('500.000,00')
+    '500000.00'
+    >>> extract_price('-500,000.00')
+    '-500000.00'
+    >>> extract_price('500 000,00')
+    '500000.00'
+    >>> extract_price(u'&#163;129&#46;99')
+    '129.99'
     >>> extract_price('adsfg')
     >>> extract_price('stained, linseed oil finish, clear glas doors')
     >>> extract_price('')
-    >>> extract_price(u'&#163;129&#46;99')
-    u'129.99'
     """
     txt = _NUMERIC_ENTITIES.sub(lambda m: unichr(int(m.groups()[0])), txt)
+    txt = txt.replace(' ', '')
     m = _DECIMAL_RE.search(txt)
+    POINT, COMMA = 0, 1
+    decimal_separator = POINT
+
     if m:
         value = m.group(1)
-        parts = _VALPARTS_RE.findall(value)
-        decimalpart = parts.pop(-1)
-        if decimalpart[0] == "," and len(decimalpart) <= 3:
-            decimalpart = decimalpart.replace(",", ".")
-        value = "".join(parts + [decimalpart]).replace(",", "")
-        return value
+        last_point_idx = value.rfind('.')
+        last_comma_idx = value.rfind(',')
+
+        # If a number has both separators take the last one
+        if last_point_idx > 0 and last_comma_idx > 0:
+            if last_comma_idx > last_point_idx:
+                decimal_separator = COMMA
+        # If a number has only commas check the last one
+        elif last_comma_idx > 0:
+            first_comma_idx = value.find(',')
+            if (first_comma_idx == last_comma_idx and
+                    len(value) - last_comma_idx <= 3):
+                decimal_separator = COMMA
+
+        if decimal_separator == POINT:
+            value = value.replace(',', '')
+        else:
+            value = value.replace('.', '')
+        return value.replace(',', '.')
 
 
 def url(txt):
