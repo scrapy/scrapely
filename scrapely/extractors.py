@@ -7,12 +7,11 @@ import re
 from six.moves.urllib.parse import urlparse, urlunparse
 from six import unichr
 
-from w3lib.html import remove_entities, remove_comments
+from w3lib.html import replace_entities, remove_comments
 from w3lib.url import safe_url_string
 
 from scrapely.htmlpage import HtmlPage, HtmlTag, HtmlTagType
 
-#FIXME: the use of "." needs to be localized
 _NUMERIC_ENTITIES = re.compile("&#([0-9]+)(?:;|\s)", re.U)
 _PRICE_NUMBER_RE = re.compile('(?:^|[^a-zA-Z0-9])(\d+(?:\.\d+)?)(?:$|[^a-zA-Z0-9])')
 _NUMBER_RE = re.compile('(-?\d+(?:\.\d+)?)')
@@ -103,7 +102,7 @@ def text(region):
     >>> t(u"<p>The text</p><?xml:namespace blabla/><p>is here</p>")
     u'The text is here'
     """
-    text = remove_entities(region.text_content, encoding=region.htmlpage.encoding)
+    text = replace_entities(region.text_content, encoding=region.htmlpage.encoding)
     return _WS.sub(u' ', text).strip()
 
 
@@ -272,7 +271,7 @@ def extract_number(txt):
 
     It will handle unescaped entities:
     >>> extract_number(u'&#163;129&#46;99')
-    '129.99'
+    u'129.99'
     """
     txt = _NUMERIC_ENTITIES.sub(lambda m: unichr(int(m.groups()[0])), txt)
     numbers = _NUMBER_RE.findall(txt)
@@ -315,7 +314,7 @@ def extract_price(txt):
     >>> extract_price('500 000,00')
     '500000.00'
     >>> extract_price(u'&#163;129&#46;99')
-    '129.99'
+    u'129.99'
     >>> extract_price('adsfg')
     >>> extract_price('stained, linseed oil finish, clear glas doors')
     >>> extract_price('')
@@ -412,7 +411,7 @@ def image_url(txt):
 
     """
     imgurl = extract_image_url(txt)
-    return [safe_url_string(remove_entities(url(imgurl)))] if imgurl else None
+    return [safe_url_string(replace_entities(url(imgurl)))] if imgurl else None
 
 
 def extract_image_url(txt):
