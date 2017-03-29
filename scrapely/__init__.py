@@ -8,6 +8,9 @@ from scrapely.extraction import InstanceBasedLearningExtractor
 from scrapely.version import __version__
 
 
+__version__ = '0.13.2'
+
+
 class Scraper(object):
 
     def __init__(self, templates=None):
