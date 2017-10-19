@@ -1,10 +1,7 @@
 """
 Unit tests for pageparsing
 """
-import os
-from six import StringIO
 from unittest import TestCase
-import numpy
 
 from scrapely.htmlpage import HtmlPage
 from scrapely.extraction.pageparsing import (
@@ -204,15 +201,18 @@ LABELLED_PAGE13 = u"""
 </head>
 """
 
+
 def _parse_page(parser_class, pagetext):
     htmlpage = HtmlPage(None, {}, pagetext)
     parser = parser_class(TokenDict())
     parser.feed(htmlpage)
     return parser
 
+
 def _tags(pp, predicate):
     return [pp.token_dict.token_string(s) for s in pp.token_list \
             if predicate(s)]
+
 
 class TestPageParsing(TestCase):
 
@@ -227,11 +227,11 @@ class TestPageParsing(TestCase):
         closep = lambda x: pp.token_dict.token_type(x) == TokenType.CLOSE_TAG
         self.assertEqual(_tags(pp, closep), ['</p>', '</html>'])
 
-    def _validate_annotation(self, parser, lable_region, name, start_tag, end_tag):
-        self.assertEqual(lable_region.surrounds_attribute, name)
-        start_token = parser.token_list[lable_region.start_index]
+    def _validate_annotation(self, parser, label_region, name, start_tag, end_tag):
+        self.assertEqual(label_region.surrounds_attribute, name)
+        start_token = parser.token_list[label_region.start_index]
         self.assertEqual(parser.token_dict.token_string(start_token), start_tag)
-        end_token = parser.token_list[lable_region.end_index]
+        end_token = parser.token_list[label_region.end_index]
         self.assertEqual(parser.token_dict.token_string(end_token), end_tag)
 
     def test_template_parsing(self):

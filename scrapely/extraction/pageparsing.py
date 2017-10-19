@@ -9,7 +9,7 @@ from numpy import array
 
 from scrapely.htmlpage import HtmlTagType, HtmlTag, HtmlPage
 from scrapely.extraction.pageobjects import (AnnotationTag,
-    TemplatePage, ExtractionPage, AnnotationText, TokenDict, FragmentedHtmlPageRegion)
+    TemplatePage, ExtractionPage, AnnotationText, TokenDict)
 
 
 def parse_strings(template_html, extraction_html):
@@ -79,6 +79,8 @@ _AUTO_CLOSE_TAGS_ON_OPEN = {
 _AUTO_CLOSE_TAGS_ON_CLOSE = {
     "select": ["option"],
 }
+
+
 class TemplatePageParser(InstanceLearningParser):
     """Template parsing for instance based learning algorithm"""
 

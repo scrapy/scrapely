@@ -5,6 +5,7 @@ from scrapely.template import TemplateMaker, FragmentNotFound, \
     FragmentAlreadyAnnotated, best_match
 from scrapely.extraction import InstanceBasedLearningExtractor
 
+
 class TemplateMakerTest(TestCase):
 
     PAGE = HtmlPage("http://www.example.com", body=u"""

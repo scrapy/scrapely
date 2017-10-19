@@ -1,10 +1,13 @@
 language: python
-python: 2.7
 
-env:
-- TOXENV=py27
-- TOXENV=py34
-- TOXENV=pypy
+matrix:
+  include:
+  - python: 2.7
+    env: TOXENV=py27
+  - python: 2.7
+    env: TOXENV=py34
+  - python: pypy
+    env: TOXENV=pypy
 
 install:
 - pip install cython

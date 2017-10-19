@@ -401,7 +401,7 @@ def image_url(txt):
         >>> image_url('http://s7d4.scene7.com/is/image/Kohler/jaa03267?hei=425&wid=457&op_usm=2,1,2,1&qlt=80')
         ['http://s7d4.scene7.com/is/image/Kohler/jaa03267?hei=425&wid=457&op_usm=2,1,2,1&qlt=80']
         >>> image_url('../image.aspx?thumb=true&amp;boxSize=175&amp;img=Unknoportrait[1].jpg')
-        ['../image.aspx?thumb=true&boxSize=175&img=Unknoportrait%5B1%5D.jpg']
+        ['../image.aspx?thumb=true&boxSize=175&img=Unknoportrait[1].jpg']
         >>> image_url('http://www.sundancecatalog.com/mgen/catalog/test.ms?args=%2245932|MERIDIAN+PENDANT|.jpg%22&is=336,336,0xffffff')
         ['http://www.sundancecatalog.com/mgen/catalog/test.ms?args=%2245932|MERIDIAN+PENDANT|.jpg%22&is=336,336,0xffffff']
         >>> image_url('http://www.site.com/image.php')

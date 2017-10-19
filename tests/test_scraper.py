@@ -5,6 +5,7 @@ from scrapely import Scraper
 from scrapely.htmlpage import HtmlPage
 from . import iter_samples
 
+
 class ScraperTest(TestCase):
 
     def _assert_extracted(self, extracted, expected):
