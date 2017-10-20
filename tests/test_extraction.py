@@ -5,7 +5,7 @@ Page parsing effectiveness is measured through the evaluation system. These
 tests should focus on specific bits of functionality work correctly.
 """
 from unittest import TestCase
-from nose_parameterized import parameterized
+from parameterized import parameterized
 
 from scrapely.htmlpage import HtmlPage
 from scrapely.descriptor import FieldDescriptor as A, ItemDescriptor
