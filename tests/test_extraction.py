@@ -5,13 +5,11 @@ Page parsing effectiveness is measured through the evaluation system. These
 tests should focus on specific bits of functionality work correctly.
 """
 from unittest import TestCase
-from nose_parameterized import parameterized
+from parameterized import parameterized
 
 from scrapely.htmlpage import HtmlPage
-from scrapely.descriptor import (FieldDescriptor as A,
-        ItemDescriptor)
-from scrapely.extractors import (contains_any_numbers,
-        image_url, html, notags)
+from scrapely.descriptor import FieldDescriptor as A, ItemDescriptor
+from scrapely.extractors import contains_any_numbers, image_url, html, notags
 from scrapely.extraction import InstanceBasedLearningExtractor
 
 # simple page with all features
@@ -1288,7 +1286,6 @@ TEST_DATA = [
         {'features': [u'feature1', u'feature2', u'feature3']}
     ),
 ]
-
 
 
 class TestExtraction(TestCase):

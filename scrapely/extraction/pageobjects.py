@@ -111,7 +111,7 @@ class Page(object):
     def __init__(self, htmlpage, token_dict, page_tokens):
         self.htmlpage = htmlpage
         self.token_dict = token_dict
-        # use a numpy array becuase we can index/slice easily and efficiently
+        # use a numpy array because we can index/slice easily and efficiently
         if not isinstance(page_tokens, ndarray):
             page_tokens = array(page_tokens)
         self.page_tokens = page_tokens

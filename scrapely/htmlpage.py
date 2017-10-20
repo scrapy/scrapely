@@ -91,7 +91,7 @@ except ImportError:
     _COMMENT_REGEXP = re.compile(_COMMENT, re.DOTALL)
 
     def parse_html(text):
-        """Higher level html parser. Calls lower level parsers and joins sucesive
+        """Higher level html parser. Calls lower level parsers and joins successive
         HtmlDataFragment elements in a single one.
         """
         # If have doctype remove it.
