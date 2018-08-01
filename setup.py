@@ -30,7 +30,7 @@ if IS_PYPY:
 
 setup(
     name='scrapely',
-    version='0.13.4',
+    version='0.13.5',
     license='BSD',
     description='A pure-python HTML screen-scraping library',
     author='Scrapy project',
@@ -49,6 +49,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Text Processing :: Markup :: HTML',
     ],
