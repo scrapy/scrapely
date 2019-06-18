@@ -1,6 +1,23 @@
 Scrapely release notes
 ======================
 
+0.13.5 (2019-06-18)
+-------------------
+
+- Update C extensions generated from Cython for python 3.7
+- Fix PEP8 violations
+
+0.13.4 (2017-05-26)
+-------------------
+
+- Improved price extraction
+- Replaced deprecated functions
+
+0.13.3 (2017-01-27)
+-------------------
+
+- Use 64 bit integers when matching pages
+
 0.13.2 (2016-12-21)
 -------------------
 
