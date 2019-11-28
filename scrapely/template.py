@@ -98,6 +98,8 @@ def best_match(text):
     def func(fragment, page):
         fdata = page.fragment_data(fragment).strip()
         if text in fdata:
+            if not len(fdata):
+                return float("inf")
             return float(len(text)) / len(fdata) - (1e-6 * fragment.start)
         else:
             return 0.0
