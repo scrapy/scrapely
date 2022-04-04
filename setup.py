@@ -5,7 +5,8 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
 
-USE_CYTHON = 'CYTHONIZE' in os.environ
+#USE_CYTHON = 'CYTHONIZE' in os.environ
+USE_CYTHON = True
 IS_PYPY = platform.python_implementation() == 'PyPy'
 ext = '.pyx' if USE_CYTHON else '.c'
 try:
