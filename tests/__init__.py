@@ -13,7 +13,7 @@ def iter_samples(prefix, html_encoding='utf-8', **json_kwargs):
     format samples_PREFIX_COUNTER.[html|json]
     """
     SAMPLES_FILE_PREFIX = path.join(_PATH, "samples/samples_" + prefix + "_")
-    json_load_kwargs = dict(encoding='utf-8')
+    json_load_kwargs = dict()
     json_load_kwargs.update(json_kwargs)
     for i in count():
         fname = SAMPLES_FILE_PREFIX + str(i)
